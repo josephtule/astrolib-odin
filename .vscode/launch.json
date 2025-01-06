@@ -1,0 +1,26 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "lldb",
+      "request": "launch",
+      "preLaunchTask": "Build",
+      "name": "Debug (Mac)",
+      "program": "${workspaceFolder}/build/debug",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "initCommands": ["command script import lldb.py"]
+    },
+
+    {
+      "type": "lldb",
+      "request": "launch",
+      "preLaunchTask": "Build_win",
+      "name": "Debug (Windows)",
+      "program": "${workspaceFolder}/build/debug.exe",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "initCommands": ["command script import lldb.py"]
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "version": "2.0.0",
+  "command": "",
+  "args": [],
+  "tasks": [
+    // mac/linux builds
+    {
+      "label": "mkdir",
+      "type": "shell",
+      "command": "mkdir -p build"
+    },
+    {
+      "label": "build",
+      "type": "shell",
+      "command": "odin build . -debug -out:build/debug",
+      "group": "build"
+    },
+    {
+      "label": "Build",
+      "dependsOn": ["mkdir", "build"]
+    },
+    // windows builds
+    {
+      "label": "mkdir_win",
+      "type": "shell",
+      "command": "cmd",
+      "args": ["/C", "if not exist .\\build mkdir .\\build"]
+    },
+    {
+      "label": "build_win",
+      "type": "shell",
+      "command": "odin build . -debug -out:build/debug.exe",
+      "group": "build"
+    },
+    {
+      "label": "Build_win",
+      "dependsOn": ["mkdir_win", "build_win"]
+    }
+  ]
+}
