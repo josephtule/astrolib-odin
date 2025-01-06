@@ -108,16 +108,16 @@ main :: proc() {
 
 	// Inertial Frame
 	origin: [3]f32 : {0, 0, 0}
-	x_inertial: [3]f32 : {1, 0, 0}
-	y_inertial: [3]f32 : {0, 1, 0}
-	z_inertial: [3]f32 : {0, 0, 1}
+	x_axis: [3]f32 : {1, 0, 0}
+	y_axis: [3]f32 : {0, 1, 0}
+	z_axis: [3]f32 : {0, 0, 1}
 
 	// Time --------------------------------------------------------------------
 	dt: f32
 	cum_time: f32
 	time_scale: f64 = 1
 	fps: f64
-	integrator_substeps: int = 100
+	substeps: int = 100
 
 	// 3D camera
 	camera: rl.Camera3D
@@ -127,9 +127,16 @@ main :: proc() {
 	camera.up = {0., 0., 1.}
 	camera.fovy = 90
 	camera.projection = .PERSPECTIVE
-	rlgl.SetClipPlanes(0.001, 10000000.)
+	rlgl.SetClipPlanes(0.1, 100000.)
 
 	paused: bool = true
+
+	camera_type :: enum {
+		origin = 0,
+		satellite,
+	}
+
+	cam_frame := camera_type.satellite
 
 	for !rl.WindowShouldClose() {
 		dt = rl.GetFrameTime()
@@ -138,11 +145,19 @@ main :: proc() {
 			paused = !paused
 		}
 
+		if rl.IsKeyPressed(rl.KeyboardKey.C) {
+			if cam_frame == .origin {
+				cam_frame = .satellite
+			} else {
+				cam_frame = .origin
+			}
+		}
+
 		// update satellite
 		if dt != 0. && !paused {
 			cum_time += dt * f32(time_scale)
 			fps = 1 / f64(dt)
-			for k := 0; k < integrator_substeps; k += 1 {
+			for k := 0; k < substeps; k += 1 {
 				ma.set_vector_slice(&xlk, satellite.pos, satellite.vel)
 				ma.set_vector_slice(&xrk, satellite.ep, satellite.omega)
 				_, xlk = integrate.rk4_step(
@@ -189,9 +204,14 @@ main :: proc() {
 		sat_pos_f32 := la.array_cast(satellite.pos, f32)
 
 		// update camera
-		camera.position = 1.1 * sat_pos_f32 + {250, 250, 0}
-		camera.target = sat_pos_f32
-		// camera.target = origin
+		switch cam_frame {
+		case .origin:
+			camera.position = {1., 1., 1.} * 8000
+			camera.target = origin
+		case .satellite:
+			camera.position = 1.5 * sat_pos_f32 + {250, 250, 0}
+			camera.target = sat_pos_f32
+		}
 
 		// update trail buffer
 		trail_pos[trail_ind] = la.array_cast(satellite.pos, f32)
@@ -202,9 +222,9 @@ main :: proc() {
 		rl.ClearBackground(rl.GetColor(0x181818FF))
 
 		// draw axes
-		rl.DrawLine3D(origin, x_inertial * 10000, rl.RED)
-		rl.DrawLine3D(origin, y_inertial * 10000, rl.GREEN)
-		rl.DrawLine3D(origin, z_inertial * 10000, rl.BLUE)
+		rl.DrawLine3D(origin, x_axis * 10000, rl.RED)
+		rl.DrawLine3D(origin, y_axis * 10000, rl.GREEN)
+		rl.DrawLine3D(origin, z_axis * 10000, rl.BLUE)
 
 		// draw line from center of earth to satellite
 		rl.DrawLine3D(origin, sat_pos_f32, rl.GOLD)
@@ -223,24 +243,23 @@ main :: proc() {
 			)
 		}
 
-
 		// draw satellite
 		rl.DrawModel(model_satellite, origin, 1, rl.WHITE)
 
 		// draw satellite axes
 		rl.DrawLine3D(
 			sat_pos_f32,
-			sat_pos_f32 + N_R_B_3x3 * (x_inertial * cube_size * 10),
+			sat_pos_f32 + N_R_B_3x3 * (x_axis * cube_size * 10),
 			rl.MAGENTA,
 		)
 		rl.DrawLine3D(
 			sat_pos_f32,
-			sat_pos_f32 + N_R_B_3x3 * (y_inertial * cube_size * 10),
+			sat_pos_f32 + N_R_B_3x3 * (y_axis * cube_size * 10),
 			rl.YELLOW,
 		)
 		rl.DrawLine3D(
 			sat_pos_f32,
-			sat_pos_f32 + N_R_B_3x3 * (z_inertial * cube_size * 10),
+			sat_pos_f32 + N_R_B_3x3 * (z_axis * cube_size * 10),
 			rl.Color({0, 255, 255, 255}),
 		)
 
@@ -306,52 +325,3 @@ quaternion256_to_quaternion128 :: proc(q: quaternion256) -> quaternion128 {
 }
 
 // Asteroid :: struct {}
-
-
-// old stuff 
-
-// dt := 0.1
-// x0 := [2]f64{0., 0.}
-// N := 100
-// x: [dynamic][2]f64
-// t: [dynamic]f64
-
-
-// xk := x0
-// tk := 0.
-
-
-// params := ode.Params_MSD {
-// 	m = 2.5,
-// 	c = 0.8,
-// 	k = 10.,
-// }
-
-// append(&x, xk)
-// append(&t, tk)
-// for i := 0; i < N; i += 1 {
-// 	tk, xk = integrate.rk4_step(ode.mass_spring_damper, tk, xk, dt, &params)
-// 	append(&x, xk)
-// 	append(&t, tk)
-// }
-
-// fmt.println(x)
-// #unroll for i in 0 ..< 2 {
-// 	x[i] = f64(i)
-// }
-
-// r: [3]f64
-// ma.set_vector_slice_3(
-// 	&r,
-// 	[1]f64{0.1},
-// 	[6]f64{0.2, .3, .4, .5, .6, .7},
-// 	[1]f64{0.67},
-// 	l2 = 1,
-// )
-// v: [3]f64
-// ma.set_vector_slice_2(&v, [2]f64{0.1, 0.2}, [1]f64{0.1})
-
-// fmt.println("vector slice test")
-// fmt.println(r, v)
-
-// ode.accel_zonal(r, 1., 1., [7]f64{0.1, .1, .1, .1, .1, .1, .1}, 3)
