@@ -19,7 +19,7 @@ CelestialBody :: struct {
 }
 
 
-wgs84 :: proc(units: UnitsLinear = .KILOMETER, $T: typeid) -> CelestialBody {
+wgs84 :: proc(units: UnitsLinear = .KILOMETER) -> CelestialBody {
 	earth: CelestialBody
 	#partial switch units {
 	case .METER: earth = CelestialBody {

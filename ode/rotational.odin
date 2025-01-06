@@ -22,10 +22,9 @@ euler_param_dyanmics :: proc(
 ) {
 	params := cast(^Params_EulerParam)(params)
 	ep: [4]f64
-	am.set_vector_slice_1(&ep, x, 0, 0, 4)
+	am.set_vector_slice_1(&ep, x, s1 = 0, l1 = 4)
 	omega: [3]f64
-	am.set_vector_slice_1(&omega, x, 4, 3)
-
+	am.set_vector_slice_1(&omega, x, s1 = 4, l1 = 3)
 	depdt := euler_param_kinematics(ep, omega)
 	dwdt := angular_velocty_dynamics(omega, params.torque, params.inertia)
 
@@ -56,11 +55,22 @@ angular_velocty_dynamics :: proc(
 		-(I.x - I.z) / I.y * omega.x * omega.z,
 		-(I.y - I.x) / I.z * omega.x * omega.y,
 	}
-	dwdt += torque
+	dwdt += torque / I
 	return dwdt
 }
 
-euler_param_to_quaternion :: proc(ep: [4]f64) -> (q: quaternion256) {
+euler_param_to_quaternion :: proc {
+	euler_param_to_quaternion128,
+	euler_param_to_quaternion256,
+}
+euler_param_to_quaternion256 :: proc(ep: [4]f64) -> (q: quaternion256) {
+	q.x = ep.x
+	q.y = ep.y
+	q.z = ep.z
+	q.w = ep.w
+	return q
+}
+euler_param_to_quaternion128 :: proc(ep: [4]f32) -> (q: quaternion128) {
 	q.x = ep.x
 	q.y = ep.y
 	q.z = ep.z

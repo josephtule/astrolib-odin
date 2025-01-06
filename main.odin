@@ -41,7 +41,7 @@ main :: proc() {
 
 	// Earth -------------------------------------------------------------------
 	// Physical Parameters
-	earth: ast.CelestialBody = ast.wgs84(T = f64)
+	earth: ast.CelestialBody = ast.wgs84()
 	// Earth Mesh
 	model_earth := rl.LoadModelFromMesh(
 		rl.GenMeshSphere(f32(earth.semimajor_axis), 30, 30),
@@ -59,11 +59,16 @@ main :: proc() {
 
 	// Physical Parameters
 	satellite := ast.Satellite {
-		pos = pos0,
-		vel = vel0,
+		pos   = pos0,
+		vel   = vel0,
+		ep    = {0, 0, 0, 1},
+		omega = {.05, .05, .1},
 	}
 	// Satellite Mesh
-	model_satellite := rl.LoadModelFromMesh(rl.GenMeshCube(5., 5., 5.))
+	cube_size: f32 = 50.
+	model_satellite := rl.LoadModelFromMesh(
+		rl.GenMeshCube(cube_size, cube_size, cube_size),
+	)
 	SetTranslation(&model_satellite.transform, la.array_cast(satellite.pos, f32))
 	model_satellite.materials[0].maps[rl.MaterialMapIndex.ALBEDO].texture =
 		texture_satellite
@@ -73,7 +78,12 @@ main :: proc() {
 	gravity_params := ode.Params_Gravity_Pointmass {
 		mu = earth.mu,
 	}
-	xk: [6]f64
+	attitude_params := ode.Params_EulerParam {
+		inertia = la.MATRIX3F64_IDENTITY,
+		torque  = {0, 0, 0},
+	}
+	xlk: [6]f64
+	xrk: [7]f64
 
 	// Inertial Frame
 	origin: [3]f32 : {0, 0, 0}
@@ -84,13 +94,13 @@ main :: proc() {
 	// Time --------------------------------------------------------------------
 	dt: f32
 	cum_time: f32
-	time_scale: f64 = 100
+	time_scale: f64 = 10
 	fps: f64
 
 	// 3D camera
 	camera: rl.Camera3D
 	// camera.position = 1.001 * la.array_cast(satellite.pos, f32) + {15, 15, 0}
-	camera.position = {1., 1., 1.} * 10000.
+	camera.position = {1., 1., 1.} * 7000.
 	camera.target = la.array_cast(satellite.pos, f32)
 	camera.up = {0., 0., 1.}
 	camera.fovy = 100
@@ -106,26 +116,45 @@ main :: proc() {
 		// update satellite
 		if dt != 0. {
 			fps = 1 / f64(dt)
-			ma.set_vector_slice(&xk, satellite.pos, satellite.vel)
-			_, xk = integrate.rk4_step(
+			ma.set_vector_slice(&xlk, satellite.pos, satellite.vel)
+			ma.set_vector_slice(&xrk, satellite.ep, satellite.omega)
+			_, xlk = integrate.rk4_step(
 				ode.gravity_pointmass,
 				f64(cum_time),
-				xk,
+				xlk,
 				f64(dt) * time_scale,
 				&gravity_params,
 			)
-			ma.set_vector_slice_1(&satellite.pos, xk, l1 = 3, s1 = 0)
-			ma.set_vector_slice_1(&satellite.vel, xk, l1 = 3, s1 = 3)
+			_, xrk = integrate.rk4_step(
+				ode.euler_param_dyanmics,
+				f64(cum_time),
+				xrk,
+				f64(dt) * time_scale,
+				&attitude_params,
+			)
+
+			// set rotation
+			ma.set_vector_slice_1(&satellite.ep, xrk, s1 = 0, l1 = 4)
+			satellite.ep = la.vector_normalize0(satellite.ep)
+			q := ode.euler_param_to_quaternion(la.array_cast(satellite.ep, f32))
+			N_R_B := rl.QuaternionToMatrix(q)
+			model_satellite.transform = N_R_B
+			// SetRotation(&model_satellite.transform, N_R_B)
+
+			// set translation
+			ma.set_vector_slice_1(&satellite.pos, xlk, l1 = 3, s1 = 0)
+			ma.set_vector_slice_1(&satellite.vel, xlk, l1 = 3, s1 = 3)
 			SetTranslation(
 				&model_satellite.transform,
 				la.array_cast(satellite.pos, f32),
 			)
 		}
-
+		N_R_B_3x3 := GetRotation(model_satellite.transform)
 		sat_pos_f32 := la.array_cast(satellite.pos, f32)
 
+		fmt.println(satellite.ep)
 		// update camera
-		// camera.position = 1.5 * sat_pos_f32 + {250, 250, 0}
+		camera.position = 1.1 * sat_pos_f32 + {250, 250, 0}
 		camera.target = sat_pos_f32
 
 
@@ -148,9 +177,21 @@ main :: proc() {
 		rl.DrawModel(model_satellite, origin, 1, rl.WHITE)
 
 		// draw satellite axes
-		rl.DrawLine3D(sat_pos_f32, sat_pos_f32 + x_inertial * 100, rl.MAGENTA)
-		rl.DrawLine3D(sat_pos_f32, sat_pos_f32 + y_inertial * 100, rl.YELLOW)
-		rl.DrawLine3D(sat_pos_f32, sat_pos_f32 + z_inertial * 100, rl.PURPLE)
+		rl.DrawLine3D(
+			sat_pos_f32,
+			sat_pos_f32 + N_R_B_3x3 * (x_inertial * cube_size * 10),
+			rl.MAGENTA,
+		)
+		rl.DrawLine3D(
+			sat_pos_f32,
+			sat_pos_f32 + N_R_B_3x3 * (y_inertial * cube_size * 10),
+			rl.YELLOW,
+		)
+		rl.DrawLine3D(
+			sat_pos_f32,
+			sat_pos_f32 + N_R_B_3x3 * (z_inertial * cube_size * 10),
+			rl.PURPLE,
+		)
 
 		rl.EndMode3D()
 		rl.EndDrawing()
@@ -176,14 +217,41 @@ GetTranslation :: proc(mat: # row_major matrix[4, 4]f32) -> [3]f32 {
 	return {mat[0, 3], mat[1, 3], mat[2, 3]}
 }
 
+SetRotation :: proc(
+	mat: ^# row_major matrix[4, 4]f32,
+	rot: # row_major matrix[3, 3]f32,
+) {
+	mat[0, 0] = rot[0, 0]
+	mat[0, 1] = rot[0, 1]
+	mat[0, 2] = rot[0, 2]
+	mat[1, 0] = rot[1, 0]
+	mat[1, 1] = rot[1, 1]
+	mat[1, 2] = rot[1, 2]
+	mat[2, 0] = rot[2, 0]
+	mat[2, 1] = rot[2, 1]
+	mat[2, 2] = rot[2, 2]
+}
+
+
 mat4row :: # row_major matrix[4, 4]f32
 mat3row :: # row_major matrix[3, 3]f32
 GetRotation :: proc(
 	mat: # row_major matrix[4, 4]f32,
 ) -> # row_major matrix[3, 3]f32 {
+	// submatrix casting
 	res: # row_major matrix[3, 3]f32
 	res = mat3row(mat)
 	return res
+}
+
+
+quaternion256_to_quaternion128 :: proc(q: quaternion256) -> quaternion128 {
+	qout: quaternion128
+	qout.x = f32(q.x)
+	qout.y = f32(q.y)
+	qout.z = f32(q.z)
+	qout.w = f32(q.w)
+	return qout
 }
 
 // Asteroid :: struct {}
