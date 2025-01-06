@@ -16,7 +16,7 @@ import "vendor:raylib/rlgl"
 import ast "astrolib"
 import ma "astromath"
 import integrate "integrator"
-import ode "ode"
+import "ode"
 
 
 main :: proc() {
@@ -44,7 +44,7 @@ main :: proc() {
 	earth: ast.CelestialBody = ast.wgs84()
 	// Earth Mesh
 	model_earth := rl.LoadModelFromMesh(
-		rl.GenMeshSphere(f32(earth.semimajor_axis), 30, 30),
+		rl.GenMeshSphere(f32(earth.semimajor_axis), 60, 60),
 	)
 	model_earth.materials[0].maps[rl.MaterialMapIndex.ALBEDO].texture =
 		texture_earth
@@ -94,20 +94,19 @@ main :: proc() {
 	// Time --------------------------------------------------------------------
 	dt: f32
 	cum_time: f32
-	time_scale: f64 = 10
+	time_scale: f64 = 50
 	fps: f64
 
 	// 3D camera
 	camera: rl.Camera3D
 	// camera.position = 1.001 * la.array_cast(satellite.pos, f32) + {15, 15, 0}
-	camera.position = {1., 1., 1.} * 7000.
+	camera.position = {1., 1., 1.} * 8000
 	camera.target = la.array_cast(satellite.pos, f32)
 	camera.up = {0., 0., 1.}
-	camera.fovy = 100
+	camera.fovy = 90
 	camera.projection = .PERSPECTIVE
-	rlgl.SetClipPlanes(0.001, 1000000.)
-
-
+	rlgl.SetClipPlanes(0.001, 100000.)
+	
 	for !rl.WindowShouldClose() {
 
 		dt = rl.GetFrameTime()
@@ -152,7 +151,6 @@ main :: proc() {
 		N_R_B_3x3 := GetRotation(model_satellite.transform)
 		sat_pos_f32 := la.array_cast(satellite.pos, f32)
 
-		fmt.println(satellite.ep)
 		// update camera
 		camera.position = 1.1 * sat_pos_f32 + {250, 250, 0}
 		camera.target = sat_pos_f32
@@ -160,7 +158,7 @@ main :: proc() {
 
 		rl.BeginDrawing()
 		rl.BeginMode3D(camera)
-		rl.ClearBackground(rl.DARKGRAY)
+		rl.ClearBackground(rl.GetColor(0x181818FF))
 
 		// draw axes
 		rl.DrawLine3D(origin, x_inertial * 10000, rl.RED)
@@ -190,7 +188,7 @@ main :: proc() {
 		rl.DrawLine3D(
 			sat_pos_f32,
 			sat_pos_f32 + N_R_B_3x3 * (z_inertial * cube_size * 10),
-			rl.PURPLE,
+			rl.Color({0, 255, 255, 255}),
 		)
 
 		rl.EndMode3D()
