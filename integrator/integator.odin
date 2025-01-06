@@ -1,4 +1,4 @@
-package ode
+package integator
 
 import "core:math"
 import la "core:math/linalg"
