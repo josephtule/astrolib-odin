@@ -63,9 +63,9 @@ gravity_zonal :: proc(t: f64, x: [6]f64, params: rawptr) -> [6]f64 {
 	v: [3]f64
 	am.set_vector_slice_1(&v, x, s1 = 3, l1 = 3)
 
-	a := accel_zonal(r, params.mu, params.R_cb, params.J, params.max_degree)
+	a := accel_pointmass(r, params.mu)
+	a += accel_zonal(r, params.mu, params.R_cb, params.J, params.max_degree)
 	am.set_vector_slice_2(&dxdt, v, a)
-
 	return dxdt
 }
 accel_zonal :: #force_inline proc(
@@ -83,7 +83,7 @@ accel_zonal :: #force_inline proc(
 	r0r := r[0] / r_mag
 	r1r := r[1] / r_mag
 	r2r := r[2] / r_mag
-	
+
 	switch max_degree {
 	case 6:
 		Rr6 := Rr * Rr * Rr * Rr * Rr * Rr

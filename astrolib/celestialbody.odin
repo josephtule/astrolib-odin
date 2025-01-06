@@ -14,6 +14,7 @@ CelestialBody :: struct {
 	surface_area:       f64,
 	volume:             f64,
 	pos, vel:           [3]f64,
+	J:                  [7]f64,
 	// orientation:        quaternion,
 	base_unit:          UnitsLinear,
 }
@@ -34,6 +35,15 @@ wgs84 :: proc(units: UnitsLinear = .KILOMETER) -> CelestialBody {
 			mean_radius        = 6.371008771415059e+06,
 			surface_area       = 5.100656217240886e+14,
 			volume             = 1.083207319801408e+21,
+			J                  = {
+				0,
+				0,
+				0.001082626173852,
+				-0.000002532410519,
+				-0.000001619897600,
+				-0.000000227753591,
+				0.000000540666576,
+			},
 			base_unit          = units,
 		}
 	case .KILOMETER: earth = CelestialBody {
@@ -48,6 +58,15 @@ wgs84 :: proc(units: UnitsLinear = .KILOMETER) -> CelestialBody {
 			mean_radius        = 6.371008771415059e+03,
 			surface_area       = 5.100656217240886e+08,
 			volume             = 1.083207319801408e+12,
+			J                  = {
+				0,
+				0,
+				0.001082626173852,
+				-0.000002532410519,
+				-0.000001619897600,
+				-0.000000227753591,
+				0.000000540666576,
+			},
 			base_unit          = units,
 		}
 	case:

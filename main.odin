@@ -54,7 +54,7 @@ main :: proc() {
 	alt: f64 = 1000
 	pos0: [3]f64 = (alt + earth.semimajor_axis) * [3]f64{1., 0., 0.}
 	v_mag0 := math.sqrt(earth.mu / la.vector_length(pos0))
-	angle0 := la.to_radians(30.)
+	angle0: f64 = la.to_radians(75.)
 	vel0: [3]f64 = v_mag0 * [3]f64{0., math.cos(angle0), math.sin(angle0)}
 
 	// Physical Parameters
@@ -73,6 +73,14 @@ main :: proc() {
 	model_satellite.materials[0].maps[rl.MaterialMapIndex.ALBEDO].texture =
 		texture_satellite
 
+	// Trajectory Trail
+	N_trail: int : 20000
+	trail_pos: [N_trail][3]f32
+	x0 := la.array_cast(GetTranslation(model_satellite.transform), f32)
+	for i := 0; i < N_trail; i += 1 {
+		trail_pos[i] = x0
+	}
+	trail_ind := 0
 
 	// ODE/Integrator ----------------------------------------------------------
 	gravity_params := ode.Params_Gravity_Pointmass {
@@ -81,6 +89,12 @@ main :: proc() {
 	attitude_params := ode.Params_EulerParam {
 		inertia = la.MATRIX3F64_IDENTITY,
 		torque  = {0, 0, 0},
+	}
+	zonal_params := ode.Params_Gravity_Zonal {
+		J          = earth.J,
+		max_degree = 2,
+		mu         = earth.mu,
+		R_cb       = earth.semimajor_axis,
 	}
 	xlk: [6]f64
 	xrk: [7]f64
@@ -94,7 +108,7 @@ main :: proc() {
 	// Time --------------------------------------------------------------------
 	dt: f32
 	cum_time: f32
-	time_scale: f64 = 50
+	time_scale: f64 = 3000
 	fps: f64
 
 	// 3D camera
@@ -105,8 +119,8 @@ main :: proc() {
 	camera.up = {0., 0., 1.}
 	camera.fovy = 90
 	camera.projection = .PERSPECTIVE
-	rlgl.SetClipPlanes(0.001, 100000.)
-	
+	rlgl.SetClipPlanes(0.001, 10000000.)
+
 	for !rl.WindowShouldClose() {
 
 		dt = rl.GetFrameTime()
@@ -117,12 +131,19 @@ main :: proc() {
 			fps = 1 / f64(dt)
 			ma.set_vector_slice(&xlk, satellite.pos, satellite.vel)
 			ma.set_vector_slice(&xrk, satellite.ep, satellite.omega)
+			// _, xlk = integrate.rk4_step(
+			// 	ode.gravity_pointmass,
+			// 	f64(cum_time),
+			// 	xlk,
+			// 	f64(dt) * time_scale,
+			// 	&gravity_params,
+			// )
 			_, xlk = integrate.rk4_step(
-				ode.gravity_pointmass,
+				ode.gravity_zonal,
 				f64(cum_time),
 				xlk,
 				f64(dt) * time_scale,
-				&gravity_params,
+				&zonal_params,
 			)
 			_, xrk = integrate.rk4_step(
 				ode.euler_param_dyanmics,
@@ -154,7 +175,11 @@ main :: proc() {
 		// update camera
 		camera.position = 1.1 * sat_pos_f32 + {250, 250, 0}
 		camera.target = sat_pos_f32
+		// camera.target = origin
 
+		// update trail buffer
+		trail_pos[trail_ind] = la.array_cast(satellite.pos, f32)
+		trail_ind = (trail_ind + 1) % N_trail
 
 		rl.BeginDrawing()
 		rl.BeginMode3D(camera)
@@ -170,6 +195,14 @@ main :: proc() {
 
 		// draw earth 
 		rl.DrawModelWires(model_earth, origin, 1, rl.WHITE)
+
+		// draw trail
+		for i := 0; i < N_trail - 1; i += 1 {
+			current := (trail_ind + i) % N_trail
+			next := (current + 1) % N_trail
+			rl.DrawLine3D(trail_pos[current], trail_pos[next], rl.Color({136, 57, 239,255}))
+		}
+
 
 		// draw satellite
 		rl.DrawModel(model_satellite, origin, 1, rl.WHITE)
