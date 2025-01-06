@@ -1,31 +1,28 @@
 package astrolib
 
 
-CelestialBody :: struct($T: typeid) {
-	mu:                 T,
-	omega:              T,
-	semimajor_axis:     T,
-	semiminor_axis:     T,
-	eccentricity:       T,
-	flattening:         T,
-	inverse_flattening: T,
-	third_flattening:   T,
-	mean_radius:        T,
-	surface_area:       T,
-	volume:             T,
-	pos, vel:           [3]T,
+CelestialBody :: struct {
+	mu:                 f64,
+	omega:              f64,
+	semimajor_axis:     f64,
+	semiminor_axis:     f64,
+	eccentricity:       f64,
+	flattening:         f64,
+	inverse_flattening: f64,
+	third_flattening:   f64,
+	mean_radius:        f64,
+	surface_area:       f64,
+	volume:             f64,
+	pos, vel:           [3]f64,
 	// orientation:        quaternion,
 	base_unit:          UnitsLinear,
 }
 
 
-wgs84 :: proc(
-	units: UnitsLinear = .KILOMETER,
-	$T: typeid,
-) -> CelestialBody(T) {
-	earth: CelestialBody(T)
+wgs84 :: proc(units: UnitsLinear = .KILOMETER, $T: typeid) -> CelestialBody {
+	earth: CelestialBody
 	#partial switch units {
-	case .METER: earth = CelestialBody(T) {
+	case .METER: earth = CelestialBody {
 			mu                 = 3.986004418000000e+14,
 			omega              = 7.292115000000000e-05,
 			semimajor_axis     = 6378137.,
@@ -39,7 +36,7 @@ wgs84 :: proc(
 			volume             = 1.083207319801408e+21,
 			base_unit          = units,
 		}
-	case .KILOMETER: earth = CelestialBody(T) {
+	case .KILOMETER: earth = CelestialBody {
 			mu                 = 3.986004418000000e+05,
 			omega              = 7.292115000000000e-05,
 			semimajor_axis     = 6378.137,

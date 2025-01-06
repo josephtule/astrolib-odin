@@ -20,10 +20,7 @@ import ode "ode"
 
 
 main :: proc() {
-
-
-	// raylib stuff
-
+	// Raylib window
 	window_width: i32 = 1024
 	window_height: i32 = 1024
 	rl.InitWindow(window_width, window_height, "Test")
@@ -44,7 +41,7 @@ main :: proc() {
 
 	// Earth -------------------------------------------------------------------
 	// Physical Parameters
-	earth: ast.CelestialBody(f64) = ast.wgs84(T = f64)
+	earth: ast.CelestialBody = ast.wgs84(T = f64)
 	// Earth Mesh
 	model_earth := rl.LoadModelFromMesh(
 		rl.GenMeshSphere(f32(earth.semimajor_axis), 30, 30),
@@ -85,16 +82,16 @@ main :: proc() {
 	z_inertial: [3]f32 : {0, 0, 1}
 
 	// Time --------------------------------------------------------------------
-	dt: f32 = 0
-	cum_time: f32 = 0
+	dt: f32
+	cum_time: f32
 	time_scale: f64 = 100
-
+	fps: f64
 
 	// 3D camera
 	camera: rl.Camera3D
 	// camera.position = 1.001 * la.array_cast(satellite.pos, f32) + {15, 15, 0}
 	camera.position = {1., 1., 1.} * 10000.
-	camera.target = origin // la.array_cast(satellite.pos, f32)
+	camera.target = la.array_cast(satellite.pos, f32)
 	camera.up = {0., 0., 1.}
 	camera.fovy = 100
 	camera.projection = .PERSPECTIVE
@@ -108,6 +105,7 @@ main :: proc() {
 
 		// update satellite
 		if dt != 0. {
+			fps = 1 / f64(dt)
 			ma.set_vector_slice(&xk, satellite.pos, satellite.vel)
 			_, xk = integrate.rk4_step(
 				ode.gravity_pointmass,
@@ -123,11 +121,12 @@ main :: proc() {
 				la.array_cast(satellite.pos, f32),
 			)
 		}
-		fmt.println(GetTranslation(model_satellite.transform))
+
+		sat_pos_f32 := la.array_cast(satellite.pos, f32)
 
 		// update camera
-		// camera.position = 1.5 * la.array_cast(satellite.pos / f64(KM_RL), f32) + {5,2,0}
-		// camera.target = la.array_cast(satellite.pos / f64(KM_RL), f32)
+		// camera.position = 1.5 * sat_pos_f32 + {250, 250, 0}
+		camera.target = sat_pos_f32
 
 
 		rl.BeginDrawing()
@@ -135,13 +134,12 @@ main :: proc() {
 		rl.ClearBackground(rl.DARKGRAY)
 
 		// draw axes
-		// rl.DrawGrid(1000, 10)
 		rl.DrawLine3D(origin, x_inertial * 10000, rl.RED)
 		rl.DrawLine3D(origin, y_inertial * 10000, rl.GREEN)
 		rl.DrawLine3D(origin, z_inertial * 10000, rl.BLUE)
 
 		// draw line from center of earth to satellite
-		rl.DrawLine3D(origin, GetTranslation(model_satellite.transform), rl.GOLD)
+		rl.DrawLine3D(origin, sat_pos_f32, rl.GOLD)
 
 		// draw earth 
 		rl.DrawModelWires(model_earth, origin, 1, rl.WHITE)
@@ -150,21 +148,9 @@ main :: proc() {
 		rl.DrawModel(model_satellite, origin, 1, rl.WHITE)
 
 		// draw satellite axes
-		rl.DrawLine3D(
-			GetTranslation(model_satellite.transform),
-			GetTranslation(model_satellite.transform) + x_inertial * 100,
-			rl.MAGENTA,
-		)
-		rl.DrawLine3D(
-			GetTranslation(model_satellite.transform),
-			GetTranslation(model_satellite.transform) + y_inertial * 100,
-			rl.YELLOW,
-		)
-		rl.DrawLine3D(
-			GetTranslation(model_satellite.transform),
-			GetTranslation(model_satellite.transform) + z_inertial * 100,
-			rl.PURPLE,
-		)
+		rl.DrawLine3D(sat_pos_f32, sat_pos_f32 + x_inertial * 100, rl.MAGENTA)
+		rl.DrawLine3D(sat_pos_f32, sat_pos_f32 + y_inertial * 100, rl.YELLOW)
+		rl.DrawLine3D(sat_pos_f32, sat_pos_f32 + z_inertial * 100, rl.PURPLE)
 
 		rl.EndMode3D()
 		rl.EndDrawing()
