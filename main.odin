@@ -34,7 +34,14 @@ main :: proc() {
 	image_checker := rl.GenImageChecked(2, 2, 1, 1, rl.GOLD, rl.SKYBLUE)
 	texture_satellite := rl.LoadTextureFromImage(image_checker)
 	rl.UnloadImage(image_checker)
-	image_checker = rl.GenImageChecked(2, 2, 1, 1, rl.BLUE, rl.BLUE)
+	image_checker = rl.GenImageChecked(
+		2,
+		2,
+		1,
+		1,
+		rl.Color({30, 102, 245, 255}),
+		rl.BLUE,
+	)
 	texture_earth := rl.LoadTextureFromImage(image_checker)
 	rl.UnloadImage(image_checker)
 
@@ -44,7 +51,7 @@ main :: proc() {
 	earth: ast.CelestialBody = ast.wgs84()
 	// Earth Mesh
 	model_earth := rl.LoadModelFromMesh(
-		rl.GenMeshSphere(f32(earth.semimajor_axis), 60, 60),
+		rl.GenMeshSphere(f32(earth.semimajor_axis), 120, 120),
 	)
 	model_earth.materials[0].maps[rl.MaterialMapIndex.ALBEDO].texture =
 		texture_earth
@@ -74,7 +81,7 @@ main :: proc() {
 		texture_satellite
 
 	// Trajectory Trail
-	N_trail: int : 20000
+	N_trail: int : 5000
 	trail_pos: [N_trail][3]f32
 	x0 := la.array_cast(GetTranslation(model_satellite.transform), f32)
 	for i := 0; i < N_trail; i += 1 {
@@ -108,8 +115,9 @@ main :: proc() {
 	// Time --------------------------------------------------------------------
 	dt: f32
 	cum_time: f32
-	time_scale: f64 = 3000
+	time_scale: f64 = 1
 	fps: f64
+	integrator_substeps: int = 100
 
 	// 3D camera
 	camera: rl.Camera3D
@@ -121,54 +129,62 @@ main :: proc() {
 	camera.projection = .PERSPECTIVE
 	rlgl.SetClipPlanes(0.001, 10000000.)
 
-	for !rl.WindowShouldClose() {
+	paused: bool = true
 
+	for !rl.WindowShouldClose() {
 		dt = rl.GetFrameTime()
-		cum_time += dt * f32(time_scale)
+
+		if rl.IsKeyPressed(rl.KeyboardKey.SPACE) {
+			paused = !paused
+		}
 
 		// update satellite
-		if dt != 0. {
+		if dt != 0. && !paused {
+			cum_time += dt * f32(time_scale)
 			fps = 1 / f64(dt)
-			ma.set_vector_slice(&xlk, satellite.pos, satellite.vel)
-			ma.set_vector_slice(&xrk, satellite.ep, satellite.omega)
-			// _, xlk = integrate.rk4_step(
-			// 	ode.gravity_pointmass,
-			// 	f64(cum_time),
-			// 	xlk,
-			// 	f64(dt) * time_scale,
-			// 	&gravity_params,
-			// )
-			_, xlk = integrate.rk4_step(
-				ode.gravity_zonal,
-				f64(cum_time),
-				xlk,
-				f64(dt) * time_scale,
-				&zonal_params,
-			)
-			_, xrk = integrate.rk4_step(
-				ode.euler_param_dyanmics,
-				f64(cum_time),
-				xrk,
-				f64(dt) * time_scale,
-				&attitude_params,
-			)
+			for k := 0; k < integrator_substeps; k += 1 {
+				ma.set_vector_slice(&xlk, satellite.pos, satellite.vel)
+				ma.set_vector_slice(&xrk, satellite.ep, satellite.omega)
+				_, xlk = integrate.rk4_step(
+					ode.gravity_pointmass,
+					f64(cum_time),
+					xlk,
+					f64(dt) * time_scale,
+					&gravity_params,
+				)
+				// _, xlk = integrate.rk4_step(
+				// 	ode.gravity_zonal,
+				// 	f64(cum_time),
+				// 	xlk,
+				// 	f64(dt) * time_scale,
+				// 	&zonal_params,
+				// )
+				_, xrk = integrate.rk4_step(
+					ode.euler_param_dyanmics,
+					f64(cum_time),
+					xrk,
+					f64(dt) * time_scale,
+					&attitude_params,
+				)
+				// set rotation
+				ma.set_vector_slice_1(&satellite.ep, xrk, s1 = 0, l1 = 4)
+				satellite.ep = la.vector_normalize0(satellite.ep)
+				q := ode.euler_param_to_quaternion(la.array_cast(satellite.ep, f32))
+				N_R_B := rl.QuaternionToMatrix(q)
+				model_satellite.transform = N_R_B
+				// SetRotation(&model_satellite.transform, N_R_B)
 
-			// set rotation
-			ma.set_vector_slice_1(&satellite.ep, xrk, s1 = 0, l1 = 4)
-			satellite.ep = la.vector_normalize0(satellite.ep)
-			q := ode.euler_param_to_quaternion(la.array_cast(satellite.ep, f32))
-			N_R_B := rl.QuaternionToMatrix(q)
-			model_satellite.transform = N_R_B
-			// SetRotation(&model_satellite.transform, N_R_B)
-
-			// set translation
-			ma.set_vector_slice_1(&satellite.pos, xlk, l1 = 3, s1 = 0)
-			ma.set_vector_slice_1(&satellite.vel, xlk, l1 = 3, s1 = 3)
-			SetTranslation(
-				&model_satellite.transform,
-				la.array_cast(satellite.pos, f32),
-			)
+				// set translation
+				ma.set_vector_slice_1(&satellite.pos, xlk, l1 = 3, s1 = 0)
+				ma.set_vector_slice_1(&satellite.vel, xlk, l1 = 3, s1 = 3)
+				SetTranslation(
+					&model_satellite.transform,
+					la.array_cast(satellite.pos, f32),
+				)
+			}
 		}
+		// fmt.println(fps)
+
 		N_R_B_3x3 := GetRotation(model_satellite.transform)
 		sat_pos_f32 := la.array_cast(satellite.pos, f32)
 
@@ -194,13 +210,17 @@ main :: proc() {
 		rl.DrawLine3D(origin, sat_pos_f32, rl.GOLD)
 
 		// draw earth 
-		rl.DrawModelWires(model_earth, origin, 1, rl.WHITE)
+		rl.DrawModel(model_earth, origin, 1, rl.WHITE)
 
 		// draw trail
 		for i := 0; i < N_trail - 1; i += 1 {
 			current := (trail_ind + i) % N_trail
 			next := (current + 1) % N_trail
-			rl.DrawLine3D(trail_pos[current], trail_pos[next], rl.Color({136, 57, 239,255}))
+			rl.DrawLine3D(
+				trail_pos[current],
+				trail_pos[next],
+				rl.Color({136, 57, 239, 255}),
+			)
 		}
 
 
