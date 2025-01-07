@@ -61,15 +61,16 @@ main :: proc() {
 	alt: f64 = 1000
 	pos0: [3]f64 = (alt + earth.semimajor_axis) * [3]f64{1., 0., 0.}
 	v_mag0 := math.sqrt(earth.mu / la.vector_length(pos0))
-	angle0: f64 = la.to_radians(75.)
+	angle0: f64 = la.to_radians(25.)
 	vel0: [3]f64 = v_mag0 * [3]f64{0., math.cos(angle0), math.sin(angle0)}
-
+	ep0: [4]f64 = {0, 0, 0, 1}
+	omega0: [3]f64 = {.05, .05, .1}
 	// Physical Parameters
 	satellite := ast.Satellite {
 		pos   = pos0,
 		vel   = vel0,
-		ep    = {0, 0, 0, 1},
-		omega = {.05, .05, .1},
+		ep    = ep0,
+		omega = omega0,
 	}
 	// Satellite Mesh
 	cube_size: f32 = 50.
@@ -81,7 +82,7 @@ main :: proc() {
 		texture_satellite
 
 	// Trajectory Trail
-	N_trail: int : 5000
+	N_trail: int : 20000
 	trail_pos: [N_trail][3]f32
 	x0 := la.array_cast(GetTranslation(model_satellite.transform), f32)
 	for i := 0; i < N_trail; i += 1 {
@@ -130,6 +131,7 @@ main :: proc() {
 
 	paused: bool = true
 	draw_trails: bool = true
+	wires: bool = true
 	camera_type :: enum {
 		origin = 0,
 		satellite,
@@ -139,16 +141,14 @@ main :: proc() {
 
 	for !rl.WindowShouldClose() {
 
-		if rl.IsKeyPressed(rl.KeyboardKey.UP) &&
-		   (f64(substeps) * time_scale < 100000) {
-			substeps *= 4
-		} else if rl.IsKeyPressed(rl.KeyboardKey.DOWN) && substeps > 1 {
-			substeps /= 4
+		if rl.IsKeyPressed(.W) && (f64(substeps) * time_scale < 100000) {
+			substeps *= 2
+		} else if rl.IsKeyPressed(.S) && substeps > 1 {
+			substeps /= 2
 		}
-		if rl.IsKeyPressed(rl.KeyboardKey.RIGHT) &&
-		   (f64(substeps) * time_scale < 100000) {
+		if rl.IsKeyPressed(.D) && (f64(substeps) * time_scale < 100000) {
 			time_scale *= 2
-		} else if rl.IsKeyPressed(rl.KeyboardKey.LEFT) {
+		} else if rl.IsKeyPressed(.A) {
 			time_scale /= 2
 		}
 		if rl.IsKeyPressed(rl.KeyboardKey.ENTER) {
@@ -170,6 +170,9 @@ main :: proc() {
 			}
 		}
 
+		if rl.IsKeyPressed(.R) {
+			reset_state(&satellite, pos0, vel0, omega0, ep0, draw_trails, &trail_pos)
+		}
 
 		// update satellite
 		if dt != 0. && !paused {
@@ -178,20 +181,20 @@ main :: proc() {
 			for k := 0; k < substeps; k += 1 {
 				ma.set_vector_slice(&xlk, satellite.pos, satellite.vel)
 				ma.set_vector_slice(&xrk, satellite.ep, satellite.omega)
-				_, xlk = integrate.rk4_step(
-					ode.gravity_pointmass,
-					f64(cum_time),
-					xlk,
-					f64(dt) * time_scale,
-					&gravity_params,
-				)
 				// _, xlk = integrate.rk4_step(
-				// 	ode.gravity_zonal,
+				// 	ode.gravity_pointmass,
 				// 	f64(cum_time),
 				// 	xlk,
 				// 	f64(dt) * time_scale,
-				// 	&zonal_params,
+				// 	&gravity_params,
 				// )
+				_, xlk = integrate.rk4_step(
+					ode.gravity_zonal,
+					f64(cum_time),
+					xlk,
+					f64(dt) * time_scale,
+					&zonal_params,
+				)
 				_, xrk = integrate.rk4_step(
 					ode.euler_param_dyanmics,
 					f64(cum_time),
@@ -248,8 +251,6 @@ main :: proc() {
 		// draw line from center of earth to satellite
 		rl.DrawLine3D(origin, sat_pos_f32, rl.GOLD)
 
-		// draw earth 
-		rl.DrawModel(model_earth, origin, 1, rl.WHITE)
 
 		if rl.IsKeyPressed(rl.KeyboardKey.T) {
 			draw_trails = !draw_trails
@@ -269,8 +270,20 @@ main :: proc() {
 			}
 		}
 
-		// draw satellite
-		rl.DrawModel(model_satellite, origin, 1, rl.WHITE)
+		if rl.IsKeyPressed(.Q) {
+			wires = !wires
+		}
+		if wires {
+			// draw earth 
+			rl.DrawModelWires(model_earth, origin, 1, rl.WHITE)
+			// draw satellite
+			rl.DrawModelWires(model_satellite, origin, 1, rl.WHITE)
+		} else {
+			// draw earth 
+			rl.DrawModel(model_earth, origin, 1, rl.WHITE)
+			// draw satellite
+			rl.DrawModel(model_satellite, origin, 1, rl.WHITE)
+		}
 
 		// draw satellite axes
 		rl.DrawLine3D(
@@ -377,11 +390,32 @@ RenderSimulationInfo :: proc(fps: f64, substeps: int, time_scale: f64) {
 	// controls
 	posy = fontsize * 5
 	controls_str := `Controls:
-Adjust Time Scale: [UP, DOWN]
-Adjust Substeps: [LEFT, RIGHT]
-Reset Time/Steps: [ENTER]
-Pause: [SPACE]
-Trails: [T]
-Camera: [C]`
+				Adjust Time Scale: [UP, DOWN]
+				Adjust Substeps: [LEFT, RIGHT]
+				Reset Time/Steps: [ENTER]
+				Pause: [SPACE]
+				Trails: [T]
+				Camera: [C]`
+
+
 	rl.DrawText(strings.clone_to_cstring(controls_str), 10, posy, 10, rl.WHITE)
+}
+
+reset_state :: proc(
+	satellite: ^ast.Satellite,
+	pos0, vel0, omega0: [3]f64,
+	ep0: [4]f64,
+	draw_trails: bool,
+	trail_pos: ^[$N][3]f32,
+) {
+	satellite.pos = pos0
+	satellite.vel = vel0
+	satellite.ep = ep0
+	satellite.omega = omega0
+	if draw_trails {
+		for i := 0; i < N; i += 1 {
+			trail_pos[i] = la.array_cast(pos0, f32)
+		}
+		trail_ind := 0
+	}
 }
