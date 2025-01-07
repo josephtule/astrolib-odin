@@ -117,7 +117,7 @@ main :: proc() {
 	cum_time: f32
 	time_scale: f64 = 1
 	fps: f64
-	substeps: int = 100
+	substeps: int = 1
 
 	// 3D camera
 	camera: rl.Camera3D
@@ -127,10 +127,9 @@ main :: proc() {
 	camera.up = {0., 0., 1.}
 	camera.fovy = 90
 	camera.projection = .PERSPECTIVE
-	rlgl.SetClipPlanes(0.1, 100000.)
 
 	paused: bool = true
-
+	draw_trails: bool = true
 	camera_type :: enum {
 		origin = 0,
 		satellite,
@@ -139,6 +138,24 @@ main :: proc() {
 	cam_frame := camera_type.satellite
 
 	for !rl.WindowShouldClose() {
+
+		if rl.IsKeyPressed(rl.KeyboardKey.UP) &&
+		   (f64(substeps) * time_scale < 100000) {
+			substeps *= 4
+		} else if rl.IsKeyPressed(rl.KeyboardKey.DOWN) && substeps > 1 {
+			substeps /= 4
+		}
+		if rl.IsKeyPressed(rl.KeyboardKey.RIGHT) &&
+		   (f64(substeps) * time_scale < 100000) {
+			time_scale *= 2
+		} else if rl.IsKeyPressed(rl.KeyboardKey.LEFT) {
+			time_scale /= 2
+		}
+		if rl.IsKeyPressed(rl.KeyboardKey.ENTER) {
+			substeps = 1
+			time_scale = 1
+		}
+
 		dt = rl.GetFrameTime()
 
 		if rl.IsKeyPressed(rl.KeyboardKey.SPACE) {
@@ -152,6 +169,7 @@ main :: proc() {
 				cam_frame = .origin
 			}
 		}
+
 
 		// update satellite
 		if dt != 0. && !paused {
@@ -198,7 +216,6 @@ main :: proc() {
 				)
 			}
 		}
-		// fmt.println(fps)
 
 		N_R_B_3x3 := GetRotation(model_satellite.transform)
 		sat_pos_f32 := la.array_cast(satellite.pos, f32)
@@ -206,11 +223,13 @@ main :: proc() {
 		// update camera
 		switch cam_frame {
 		case .origin:
+			rlgl.SetClipPlanes(10, 1000000.)
 			camera.position = {1., 1., 1.} * 8000
 			camera.target = origin
 		case .satellite:
-			camera.position = 1.5 * sat_pos_f32 + {250, 250, 0}
+			camera.position = 1.1 * sat_pos_f32 + {250, 250, 0}
 			camera.target = sat_pos_f32
+			rlgl.SetClipPlanes(1, 10000.)
 		}
 
 		// update trail buffer
@@ -224,7 +243,7 @@ main :: proc() {
 		// draw axes
 		rl.DrawLine3D(origin, x_axis * 10000, rl.RED)
 		rl.DrawLine3D(origin, y_axis * 10000, rl.GREEN)
-		rl.DrawLine3D(origin, z_axis * 10000, rl.BLUE)
+		rl.DrawLine3D(origin, z_axis * 10000, rl.DARKBLUE)
 
 		// draw line from center of earth to satellite
 		rl.DrawLine3D(origin, sat_pos_f32, rl.GOLD)
@@ -232,15 +251,22 @@ main :: proc() {
 		// draw earth 
 		rl.DrawModel(model_earth, origin, 1, rl.WHITE)
 
+		if rl.IsKeyPressed(rl.KeyboardKey.T) {
+			draw_trails = !draw_trails
+			if draw_trails {
+				for i := 0; i < N_trail; i += 1 {
+					trail_pos[i] = sat_pos_f32
+				}
+				trail_ind := 0
+			}
+		}
 		// draw trail
-		for i := 0; i < N_trail - 1; i += 1 {
-			current := (trail_ind + i) % N_trail
-			next := (current + 1) % N_trail
-			rl.DrawLine3D(
-				trail_pos[current],
-				trail_pos[next],
-				rl.Color({136, 57, 239, 255}),
-			)
+		if draw_trails {
+			for i := 0; i < N_trail - 1; i += 1 {
+				current := (trail_ind + i) % N_trail
+				next := (current + 1) % N_trail
+				rl.DrawLine3D(trail_pos[current], trail_pos[next], rl.RAYWHITE)
+			}
 		}
 
 		// draw satellite
@@ -264,6 +290,7 @@ main :: proc() {
 		)
 
 		rl.EndMode3D()
+		RenderSimulationInfo(fps, substeps, time_scale)
 		rl.EndDrawing()
 	}
 }
@@ -325,3 +352,36 @@ quaternion256_to_quaternion128 :: proc(q: quaternion256) -> quaternion128 {
 }
 
 // Asteroid :: struct {}
+RenderSimulationInfo :: proc(fps: f64, substeps: int, time_scale: f64) {
+	fontsize: i32 = 15
+	// fps
+	posy: i32 = fontsize
+	fps_str := strings.builder_make()
+	strings.write_string(&fps_str, "FPS: ")
+	strings.write_float(&fps_str, fps, fmt = 'f', prec = 3, bit_size = 64)
+	rl.DrawText(strings.to_cstring(&fps_str), 10, posy, fontsize, rl.WHITE)
+
+	// time scale
+	posy = fontsize * 2
+	ts_str := strings.builder_make()
+	strings.write_string(&ts_str, "Time Scale: ")
+	strings.write_float(&ts_str, time_scale, fmt = 'f', prec = 4, bit_size = 64)
+	rl.DrawText(strings.to_cstring(&ts_str), 10, posy, fontsize, rl.WHITE)
+	// substeps
+	posy = fontsize * 3
+	sub_str := strings.builder_make()
+	strings.write_string(&sub_str, "Substeps: ")
+	strings.write_int(&sub_str, substeps, 10)
+	rl.DrawText(strings.to_cstring(&sub_str), 10, posy, fontsize, rl.WHITE)
+
+	// controls
+	posy = fontsize * 5
+	controls_str := `Controls:
+Adjust Time Scale: [UP, DOWN]
+Adjust Substeps: [LEFT, RIGHT]
+Reset Time/Steps: [ENTER]
+Pause: [SPACE]
+Trails: [T]
+Camera: [C]`
+	rl.DrawText(strings.clone_to_cstring(controls_str), 10, posy, 10, rl.WHITE)
+}
