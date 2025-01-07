@@ -21,8 +21,8 @@ import "ode"
 
 main :: proc() {
 	// Raylib window
-	window_width: i32 = 1024
-	window_height: i32 = 1024
+	window_width: i32 = 1920
+	window_height: i32 = 1080
 	rl.InitWindow(window_width, window_height, "Test")
 	rl.SetWindowState({.VSYNC_HINT, .WINDOW_RESIZABLE, .MSAA_4X_HINT})
 	rl.SetTargetFPS(60)
@@ -353,7 +353,7 @@ quaternion256_to_quaternion128 :: proc(q: quaternion256) -> quaternion128 {
 
 // Asteroid :: struct {}
 RenderSimulationInfo :: proc(fps: f64, substeps: int, time_scale: f64) {
-	fontsize: i32 = 15
+	fontsize: i32 = 10
 	// fps
 	posy: i32 = fontsize
 	fps_str := strings.builder_make()
