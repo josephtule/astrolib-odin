@@ -21,8 +21,8 @@ import "ode"
 
 main :: proc() {
 	// Raylib window
-	window_width: i32 = 1920
-	window_height: i32 = 1080
+	window_width: i32 = 1024
+	window_height: i32 = 1024
 	rl.InitWindow(window_width, window_height, "Test")
 	rl.SetWindowState({.VSYNC_HINT, .WINDOW_RESIZABLE, .MSAA_4X_HINT})
 	rl.SetTargetFPS(60)
@@ -35,8 +35,8 @@ main :: proc() {
 	texture_satellite := rl.LoadTextureFromImage(image_checker)
 	rl.UnloadImage(image_checker)
 	image_checker = rl.GenImageChecked(
-		2,
-		2,
+		16,
+		16,
 		1,
 		1,
 		rl.Color({30, 102, 245, 255}),
@@ -128,52 +128,32 @@ main :: proc() {
 	camera.up = {0., 0., 1.}
 	camera.fovy = 90
 	camera.projection = .PERSPECTIVE
+	camera_offset: [3]f32 = {250, 250, 0}
 
 	paused: bool = true
-	draw_trails: bool = true
+	trails_flag: bool = true
 	wires: bool = true
 	camera_type :: enum {
 		origin = 0,
 		satellite,
 	}
+	pos_scale: f32 = 1.01
 
 	cam_frame := camera_type.satellite
 
 	for !rl.WindowShouldClose() {
 
-		if rl.IsKeyPressed(.W) && (f64(substeps) * time_scale < 100000) {
-			substeps *= 2
-		} else if rl.IsKeyPressed(.S) && substeps > 1 {
-			substeps /= 2
-		}
-		if rl.IsKeyPressed(.D) && (f64(substeps) * time_scale < 100000) {
-			time_scale *= 2
-		} else if rl.IsKeyPressed(.A) {
-			time_scale /= 2
-		}
-		if rl.IsKeyPressed(rl.KeyboardKey.ENTER) {
-			substeps = 1
-			time_scale = 1
-		}
 
 		dt = rl.GetFrameTime()
 
-		if rl.IsKeyPressed(rl.KeyboardKey.SPACE) {
-			paused = !paused
-		}
+		input_integrator(&paused, &substeps, &time_scale)
 
-		if rl.IsKeyPressed(rl.KeyboardKey.C) {
-			if cam_frame == .origin {
-				cam_frame = .satellite
-			} else {
-				cam_frame = .origin
-			}
-		}
 
 		if rl.IsKeyPressed(.R) {
-			reset_state(&satellite, pos0, vel0, omega0, ep0, draw_trails, &trail_pos)
+			reset_state(&satellite, pos0, vel0, omega0, ep0, trails_flag, &trail_pos)
 		}
 
+		update_satellite(&satellite, &model_satellite)
 		// update satellite
 		if dt != 0. && !paused {
 			cum_time += dt * f32(time_scale)
@@ -224,13 +204,41 @@ main :: proc() {
 		sat_pos_f32 := la.array_cast(satellite.pos, f32)
 
 		// update camera
+		// camera update
+		if rl.IsKeyPressed(rl.KeyboardKey.C) {
+			if cam_frame == .origin {
+				pos_scale = 1
+				cam_frame = .satellite
+				camera_offset = {250, 250, 0}
+			} else if cam_frame == .satellite {
+				pos_scale = 1
+				cam_frame = .origin
+				camera_offset = {1, 1, 1}
+			}
+		}
+		if rl.GetMouseWheelMove() < 0 {
+			pos_scale *= 1.1
+		} else if rl.GetMouseWheelMove() > 0 {
+			pos_scale /= 1.1
+		}
+		if rl.IsKeyDown(.D) {
+			camera_offset -= {1, 0, 0}
+		} else if rl.IsKeyDown(.A) {
+			camera_offset += {1, 0, 0}
+		} else if rl.IsKeyDown(.S) {
+			camera_offset -= {0, 0, 1}
+		} else if rl.IsKeyDown(.W) {
+			camera_offset += {0, 0, 1}
+		}
+
 		switch cam_frame {
 		case .origin:
 			rlgl.SetClipPlanes(10, 1000000.)
-			camera.position = {1., 1., 1.} * 8000
+			camera.position = ({1., 1., 1.} * 7500 + camera_offset * 20) * pos_scale
+			fmt.println(camera_offset)
 			camera.target = origin
 		case .satellite:
-			camera.position = 1.1 * sat_pos_f32 + {250, 250, 0}
+			camera.position = sat_pos_f32 + pos_scale * camera_offset
 			camera.target = sat_pos_f32
 			rlgl.SetClipPlanes(1, 10000.)
 		}
@@ -243,7 +251,7 @@ main :: proc() {
 		rl.BeginMode3D(camera)
 		rl.ClearBackground(rl.GetColor(0x181818FF))
 
-		// draw axes
+		// draw inertial axes
 		rl.DrawLine3D(origin, x_axis * 10000, rl.RED)
 		rl.DrawLine3D(origin, y_axis * 10000, rl.GREEN)
 		rl.DrawLine3D(origin, z_axis * 10000, rl.DARKBLUE)
@@ -252,23 +260,8 @@ main :: proc() {
 		rl.DrawLine3D(origin, sat_pos_f32, rl.GOLD)
 
 
-		if rl.IsKeyPressed(rl.KeyboardKey.T) {
-			draw_trails = !draw_trails
-			if draw_trails {
-				for i := 0; i < N_trail; i += 1 {
-					trail_pos[i] = sat_pos_f32
-				}
-				trail_ind := 0
-			}
-		}
-		// draw trail
-		if draw_trails {
-			for i := 0; i < N_trail - 1; i += 1 {
-				current := (trail_ind + i) % N_trail
-				next := (current + 1) % N_trail
-				rl.DrawLine3D(trail_pos[current], trail_pos[next], rl.RAYWHITE)
-			}
-		}
+		update_trails(&trails_flag, &trail_ind, &trail_pos, sat_pos_f32)
+		draw_trail(&trails_flag, &trail_pos, trail_ind)
 
 		if rl.IsKeyPressed(.Q) {
 			wires = !wires
@@ -417,5 +410,65 @@ reset_state :: proc(
 			trail_pos[i] = la.array_cast(pos0, f32)
 		}
 		trail_ind := 0
+	}
+}
+
+draw_satellite :: proc() {
+
+}
+
+update_satellite :: proc(sat: ^ast.Satellite, model: ^rl.Model) {}
+update_trails :: proc(
+	trails_flag: ^bool,
+	trail_ind: ^int,
+	trail_pos: ^[$N][3]f32,
+	sat_pos: [3]f32,
+) {
+
+	if rl.IsKeyPressed(rl.KeyboardKey.T) {
+		trails_flag^ = !trails_flag^
+		if trails_flag^ {
+			for i := 0; i < N; i += 1 {
+				trail_pos[i] = sat_pos
+			}
+			trail_ind := 0
+		}
+	}
+}
+
+input_integrator :: proc(paused: ^bool, substeps: ^int, time_scale: ^f64) {
+	if rl.IsKeyPressed(.UP) && (f64(substeps^) * time_scale^ < 100000) {
+		substeps^ *= 2
+	} else if rl.IsKeyPressed(.DOWN) && substeps^ > 1 {
+		substeps^ /= 2
+	}
+	if rl.IsKeyPressed(.RIGHT) && (f64(substeps^) * time_scale^ < 100000) {
+		time_scale^ *= 2
+	} else if rl.IsKeyPressed(.LEFT) {
+		time_scale^ /= 2
+	}
+	if rl.IsKeyPressed(rl.KeyboardKey.ENTER) {
+		substeps^ = 1
+		time_scale^ = 1
+	}
+	if rl.IsKeyPressed(rl.KeyboardKey.SPACE) {
+		paused^ = !paused^
+	}
+}
+
+
+draw_trail :: proc(
+	trails_flag: ^bool,
+	trail_pos: ^[$N][3]f32,
+	trail_ind: int,
+) {
+
+	// draw trail
+	if trails_flag^ {
+		for i := 0; i < N - 1; i += 1 {
+			current := (trail_ind + i) % N
+			next := (current + 1) % N
+			rl.DrawLine3D(trail_pos[current], trail_pos[next], rl.RAYWHITE)
+		}
 	}
 }
