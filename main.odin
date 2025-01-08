@@ -129,6 +129,7 @@ main :: proc() {
 	camera.fovy = 90
 	camera.projection = .PERSPECTIVE
 	camera_offset: [3]f32 = {250, 250, 0}
+	camera_azel := cart_to_azel(camera.position)
 
 	paused: bool = true
 	trails_flag: bool = true
@@ -207,40 +208,43 @@ main :: proc() {
 		// camera update
 		if rl.IsKeyPressed(rl.KeyboardKey.C) {
 			if cam_frame == .origin {
+				// switch to satellite
+				camera_azel =
+					cart_to_azel(la.array_cast(satellite.pos, f32))// +
+					//{1., math.to_radians(f32(5.)), math.to_radians(f32(5.))}
 				pos_scale = 1
 				cam_frame = .satellite
-				camera_offset = {250, 250, 0}
 			} else if cam_frame == .satellite {
+				camera_azel = cart_to_azel([3]f32{7500., 7500., 7500.})
 				pos_scale = 1
 				cam_frame = .origin
-				camera_offset = {1, 1, 1}
 			}
 		}
 		if rl.GetMouseWheelMove() < 0 {
-			pos_scale *= 1.1
+			camera_azel.x *= 1.1
 		} else if rl.GetMouseWheelMove() > 0 {
-			pos_scale /= 1.1
+			camera_azel.x /= 1.1
 		}
-		if rl.IsKeyDown(.D) {
-			camera_offset -= {1, 0, 0}
-		} else if rl.IsKeyDown(.A) {
-			camera_offset += {1, 0, 0}
+		if rl.IsKeyDown(.A) {
+			camera_azel.y -= math.to_radians(f32(1))
+		} else if rl.IsKeyDown(.D) {
+			camera_azel.y += math.to_radians(f32(1))
 		} else if rl.IsKeyDown(.S) {
-			camera_offset -= {0, 0, 1}
+			camera_azel.z -= math.to_radians(f32(1))
 		} else if rl.IsKeyDown(.W) {
-			camera_offset += {0, 0, 1}
+			camera_azel.z += math.to_radians(f32(1))
 		}
 
 		switch cam_frame {
 		case .origin:
 			rlgl.SetClipPlanes(10, 1000000.)
-			camera.position = ({1., 1., 1.} * 7500 + camera_offset * 20) * pos_scale
+			camera.position = azel_to_cart(camera_azel)
 			fmt.println(camera_offset)
 			camera.target = origin
 		case .satellite:
-			camera.position = sat_pos_f32 + pos_scale * camera_offset
+			camera.position = azel_to_cart(camera_azel)
 			camera.target = sat_pos_f32
-			rlgl.SetClipPlanes(1, 10000.)
+			rlgl.SetClipPlanes(1, 100000.)
 		}
 
 		// update trail buffer
@@ -301,6 +305,48 @@ main :: proc() {
 	}
 }
 
+azzen_to_cart :: proc(azzen: [3]$T) -> (r: [3]T) {
+	// spherical coordinates in the form of (range (rho), azimuth (theta), zenith (phi))
+	rho := azzen.x
+	theta := azzen.y
+	phi := azzen.z
+
+	r.x = math.sin(phi) * math.cos(theta)
+	r.y = math.sin(phi) * math.sin(theta)
+	r.z = math.cos(phi)
+	r *= rho
+	return r
+}
+
+azel_to_cart :: proc(azel: [3]$T) -> (r: [3]T) {
+	// spherical coordinates in the form of (range (rho), azimuth (theta), elevation (phi))
+	// angle units in radians
+	rho := azel.x
+	theta := azel.y
+	phi := azel.z
+
+	r.x = math.cos(phi) * math.cos(theta)
+	r.y = math.cos(phi) * math.sin(theta)
+	r.z = math.sin(phi)
+	r *= rho
+	return
+}
+
+cart_to_azzen :: proc(r: [3]$T) -> (azzen: [3]T) {
+	// last coordinate measured from the z-axis
+	azzen.x = la.vector_length(r)
+	azzen.y = math.atan2(r[1], r[0])
+	azzen.z = math.acos(r[2] / azzen.x)
+	return
+}
+
+cart_to_azel :: proc(r: [3]$T) -> (azel: [3]T) {
+	// last coordinate measured from the x-y plane
+	azel.x = la.vector_length(r)
+	azel.y = math.atan2(r[1], r[0])
+	azel.z = math.asin(r[2] / azel.x)
+	return azel
+}
 
 MatrixTranslateAdditive :: proc(pos: [3]f32) -> # row_major matrix[4, 4]f32 {
 	mat: # row_major matrix[4, 4]f32
