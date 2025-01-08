@@ -68,7 +68,7 @@ main :: proc() {
 	angle0: f64 = la.to_radians(25.)
 	vel0: [3]f64 = v_mag0 * [3]f64{0., math.cos(angle0), math.sin(angle0)}
 	ep0: [4]f64 = {0, 0, 0, 1}
-	omega0: [3]f64 = {0.01, 5, 0.01}
+	omega0: [3]f64 = {0.001, .05, 0.001}
 
 	// Physical Parameters
 	satellite := ast.Satellite {

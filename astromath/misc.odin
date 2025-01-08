@@ -4,7 +4,6 @@ import "core:math"
 
 eps :: proc{eps_f64,eps_f32, eps_f16}
 
-
 eps_f64 :: proc(x: f64) -> f64 {
 	if x == 0.0 {
 		return 2.2250738585072014e-308
