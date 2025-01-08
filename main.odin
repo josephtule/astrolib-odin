@@ -18,6 +18,8 @@ import ma "astromath"
 import integrate "integrator"
 import "ode"
 
+rl_to_u: f32 : 100
+u_to_rl: f32 : 1 / rl_to_u
 
 main :: proc() {
 	// Raylib window
@@ -65,6 +67,7 @@ main :: proc() {
 	vel0: [3]f64 = v_mag0 * [3]f64{0., math.cos(angle0), math.sin(angle0)}
 	ep0: [4]f64 = {0, 0, 0, 1}
 	omega0: [3]f64 = {.05, .05, .1}
+
 	// Physical Parameters
 	satellite := ast.Satellite {
 		pos   = pos0,
@@ -73,7 +76,7 @@ main :: proc() {
 		omega = omega0,
 	}
 	// Satellite Mesh
-	cube_size: f32 = 50.
+	cube_size: f32 = 10 / 1000. 
 	model_satellite := rl.LoadModelFromMesh(
 		rl.GenMeshCube(cube_size, cube_size, cube_size),
 	)
@@ -123,13 +126,16 @@ main :: proc() {
 	// 3D camera
 	camera: rl.Camera3D
 	// camera.position = 1.001 * la.array_cast(satellite.pos, f32) + {15, 15, 0}
-	camera.position = {1., 1., 1.} * 8000
+	camera_azel := [3]f32 {
+		cube_size * 25,
+		math.to_radians(f32(45.)),
+		math.to_radians(f32(45.)),
+	}
 	camera.target = la.array_cast(satellite.pos, f32)
+	camera.position = azel_to_cart(camera_azel) + camera.target
 	camera.up = {0., 0., 1.}
 	camera.fovy = 90
 	camera.projection = .PERSPECTIVE
-	camera_offset: [3]f32 = {250, 250, 0}
-	camera_azel := cart_to_azel(camera.position)
 
 	paused: bool = true
 	trails_flag: bool = true
@@ -138,9 +144,8 @@ main :: proc() {
 		origin = 0,
 		satellite,
 	}
-	pos_scale: f32 = 1.01
-
 	cam_frame := camera_type.satellite
+
 
 	for !rl.WindowShouldClose() {
 
@@ -209,14 +214,10 @@ main :: proc() {
 		if rl.IsKeyPressed(rl.KeyboardKey.C) {
 			if cam_frame == .origin {
 				// switch to satellite
-				camera_azel =
-					cart_to_azel(la.array_cast(satellite.pos, f32))// +
-					//{1., math.to_radians(f32(5.)), math.to_radians(f32(5.))}
-				pos_scale = 1
+				camera_azel = cart_to_azel([3]f32{1, 1, 1})
 				cam_frame = .satellite
 			} else if cam_frame == .satellite {
 				camera_azel = cart_to_azel([3]f32{7500., 7500., 7500.})
-				pos_scale = 1
 				cam_frame = .origin
 			}
 		}
@@ -237,14 +238,13 @@ main :: proc() {
 
 		switch cam_frame {
 		case .origin:
-			rlgl.SetClipPlanes(10, 1000000.)
+			rlgl.SetClipPlanes(1.0e1, 1000000.)
 			camera.position = azel_to_cart(camera_azel)
-			fmt.println(camera_offset)
 			camera.target = origin
 		case .satellite:
-			camera.position = azel_to_cart(camera_azel)
+			camera.position = azel_to_cart(camera_azel) + sat_pos_f32
 			camera.target = sat_pos_f32
-			rlgl.SetClipPlanes(1, 100000.)
+			rlgl.SetClipPlanes(1.0e-2, 5.0e4)
 		}
 
 		// update trail buffer
@@ -300,7 +300,7 @@ main :: proc() {
 		)
 
 		rl.EndMode3D()
-		RenderSimulationInfo(fps, substeps, time_scale)
+		RenderSimulationInfo(fps, substeps, time_scale, camera_azel)
 		rl.EndDrawing()
 	}
 }
@@ -404,7 +404,12 @@ quaternion256_to_quaternion128 :: proc(q: quaternion256) -> quaternion128 {
 }
 
 // Asteroid :: struct {}
-RenderSimulationInfo :: proc(fps: f64, substeps: int, time_scale: f64) {
+RenderSimulationInfo :: proc(
+	fps: f64,
+	substeps: int,
+	time_scale: f64,
+	azel: [3]f32,
+) {
 	fontsize: i32 = 10
 	// fps
 	posy: i32 = fontsize
@@ -425,6 +430,35 @@ RenderSimulationInfo :: proc(fps: f64, substeps: int, time_scale: f64) {
 	strings.write_string(&sub_str, "Substeps: ")
 	strings.write_int(&sub_str, substeps, 10)
 	rl.DrawText(strings.to_cstring(&sub_str), 10, posy, fontsize, rl.WHITE)
+	// Camera AzEl
+	posy = fontsize * 4
+	azel_str := strings.builder_make()
+	strings.write_string(&azel_str, "[Range, Az, El]: [")
+	strings.write_float(
+		&azel_str,
+		f64(math.to_degrees(azel.x)),
+		fmt = 'f',
+		prec = 2,
+		bit_size = 64,
+	)
+	strings.write_string(&azel_str, ", ")
+	strings.write_float(
+		&azel_str,
+		f64(math.to_degrees(azel.y)),
+		fmt = 'f',
+		prec = 0,
+		bit_size = 64,
+	)
+	strings.write_string(&azel_str, ", ")
+	strings.write_float(
+		&azel_str,
+		f64(math.to_degrees(azel.z)),
+		fmt = 'f',
+		prec = 0,
+		bit_size = 64,
+	)
+	strings.write_string(&azel_str, "]")
+	rl.DrawText(strings.to_cstring(&azel_str), 10, posy, fontsize, rl.WHITE)
 
 	// controls
 	posy = fontsize * 5
