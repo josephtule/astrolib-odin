@@ -18,8 +18,8 @@ import ma "astromath"
 import integrate "integrator"
 import "ode"
 
-rl_to_u: f32 : 100
-u_to_rl: f32 : 1 / rl_to_u
+rl_to_u :: 100.
+u_to_rl :: 1. / rl_to_u
 
 main :: proc() {
 	// Raylib window
@@ -27,7 +27,9 @@ main :: proc() {
 	window_height: i32 = 1024
 	rl.InitWindow(window_width, window_height, "Test")
 	rl.SetWindowState({.VSYNC_HINT, .WINDOW_RESIZABLE, .MSAA_4X_HINT})
-	rl.SetTargetFPS(60)
+	// rl.SetTargetFPS(60)
+	rl.SetTargetFPS(rl.GetMonitorRefreshRate(0)) // Dynamically align with the display
+
 	defer rl.CloseWindow()
 
 
@@ -53,7 +55,7 @@ main :: proc() {
 	earth: ast.CelestialBody = ast.wgs84()
 	// Earth Mesh
 	model_earth := rl.LoadModelFromMesh(
-		rl.GenMeshSphere(f32(earth.semimajor_axis), 120, 120),
+		rl.GenMeshSphere(f32(earth.semimajor_axis) * u_to_rl, 120, 120),
 	)
 	model_earth.materials[0].maps[rl.MaterialMapIndex.ALBEDO].texture =
 		texture_earth
@@ -76,11 +78,14 @@ main :: proc() {
 		omega = omega0,
 	}
 	// Satellite Mesh
-	cube_size: f32 = 10 / 1000. 
+	cube_size: f32 = 50/ 1000. * u_to_rl
 	model_satellite := rl.LoadModelFromMesh(
 		rl.GenMeshCube(cube_size, cube_size, cube_size),
 	)
-	SetTranslation(&model_satellite.transform, la.array_cast(satellite.pos, f32))
+	SetTranslation(
+		&model_satellite.transform,
+		la.array_cast(satellite.pos * u_to_rl, f32),
+	)
 	model_satellite.materials[0].maps[rl.MaterialMapIndex.ALBEDO].texture =
 		texture_satellite
 
@@ -126,13 +131,13 @@ main :: proc() {
 	// 3D camera
 	camera: rl.Camera3D
 	// camera.position = 1.001 * la.array_cast(satellite.pos, f32) + {15, 15, 0}
-	camera_azel := [3]f32 {
-		cube_size * 25,
-		math.to_radians(f32(45.)),
-		math.to_radians(f32(45.)),
+	camera_azel := [3]f64 {
+		f64(cube_size) * 25,
+		math.to_radians(f64(45.)),
+		math.to_radians(f64(45.)),
 	}
-	camera.target = la.array_cast(satellite.pos, f32)
-	camera.position = azel_to_cart(camera_azel) + camera.target
+	camera.target = la.array_cast(satellite.pos, f32) * u_to_rl
+	camera.position = azel_to_cart(la.array_cast(camera_azel,f32)) + camera.target
 	camera.up = {0., 0., 1.}
 	camera.fovy = 90
 	camera.projection = .PERSPECTIVE
@@ -148,19 +153,14 @@ main :: proc() {
 
 
 	for !rl.WindowShouldClose() {
-
-
 		dt = rl.GetFrameTime()
 
+		// update satellite
 		input_integrator(&paused, &substeps, &time_scale)
-
-
 		if rl.IsKeyPressed(.R) {
 			reset_state(&satellite, pos0, vel0, omega0, ep0, trails_flag, &trail_pos)
 		}
-
 		update_satellite(&satellite, &model_satellite)
-		// update satellite
 		if dt != 0. && !paused {
 			cum_time += dt * f32(time_scale)
 			fps = 1 / f64(dt)
@@ -194,14 +194,12 @@ main :: proc() {
 				q := ode.euler_param_to_quaternion(la.array_cast(satellite.ep, f32))
 				N_R_B := rl.QuaternionToMatrix(q)
 				model_satellite.transform = N_R_B
-				// SetRotation(&model_satellite.transform, N_R_B)
-
 				// set translation
 				ma.set_vector_slice_1(&satellite.pos, xlk, l1 = 3, s1 = 0)
 				ma.set_vector_slice_1(&satellite.vel, xlk, l1 = 3, s1 = 3)
 				SetTranslation(
 					&model_satellite.transform,
-					la.array_cast(satellite.pos, f32),
+					la.array_cast(satellite.pos * u_to_rl, f32) ,
 				)
 			}
 		}
@@ -214,10 +212,10 @@ main :: proc() {
 		if rl.IsKeyPressed(rl.KeyboardKey.C) {
 			if cam_frame == .origin {
 				// switch to satellite
-				camera_azel = cart_to_azel([3]f32{1, 1, 1})
+				camera_azel = cart_to_azel([3]f64{1, 1, 1})
 				cam_frame = .satellite
 			} else if cam_frame == .satellite {
-				camera_azel = cart_to_azel([3]f32{7500., 7500., 7500.})
+				camera_azel = cart_to_azel([3]f64{7500., 7500., 7500.} * u_to_rl)
 				cam_frame = .origin
 			}
 		}
@@ -227,28 +225,33 @@ main :: proc() {
 			camera_azel.x /= 1.1
 		}
 		if rl.IsKeyDown(.A) {
-			camera_azel.y -= math.to_radians(f32(1))
+			camera_azel.y -= math.to_radians(f64(1.))
 		} else if rl.IsKeyDown(.D) {
-			camera_azel.y += math.to_radians(f32(1))
+			camera_azel.y += math.to_radians(f64(1.))
 		} else if rl.IsKeyDown(.S) {
-			camera_azel.z -= math.to_radians(f32(1))
+			camera_azel.z -= math.to_radians(f64(1.))
 		} else if rl.IsKeyDown(.W) {
-			camera_azel.z += math.to_radians(f32(1))
+			camera_azel.z += math.to_radians(f64(1.))
 		}
 
 		switch cam_frame {
 		case .origin:
-			rlgl.SetClipPlanes(1.0e1, 1000000.)
-			camera.position = azel_to_cart(camera_azel)
+			rlgl.SetClipPlanes(1.0e-3, 1.0e3)
+			camera.position = la.array_cast(
+				azel_to_cart(la.array_cast(camera_azel, f64)),
+				f32,
+			)
 			camera.target = origin
 		case .satellite:
-			camera.position = azel_to_cart(camera_azel) + sat_pos_f32
-			camera.target = sat_pos_f32
-			rlgl.SetClipPlanes(1.0e-2, 5.0e4)
+			camera.position =
+				la.array_cast(azel_to_cart(la.array_cast(camera_azel, f64)), f32) +
+				sat_pos_f32 * u_to_rl
+			camera.target = sat_pos_f32 * u_to_rl
+			rlgl.SetClipPlanes(1.0e-5, 1e3)
 		}
 
 		// update trail buffer
-		trail_pos[trail_ind] = la.array_cast(satellite.pos, f32)
+		trail_pos[trail_ind] = la.array_cast(satellite.pos, f32) * u_to_rl
 		trail_ind = (trail_ind + 1) % N_trail
 
 		rl.BeginDrawing()
@@ -256,15 +259,15 @@ main :: proc() {
 		rl.ClearBackground(rl.GetColor(0x181818FF))
 
 		// draw inertial axes
-		rl.DrawLine3D(origin, x_axis * 10000, rl.RED)
-		rl.DrawLine3D(origin, y_axis * 10000, rl.GREEN)
-		rl.DrawLine3D(origin, z_axis * 10000, rl.DARKBLUE)
+		rl.DrawLine3D(origin, x_axis * 100, rl.RED)
+		rl.DrawLine3D(origin, y_axis * 100, rl.GREEN)
+		rl.DrawLine3D(origin, z_axis * 100, rl.DARKBLUE)
 
 		// draw line from center of earth to satellite
-		rl.DrawLine3D(origin, sat_pos_f32, rl.GOLD)
+		rl.DrawLine3D(origin, sat_pos_f32 * u_to_rl, rl.GOLD)
 
 
-		update_trails(&trails_flag, &trail_ind, &trail_pos, sat_pos_f32)
+		update_trails(&trails_flag, &trail_ind, &trail_pos, sat_pos_f32 * u_to_rl)
 		draw_trail(&trails_flag, &trail_pos, trail_ind)
 
 		if rl.IsKeyPressed(.Q) {
@@ -284,18 +287,18 @@ main :: proc() {
 
 		// draw satellite axes
 		rl.DrawLine3D(
-			sat_pos_f32,
-			sat_pos_f32 + N_R_B_3x3 * (x_axis * cube_size * 10),
+			sat_pos_f32 * u_to_rl,
+			sat_pos_f32 * u_to_rl + N_R_B_3x3 * (x_axis * cube_size * 10),
 			rl.MAGENTA,
 		)
 		rl.DrawLine3D(
-			sat_pos_f32,
-			sat_pos_f32 + N_R_B_3x3 * (y_axis * cube_size * 10),
+			sat_pos_f32 * u_to_rl,
+			sat_pos_f32 * u_to_rl + N_R_B_3x3 * (y_axis * cube_size * 10),
 			rl.YELLOW,
 		)
 		rl.DrawLine3D(
-			sat_pos_f32,
-			sat_pos_f32 + N_R_B_3x3 * (z_axis * cube_size * 10),
+			sat_pos_f32 * u_to_rl,
+			sat_pos_f32 * u_to_rl + N_R_B_3x3 * (z_axis * cube_size * 10),
 			rl.Color({0, 255, 255, 255}),
 		)
 
@@ -408,7 +411,7 @@ RenderSimulationInfo :: proc(
 	fps: f64,
 	substeps: int,
 	time_scale: f64,
-	azel: [3]f32,
+	azel: [3]f64,
 ) {
 	fontsize: i32 = 10
 	// fps
