@@ -1,5 +1,6 @@
 package ode
 
+import "core:fmt"
 import "core:math"
 import la "core:math/linalg"
 
@@ -49,15 +50,23 @@ angular_velocty_dynamics :: proc(
 ) -> (
 	dwdt: [3]f64,
 ) {
-	I: [3]f64 = {I[0, 0], I[1, 1], I[2, 2]}
-	dwdt = {
-		-(I.z - I.y) / I.x * omega.y * omega.z,
-		-(I.x - I.z) / I.y * omega.x * omega.z,
-		-(I.y - I.x) / I.z * omega.x * omega.y,
+	if am.is_diagonal(I) {
+		I: [3]f64 = {I[0, 0], I[1, 1], I[2, 2]}
+		dwdt = {
+			(I.y - I.z) / I.x * omega.y * omega.z,
+			(I.z - I.x) / I.y * omega.x * omega.z,
+			(I.x - I.y) / I.z * omega.x * omega.y,
+		}
+		dwdt += torque / I
+		return dwdt
+	} else {
+		angular_momentum := I * omega
+		coriolis_term := la.cross(omega, angular_momentum)
+		dwdt = la.inverse(I) * (torque - coriolis_term)
+		return dwdt
 	}
-	dwdt += torque / I
-	return dwdt
 }
+
 
 euler_param_to_quaternion :: proc {
 	euler_param_to_quaternion128,

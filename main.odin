@@ -68,7 +68,7 @@ main :: proc() {
 	angle0: f64 = la.to_radians(25.)
 	vel0: [3]f64 = v_mag0 * [3]f64{0., math.cos(angle0), math.sin(angle0)}
 	ep0: [4]f64 = {0, 0, 0, 1}
-	omega0: [3]f64 = {.05, .05, .1}
+	omega0: [3]f64 = {0.01, 5, 0.01}
 
 	// Physical Parameters
 	satellite := ast.Satellite {
@@ -78,7 +78,7 @@ main :: proc() {
 		omega = omega0,
 	}
 	// Satellite Mesh
-	cube_size: f32 = 50/ 1000. * u_to_rl
+	cube_size: f32 = 50 / 1000. * u_to_rl
 	model_satellite := rl.LoadModelFromMesh(
 		rl.GenMeshCube(cube_size, cube_size, cube_size),
 	)
@@ -103,7 +103,11 @@ main :: proc() {
 		mu = earth.mu,
 	}
 	attitude_params := ode.Params_EulerParam {
-		inertia = la.MATRIX3F64_IDENTITY,
+		inertia = matrix[3, 3]f64{
+			100, 0, 0, 
+			0, 200, 0, 
+			0, 0, 300, 
+		},
 		torque  = {0, 0, 0},
 	}
 	zonal_params := ode.Params_Gravity_Zonal {
@@ -137,7 +141,8 @@ main :: proc() {
 		math.to_radians(f64(45.)),
 	}
 	camera.target = la.array_cast(satellite.pos, f32) * u_to_rl
-	camera.position = azel_to_cart(la.array_cast(camera_azel,f32)) + camera.target
+	camera.position =
+		azel_to_cart(la.array_cast(camera_azel, f32)) + camera.target
 	camera.up = {0., 0., 1.}
 	camera.fovy = 90
 	camera.projection = .PERSPECTIVE
@@ -190,6 +195,7 @@ main :: proc() {
 				)
 				// set rotation
 				ma.set_vector_slice_1(&satellite.ep, xrk, s1 = 0, l1 = 4)
+				ma.set_vector_slice_1(&satellite.omega, xrk, s1 = 4, l1 = 3)
 				satellite.ep = la.vector_normalize0(satellite.ep)
 				q := ode.euler_param_to_quaternion(la.array_cast(satellite.ep, f32))
 				N_R_B := rl.QuaternionToMatrix(q)
@@ -199,7 +205,7 @@ main :: proc() {
 				ma.set_vector_slice_1(&satellite.vel, xlk, l1 = 3, s1 = 3)
 				SetTranslation(
 					&model_satellite.transform,
-					la.array_cast(satellite.pos * u_to_rl, f32) ,
+					la.array_cast(satellite.pos * u_to_rl, f32),
 				)
 			}
 		}
@@ -212,7 +218,7 @@ main :: proc() {
 		if rl.IsKeyPressed(rl.KeyboardKey.C) {
 			if cam_frame == .origin {
 				// switch to satellite
-				camera_azel = cart_to_azel([3]f64{1, 1, 1})
+				camera_azel = cart_to_azel([3]f64{1, 1, 1} * u_to_rl)
 				cam_frame = .satellite
 			} else if cam_frame == .satellite {
 				camera_azel = cart_to_azel([3]f64{7500., 7500., 7500.} * u_to_rl)
