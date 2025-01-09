@@ -17,6 +17,8 @@ CelestialBody :: struct {
 	surface_area:       f64,
 	volume:             f64,
 	pos, vel:           [3]f64,
+	max_degree:         int,
+	max_order:          int,
 	J:                  [7]f64,
 	C:                  ^[dynamic]f64,
 	S:                  ^[dynamic]f64,
@@ -24,7 +26,7 @@ CelestialBody :: struct {
 }
 
 CelestialBodyModel :: struct {
-	model : rl.Model,
+	model:      rl.Model,
 	radius:     f32,
 	local_axes: [3][3]f32,
 	draw_axes:  bool,

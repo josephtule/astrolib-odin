@@ -26,6 +26,11 @@ SatelliteModel :: struct {
 	// TODO: add trails
 }
 
+update_satellite :: proc(sat: ^Satellite, params: rawptr, dt: f64) {
+
+
+}
+
 gen_satellite_and_mesh :: proc(
 	pos, vel: [3]f64,
 	ep: [4]f64,

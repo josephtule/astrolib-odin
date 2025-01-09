@@ -62,4 +62,3 @@ rk4_step :: proc(
 	t_new := t + dt
 	return t_new, x_new
 }
-

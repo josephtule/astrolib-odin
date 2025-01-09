@@ -5,22 +5,11 @@ import la "core:math/linalg"
 
 import am "../astromath"
 
-Params_MSD :: struct {
-	m, c, k: f64,
+GravityModel :: enum {
+	pointmass,
+	zonal,
+	spherical_harmonic,
 }
-mass_spring_damper :: proc(t: f64, x: [2]f64, params: rawptr) -> [2]f64 {
-	params := cast(^Params_MSD)(params)
-	A := matrix[2, 2]f64{
-		0., 1., 
-		-params.k / params.m, -params.c / params.m, 
-	}
-	B := [2]f64{0., 1. / 2.5}
-	F := proc(t: f64) -> f64 {return 5.0 * math.sin(2 * t)}
-	dxdt := A * x + B * F(t)
-
-	return dxdt
-}
-
 
 Params_Gravity_Pointmass :: struct {
 	mu: f64,
@@ -150,4 +139,22 @@ accel_zonal :: #force_inline proc(
 	}
 
 	return a
+}
+
+
+//
+Params_MSD :: struct {
+	m, c, k: f64,
+}
+mass_spring_damper :: proc(t: f64, x: [2]f64, params: rawptr) -> [2]f64 {
+	params := cast(^Params_MSD)(params)
+	A := matrix[2, 2]f64{
+		0., 1., 
+		-params.k / params.m, -params.c / params.m, 
+	}
+	B := [2]f64{0., 1. / 2.5}
+	F := proc(t: f64) -> f64 {return 5.0 * math.sin(2 * t)}
+	dxdt := A * x + B * F(t)
+
+	return dxdt
 }

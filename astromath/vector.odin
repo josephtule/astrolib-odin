@@ -2,6 +2,26 @@ package astromath
 
 import "core:math"
 
+posvel_to_state :: proc(pos, vel: [3]$T) -> (state: [6]T) {
+	set_vector_slice(&state, pos, vel)
+	return state
+}
+state_to_posvel :: proc(state: [6]$T) -> (pos, vel: [3]T) {
+	set_vector_slice_1(&pos, state, l1 = 3, s1 = 0)
+	set_vector_slice_1(&vel, state, l1 = 3, s1 = 3)
+	return pos, vel
+}
+
+epomega_to_state :: proc(ep: [4]$T, omega: [3]T) -> (state: [7]T) {
+	set_vector_slice(&state, ep, omega)
+	return state
+}
+state_to_epomega :: proc(state: [7]$T) -> (ep: [4]T, omega: [3]T) {
+	set_vector_slice_1(&ep, state, s1 = 0, l1 = 4)
+	set_vector_slice_1(&omega, state, s1 = 4, l1 = 3)
+	return ep, omega
+}
+
 is_diagonal :: proc(mat: matrix[$N, N]$T, tol := 1.0e-6) -> bool {
     for i := 0; i < N; i += 1 {
         for j := 0; j < N; j += 1 {
