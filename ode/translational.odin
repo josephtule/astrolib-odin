@@ -6,9 +6,9 @@ import la "core:math/linalg"
 import am "../astromath"
 
 GravityModel :: enum {
-	pointmass,
-	zonal,
-	spherical_harmonic,
+	pointmass = 0,
+	zonal = 1,
+	spherical_harmonic = 2,
 }
 
 Params_Gravity_Pointmass :: struct {

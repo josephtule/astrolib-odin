@@ -46,7 +46,15 @@ update_system :: proc(system: ^AstroSystem, dt, time: f64) {
 				rel_pos := body.pos - other.pos
 				state_current := am.posvel_to_state(rel_pos, [3]f64{0., 0., 0.})
 
-				switch body_gravmodel[i] {
+				lowest_model: ode.GravityModel
+				if body_gravmodel[i] > body_gravmodel[j] {
+					lowest_model = body_gravmodel[j]
+				} else {
+					lowest_model = body_gravmodel[i]
+				}
+
+
+				switch lowest_model {
 				case .pointmass:
 					// update params
 					body_params := cast(^ode.Params_Gravity_Pointmass)body_odeparams[i]
@@ -86,6 +94,7 @@ update_system :: proc(system: ^AstroSystem, dt, time: f64) {
 
 	for i := 0; i < N_bodies; i += 1 {
 		// assign new states after computing
+		bodies[i].pos, bodies[i].vel = am.state_to_posvel(state_new[i])
 	}
 
 
