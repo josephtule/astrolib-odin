@@ -68,29 +68,4 @@ angular_velocty_dynamics :: proc(
 }
 
 
-euler_param_to_quaternion :: proc {
-	euler_param_to_quaternion128,
-	euler_param_to_quaternion256,
-}
-euler_param_to_quaternion256 :: proc(ep: [4]f64) -> (q: quaternion256) {
-	q.x = ep.x
-	q.y = ep.y
-	q.z = ep.z
-	q.w = ep.w
-	return q
-}
-euler_param_to_quaternion128 :: proc(ep: [4]f32) -> (q: quaternion128) {
-	q.x = ep.x
-	q.y = ep.y
-	q.z = ep.z
-	q.w = ep.w
-	return q
-}
 
-quaternion_to_euler_param :: proc(q: quaternion256) -> (ep: [4]f64) {
-	ep.x = q.x
-	ep.y = q.y
-	ep.z = q.z
-	ep.w = q.w
-	return ep
-}

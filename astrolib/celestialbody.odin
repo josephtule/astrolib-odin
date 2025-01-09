@@ -1,5 +1,8 @@
 package astrolib
 
+import "core:math"
+import la "core:math/linalg"
+import rl "vendor:raylib"
 
 CelestialBody :: struct {
 	mu:                 f64,
@@ -15,12 +18,39 @@ CelestialBody :: struct {
 	volume:             f64,
 	pos, vel:           [3]f64,
 	J:                  [7]f64,
-	// orientation:        quaternion,
+	C:                  ^[dynamic]f64,
+	S:                  ^[dynamic]f64,
 	base_unit:          UnitsLinear,
 }
 
+CelestialBodyModel :: struct {
+	model : rl.Model,
+	radius:     f32,
+	local_axes: [3][3]f32,
+	draw_axes:  bool,
+}
 
-wgs84 :: proc(units: UnitsLinear = .KILOMETER) -> CelestialBody {
+add_celestialbody :: proc(
+	bodies: ^[dynamic]CelestialBody,
+	body: ^CelestialBody,
+) {
+	append_elem(bodies, body^)
+	free(body)
+}
+
+add_celestialbody_model :: proc(
+	bodies: ^[dynamic]CelestialBodyModel,
+	body: ^CelestialBodyModel,
+) {
+	append_elem(bodies, body^)
+	free(body)
+}
+
+wgs84 :: proc(
+	units: UnitsLinear = .KILOMETER,
+	max_degree: int = 0,
+	max_order: int = 0,
+) -> CelestialBody {
 	earth: CelestialBody
 	#partial switch units {
 	case .METER: earth = CelestialBody {

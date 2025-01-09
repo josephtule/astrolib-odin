@@ -13,3 +13,5 @@
   - Adding new body should pause simulation
   - add support for rotating frames
 - Add different controllers
+- Implement/fix locked camera view
+  - currently only locks, cannot pan
