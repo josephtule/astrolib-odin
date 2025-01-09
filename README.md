@@ -5,19 +5,19 @@
 ## TODO
 
 - [x] Implement adding multiple satellites
-- [] Implement adding multiple celestial bodies
-- [] Need to figure out how to do floating origin for rendering (and simulations)
+- [ ] Implement adding multiple celestial bodies
+- [ ] Need to figure out how to do floating origin for rendering (and simulations)
   (move origin point to currently viewed object (ie. earth or the any satellite)) to reduce jittering in motion
-- [] Add n-body dynamics
-  - [] n-body for satellites
+- [ ] Add n-body dynamics
+  - [ ] n-body for satellites
   - [x] n-body for celestial bodies
   - [x] add switch to control which model to use (lowest precision between two bodies, certain bodies may not have zonal spherical harmonic parameters)
-- [] Add spherical harmonics
-- [] Add UI to be able to spawn new bodies (both celestial and satellite)
-  - [] Adding new body should pause simulation
-  - [] add support for rotating frames
-- [] Add different controllers
-- [] Implement/fix locked camera view
+- [ ] Add spherical harmonics
+- [ ] Add UI to be able to spawn new bodies (both celestial and satellite)
+  - [ ] Adding new body should pause simulation
+  - [ ] add support for rotating frames
+- [ ] Add different controllers
+- [ ] Implement/fix locked camera view
   - NOTE: currently only locks, cannot pan
 
 ## How to Build
