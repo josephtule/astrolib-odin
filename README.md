@@ -17,9 +17,11 @@
 - [ ] Add UI to be able to spawn new bodies (both celestial and satellite)
   - [ ] Adding new body should pause simulation
   - [ ] add support for rotating frames
+  - [ ] add picker for example configurations 
 - [ ] Add different controllers
 - [ ] Implement/fix locked camera view
   - NOTE: currently only locks, cannot pan
+- [ ] Implement multiple hold for camera movement
 
 ## How to Build
 

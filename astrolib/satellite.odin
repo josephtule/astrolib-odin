@@ -4,6 +4,7 @@ import am "../astromath"
 import "core:math"
 import la "core:math/linalg"
 import rl "vendor:raylib"
+import ode "../ode"
 
 Satellite :: struct {
 	pos, vel:      [3]f64,
@@ -14,6 +15,7 @@ Satellite :: struct {
 	radius:        f64,
 	linear_units:  UnitsLinear,
 	angular_units: UnitsAngle,
+	gravity_model : ode.GravityModel,
 }
 
 SatelliteModel :: struct {

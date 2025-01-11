@@ -23,36 +23,73 @@ AstroSystem :: struct {
 
 update_system :: proc(system: ^AstroSystem, dt, time: f64) {
 	using system
-	// TODO: finish this
 	N_sats := len(satellites)
 	N_bodies := len(bodies)
 
 	// update satellites first
-	for i := 0; i < N_sats; i += 1 {
+	state_new_sat: [dynamic][6]f64
+	for sat, i in satellites {
+		for body, j in bodies {
+			rel_pos := sat.pos - body.pos
+			rel_vel := sat.vel - body.vel
+			state_current := am.posvel_to_state(rel_pos, rel_vel)
 
+			// determine which gravity model to use
+			lowest_model: ode.GravityModel = max(sat.gravity_model, body.gravity_model)
+
+			switch lowest_model {
+			case .pointmass:
+				// update params
+				sat_params := cast(^ode.Params_Gravity_Pointmass)satellite_odeparams[i]
+				sat_params.mu = body.mu
+
+				_, state_new := am.rk4_step(
+					ode.gravity_pointmass,
+					time,
+					state_current,
+					dt * time_scale,
+					sat_params,
+				)
+			case .zonal:
+				// update params
+				sat_params := cast(^ode.Params_Gravity_Zonal)satellite_odeparams[i]
+				sat_params.mu = body.mu
+				sat_params.J = body.J
+				sat_params.max_degree = body.max_degree
+				sat_params.R_cb = body.semimajor_axis
+
+				_, state_new := am.rk4_step(
+					ode.gravity_zonal,
+					time,
+					state_current,
+					dt * time_scale,
+					sat_params,
+				)
+			case .spherical_harmonic:
+				panic("ERROR: Spherical harmonics gravity has not been implemented yet")
+			case:
+				panic("ERROR: invalid gravity model for celestial body")
+			}
+		}
 	}
 
 	// update celestial bodies
 	// store celestial body current positions
 	// rk4 based on old positions
-	state_new: [dynamic][6]f64
-	for i := 0; i < N_bodies; i += 1 {
+	state_new_body: [dynamic][6]f64
+	for body, i in bodies {
 		// update body i
-		body := bodies[i]
-		for j := 0; j < N_bodies; j += 1 {
+		for other, j in bodies {
 			if i != j {
 				// get relative position
-				other := bodies[j]
 				rel_pos := body.pos - other.pos
-				state_current := am.posvel_to_state(rel_pos, [3]f64{0., 0., 0.})
+				rel_vel := body.vel - other.vel
+				state_current := am.posvel_to_state(rel_pos, rel_vel)
 
-				lowest_model: ode.GravityModel
-				if body_gravmodel[i] > body_gravmodel[j] {
-					lowest_model = body_gravmodel[j]
-				} else {
-					lowest_model = body_gravmodel[i]
-				}
-
+				lowest_model: ode.GravityModel = max(
+					body.gravity_model,
+					other.gravity_model,
+				)
 
 				switch lowest_model {
 				case .pointmass:
@@ -60,7 +97,7 @@ update_system :: proc(system: ^AstroSystem, dt, time: f64) {
 					body_params := cast(^ode.Params_Gravity_Pointmass)body_odeparams[i]
 					body_params.mu = other.mu
 
-					_, state_new[i] = am.rk4_step(
+					_, state_new_body[i] = am.rk4_step(
 						ode.gravity_pointmass,
 						time,
 						state_current,
@@ -75,14 +112,15 @@ update_system :: proc(system: ^AstroSystem, dt, time: f64) {
 					body_params.max_degree = other.max_degree
 					body_params.R_cb = other.semimajor_axis
 
-					_, state_new[i] = am.rk4_step(
+					_, state_new_body[i] = am.rk4_step(
 						ode.gravity_zonal,
 						time,
 						state_current,
 						dt * time_scale,
-						&body_odeparams[i],
+						body_params,
 					)
 				case .spherical_harmonic:
+					panic("ERROR: Spherical harmonics gravity has not been implemented yet")
 				case:
 					panic("ERROR: invalid gravity model for celestial body")
 				}
@@ -94,7 +132,7 @@ update_system :: proc(system: ^AstroSystem, dt, time: f64) {
 
 	for i := 0; i < N_bodies; i += 1 {
 		// assign new states after computing
-		bodies[i].pos, bodies[i].vel = am.state_to_posvel(state_new[i])
+		bodies[i].pos, bodies[i].vel = am.state_to_posvel(state_new_body[i])
 	}
 
 

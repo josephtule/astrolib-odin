@@ -1,9 +1,9 @@
 package astrolib
 
+import ode "../ode"
 import "core:math"
 import la "core:math/linalg"
 import rl "vendor:raylib"
-
 CelestialBody :: struct {
 	mu:                 f64,
 	omega:              f64,
@@ -17,6 +17,7 @@ CelestialBody :: struct {
 	surface_area:       f64,
 	volume:             f64,
 	pos, vel:           [3]f64,
+	gravity_model:      ode.GravityModel,
 	max_degree:         int,
 	max_order:          int,
 	J:                  [7]f64,
