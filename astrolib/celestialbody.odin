@@ -1,9 +1,12 @@
 package astrolib
 
-import ode "../ode"
 import "core:math"
 import la "core:math/linalg"
 import rl "vendor:raylib"
+
+import am "../astromath"
+import ode "../ode"
+
 CelestialBody :: struct {
 	mu:                 f64,
 	omega:              f64,
@@ -23,7 +26,8 @@ CelestialBody :: struct {
 	J:                  [7]f64,
 	C:                  ^[dynamic]f64,
 	S:                  ^[dynamic]f64,
-	base_unit:          UnitsLinear,
+	base_unit:          am.UnitsLinear,
+	name:               string,
 }
 
 CelestialBodyModel :: struct {
@@ -31,26 +35,47 @@ CelestialBodyModel :: struct {
 	radius:     f32,
 	local_axes: [3][3]f32,
 	draw_axes:  bool,
+	draw_model: bool,
+	draw_trail: bool,
 }
-
-add_celestialbody :: proc(
+add_celestialbody :: proc {
+	add_celestialbody_ptr,
+	add_celestialbody_copy,
+}
+add_celestialbody_ptr :: proc(
 	bodies: ^[dynamic]CelestialBody,
 	body: ^CelestialBody,
 ) {
 	append_elem(bodies, body^)
 	free(body)
 }
+add_celestialbody_copy :: proc(
+	bodies: ^[dynamic]CelestialBody,
+	body: CelestialBody,
+) {
+	append_elem(bodies, body)
+}
 
-add_celestialbody_model :: proc(
+add_celestialbody_model :: proc {
+	add_celestialbody_model_ptr,
+	add_celestialbody_model_copy
+}
+add_celestialbody_model_ptr :: proc(
 	bodies: ^[dynamic]CelestialBodyModel,
 	body: ^CelestialBodyModel,
 ) {
 	append_elem(bodies, body^)
 	free(body)
 }
+add_celestialbody_model_copy :: proc(
+	bodies: ^[dynamic]CelestialBodyModel,
+	body: CelestialBodyModel,
+) {
+	append_elem(bodies, body)
+}
 
 wgs84 :: proc(
-	units: UnitsLinear = .KILOMETER,
+	units: am.UnitsLinear = .KILOMETER,
 	max_degree: int = 0,
 	max_order: int = 0,
 ) -> CelestialBody {
@@ -105,5 +130,6 @@ wgs84 :: proc(
 	case:
 		panic("ERROR: units for wgs84 are incorrect")
 	}
+	earth.name = "Earth"
 	return earth
 }

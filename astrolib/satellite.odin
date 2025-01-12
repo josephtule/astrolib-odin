@@ -1,10 +1,10 @@
 package astrolib
 
 import am "../astromath"
+import ode "../ode"
 import "core:math"
 import la "core:math/linalg"
 import rl "vendor:raylib"
-import ode "../ode"
 
 Satellite :: struct {
 	pos, vel:      [3]f64,
@@ -12,16 +12,18 @@ Satellite :: struct {
 	omega:         [3]f64,
 	mass:          f64,
 	inertia:       matrix[3, 3]f64,
-	radius:        f64,
-	linear_units:  UnitsLinear,
-	angular_units: UnitsAngle,
-	gravity_model : ode.GravityModel,
+	radius:        f64, // hardbody radius
+	name:          string,
+	linear_units:  am.UnitsLinear,
+	angular_units: am.UnitsAngle,
+	gravity_model: ode.GravityModel,
 }
 
 SatelliteModel :: struct {
 	model:      rl.Model,
 	model_size: [3]f32,
 	local_axes: [3][3]f32,
+	trail:      [dynamic][3]f32,
 	draw_model: bool,
 	draw_axes:  bool,
 	draw_trail: bool,
@@ -70,17 +72,34 @@ gen_satellite_and_mesh :: proc(
 	return s, m
 }
 
-add_satellite :: proc(sats: ^[dynamic]Satellite, sat: ^Satellite) {
+add_satellite :: proc {
+	add_satellite_ptr,
+	add_satellite_copy,
+}
+add_satellite_ptr :: proc(sats: ^[dynamic]Satellite, sat: ^Satellite) {
 	append_elem(sats, sat^)
 	free(sat)
 }
+add_satellite_copy :: proc(sats: ^[dynamic]Satellite, sat: Satellite) {
+	append_elem(sats, sat)
+}
 
-add_satellite_model :: proc(
+add_satellite_model :: proc {
+	add_satellite_model_ptr,
+	add_satellite_model_copy
+}
+add_satellite_model_ptr :: proc(
 	sat_models: ^[dynamic]SatelliteModel,
 	model: ^SatelliteModel,
 ) {
 	append_elem(sat_models, model^)
 	free(model)
+}
+add_satellite_model_copy :: proc(
+	sat_models: ^[dynamic]SatelliteModel,
+	model: SatelliteModel,
+) {
+	append_elem(sat_models, model)
 }
 
 update_satellite_model :: proc(sat_model: ^SatelliteModel, sat: Satellite) {

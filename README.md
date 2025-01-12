@@ -22,6 +22,8 @@
 - [ ] Implement/fix locked camera view
   - NOTE: currently only locks, cannot pan
 - [ ] Implement multiple hold for camera movement
+- Add orbit generating functions 
+
 
 ## How to Build
 

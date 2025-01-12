@@ -1,4 +1,4 @@
-package astrolib
+package astromath
 
 
 UnitsAngle :: enum {

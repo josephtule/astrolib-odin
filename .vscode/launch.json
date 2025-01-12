@@ -1,6 +1,8 @@
 {
   "version": "0.2.0",
   "configurations": [
+    // mac/linux ---------------------------------------------------------------
+    // main
     {
       "type": "lldb",
       "request": "launch",
@@ -11,12 +13,34 @@
       "cwd": "${workspaceFolder}",
       "initCommands": ["command script import lldb.py"]
     },
-
+    // sandbox
+    {
+      "type": "lldb",
+      "request": "launch",
+      "preLaunchTask": "Build_sandbox",
+      "name": "Debug Sandbox (Mac)",
+      "program": "${workspaceFolder}/build/debug",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "initCommands": ["command script import lldb.py"]
+    },
+    // windows -----------------------------------------------------------------
+    // main
     {
       "type": "lldb",
       "request": "launch",
       "preLaunchTask": "Build_win",
       "name": "Debug (Windows)",
+      "program": "${workspaceFolder}/build/debug.exe",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "initCommands": ["command script import lldb.py"]
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "preLaunchTask": "Build_sandbox_win",
+      "name": "Debug Sandbox (Windows)",
       "program": "${workspaceFolder}/build/debug.exe",
       "args": [],
       "cwd": "${workspaceFolder}",
