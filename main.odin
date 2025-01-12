@@ -17,10 +17,10 @@ import ast "astrolib"
 import am "astromath"
 import "ode"
 
-u_to_rl :: am.u_to_rl
-rl_to_u :: am.rl_to_u
+// u_to_rl :: am.u_to_rl
+// rl_to_u :: am.rl_to_u
 
-main :: proc() {
+main2 :: proc() {
 	// Raylib window
 	window_width: i32 = 1024
 	window_height: i32 = 1024
@@ -125,7 +125,7 @@ main :: proc() {
 		},
 		torque  = {0, 0, 0},
 	}
-	zonal_params := ode.Params_Gravity_Zonal {
+	zonal_params := ode.Params_Gravity_SphHarmon {
 		J          = earth.J,
 		max_degree = 2,
 		mu         = earth.mu,

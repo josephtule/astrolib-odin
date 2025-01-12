@@ -6,8 +6,8 @@ import la "core:math/linalg"
 import am "../astromath"
 
 GravityModel :: enum {
-	pointmass = 0,
-	zonal = 1,
+	pointmass          = 0,
+	zonal              = 1,
 	spherical_harmonic = 2,
 }
 
@@ -36,17 +36,21 @@ accel_pointmass :: #force_inline proc(r: [3]f64, mu: f64) -> (a: [3]f64) {
 	return a
 }
 
-
-Params_Gravity_Zonal :: struct {
-	mu:         f64, // gravitional parameter
-	R_cb:       f64, // central body radius (SMA)
-	J:          [7]f64,
-	max_degree: int, // maxium zonal degree
+Params_Gravity_SphHarmon :: struct {
+	mu:          f64, // gravitional parameter
+	R_cb:        f64, // central body radius (SMA)
+	zonals_only: bool,
+	max_degree:  int,
+	max_order:   int,
+	J:           [7]f64,
+	C:           ^[dynamic]f64,
+	S:           ^[dynamic]f64,
 }
+
 gravity_zonal :: proc(t: f64, x: [6]f64, params: rawptr) -> [6]f64 {
 	dxdt: [6]f64
 
-	params := cast(^Params_Gravity_Zonal)(params)
+	params := cast(^Params_Gravity_SphHarmon)(params)
 	r: [3]f64
 	am.set_vector_slice_1(&r, x, l1 = 3)
 	v: [3]f64

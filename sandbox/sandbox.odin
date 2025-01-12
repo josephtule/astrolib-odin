@@ -2,6 +2,7 @@ package sandbox
 
 import ast "../astrolib"
 import am "../astromath"
+import ode "../ode"
 
 import "core:fmt"
 import "core:time"
@@ -31,7 +32,20 @@ main :: proc() {
 		92.335,
 		earth.mu,
 	)
-    fmt.println(r)
+	fmt.println(r)
+
+
+	p1 := ode.Params_Gravity_Pointmass {
+		mu = 1.4332,
+	}
+	p2 := ode.Params_Gravity_Zonal {
+		mu         = 3.4321432,
+		R_cb       = 201,
+		max_degree = 2,
+		J          = {0., 0., 0., 0., 0., 0., 0.},
+	}
+	fmt.println(p1)
+	fmt.println(cast(^ode.Params_Gravity_Pointmass)&p2)
 }
 
 get_delta_time :: proc(current: time.Tick, last: ^time.Tick) -> (dt: f64) {

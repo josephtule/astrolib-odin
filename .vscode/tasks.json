@@ -7,7 +7,7 @@
     {
       "label": "mkdir",
       "type": "shell",
-      "command": "mkdir -p build; rm ./build/debug.*"
+      "command": "mkdir -p build; rm -rf ./build/debug.*"
     },
     // main
     {

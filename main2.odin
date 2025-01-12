@@ -6,6 +6,7 @@ import "core:math"
 import la "core:math/linalg"
 import "core:strconv"
 import "core:strings"
+import "core:time"
 import "core:unicode/utf8"
 
 import ast "astrolib"
@@ -13,6 +14,7 @@ import am "astromath"
 import ode "ode"
 import rl "vendor:raylib"
 import "vendor:raylib/rlgl"
+
 
 u_to_rl :: am.u_to_rl
 rl_to_u :: am.rl_to_u
@@ -29,11 +31,18 @@ main :: proc() {
 	defer rl.CloseWindow()
 
 	// generate celestial bodies
-	earth := ast.wgs84()
 	celestialbodies: [dynamic]ast.CelestialBody
 	celestialbody_models: [dynamic]ast.CelestialBodyModel
 
+	earth := ast.wgs84()
+	earth_model := ast.gen_celestialbody_model(f32(earth.semimajor_axis))
 	ast.add_celestialbody(&celestialbodies, earth)
+	ast.add_celestialbody_model(&celestialbody_models, earth_model)
+
+	moon := ast.luna_params()
+	moon_model := ast.gen_celestialbody_model(f32(moon.semimajor_axis))
+	ast.add_celestialbody(&celestialbodies, moon)
+	ast.add_celestialbody_model(&celestialbody_models, moon_model)
 
 	// generate orbits/satellites
 	num_sats := 10
@@ -65,8 +74,79 @@ main :: proc() {
 
 		ast.add_satellite(&satellites, sat)
 		ast.add_satellite_model(&satellite_models, sat_model)
-
 	}
 
+	// misc --------------------------------------------------------------------
+	// Inertial Frame
+	origin: [3]f32 : {0, 0, 0}
+	x_axis: [3]f32 : {1, 0, 0}
+	y_axis: [3]f32 : {0, 1, 0}
+	z_axis: [3]f32 : {0, 0, 1}
 
+	// attitude dynamics params
+	attitude_params := ode.Params_EulerParam {
+		inertia = matrix[3, 3]f64{
+			100, 0, 0, 
+			0, 200, 0, 
+			0, 0, 300, 
+		},
+		torque  = {0, 0, 0},
+	}
+
+	// Time --------------------------------------------------------------------
+	dt: f64
+	cum_time: f64
+	real_time: f64
+	time_scale: f64 = 1
+	fps: f64
+	substeps: int = 1
+	last_time := time.tick_now()
+
+	// 3D camera
+	camera: rl.Camera3D
+	// camera.position = 1.001 * la.array_cast(satellite.pos, f32) + {15, 15, 0}
+	camera_azel := [3]f64 {
+		7500.,
+		math.to_radians(f64(45.)),
+		math.to_radians(f64(45.)),
+	}
+	camera.target = la.array_cast(origin, f32) * u_to_rl
+	camera.position =
+		am.azel_to_cart(la.array_cast(camera_azel, f32)) + camera.target
+	camera.up = {0., 0., 1.}
+	camera.fovy = 90
+	camera.projection = .PERSPECTIVE
+
+	asystem := ast.AstroSystem {
+		// satellites
+		satellites       = satellites,
+		satellite_models = satellite_models,
+		// satellite_odeparams: [dynamic]rawptr,
+		// bodies
+		bodies           = celestialbodies,
+		body_models      = celestialbody_models,
+		// body_odeparams:      [dynamic]rawptr,
+		// integrator
+		integrator       = .rk4,
+		time_scale       = time_scale,
+	}
+
+	for !rl.WindowShouldClose() {
+		dt = get_delta_time(time.tick_now(), &last_time)
+		fps = 1 / dt
+		cum_time += dt
+
+		for k := 0; k < substeps; k += 1 {
+			ast.update_system(&asystem, dt, cum_time)
+		}
+		// ast.draw_system(&asystem)
+
+	}
+}
+
+
+get_delta_time :: proc(current: time.Tick, last: ^time.Tick) -> (dt: f64) {
+	dt = f64(current._nsec - last._nsec) * 1.0e-9
+	last^ = current
+	return dt
 }

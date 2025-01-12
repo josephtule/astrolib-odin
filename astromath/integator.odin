@@ -11,6 +11,27 @@ IntegratorType :: enum {
 	// velocity_verlet, // TODO: add?
 }
 
+integrate :: proc(
+	f: proc(t: $T, x: [$N]T, params: rawptr) -> [N]T,
+	t: T,
+	x: [N]T,
+	dt: T,
+	params: rawptr,
+	integrator: IntegratorType = .rk4,
+) -> (
+	T,
+	[N]T,
+) {
+	time: T
+	state: [N]T
+	switch integrator {
+	case .rk1: time, state = rk1_step(f, t, x, dt, params)
+	case .rk2: time, state = rk2_step(f, t, x, dt, params)
+	case .rk4: time, state = rk4_step(f, t, x, dt, params)
+	}
+	return time, state
+}
+
 rk1_step :: proc(
 	f: proc(t: $T, x: [$N]T, params: rawptr) -> [N]T,
 	t: T,

@@ -40,7 +40,7 @@ gen_satellite_and_mesh :: proc(
 	ep: [4]f64,
 	omega: [3]f64,
 	cube_size: f32,
-	u_to_rl: f64 = 1. / 1000.,
+	u_to_rl: f64 = u_to_rl,
 ) -> (
 	s: Satellite,
 	m: SatelliteModel,
@@ -64,6 +64,8 @@ gen_satellite_and_mesh :: proc(
 	)
 	m.model_size = {cube_size, cube_size, cube_size}
 	am.SetTranslation(&m.model.transform, la.array_cast(s.pos * u_to_rl, f32))
+
+	// checker pattern
 	image_checker := rl.GenImageChecked(2, 2, 1, 1, rl.GOLD, rl.SKYBLUE)
 	texture := rl.LoadTextureFromImage(image_checker)
 	rl.UnloadImage(image_checker)
@@ -86,7 +88,7 @@ add_satellite_copy :: proc(sats: ^[dynamic]Satellite, sat: Satellite) {
 
 add_satellite_model :: proc {
 	add_satellite_model_ptr,
-	add_satellite_model_copy
+	add_satellite_model_copy,
 }
 add_satellite_model_ptr :: proc(
 	sat_models: ^[dynamic]SatelliteModel,
