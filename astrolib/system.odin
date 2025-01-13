@@ -28,7 +28,20 @@ update_system :: proc(system: ^AstroSystem, dt, time: f64) {
 	// update satellites first
 	for &sat, i in satellites {
 		// attitude dynamics
-
+		attitude_params := Params_EulerParam {
+			inertia = sat.inertia,
+			torque  = {0, 0, 0}, // NOTE: no control for now
+		}
+		attitude_current := am.epomega_to_state(sat.ep, sat.omega)
+		_, attitude_new := am.integrate(
+			euler_param_dyanmics,
+			time,
+			attitude_current,
+			dt,
+			&attitude_params,
+			integrator,
+		)
+		sat.ep, sat.omega = am.state_to_epomega(attitude_new)
 
 		// translational dynamics
 		sat_params := Params_Gravity_Nbody {
@@ -51,7 +64,7 @@ update_system :: proc(system: ^AstroSystem, dt, time: f64) {
 	// update celestial bodies
 	// store celestial body current positions
 	// rk4 based on old positions
-	state_new_body:= make( [dynamic][6]f64, len(bodies))
+	state_new_body := make([dynamic][6]f64, len(bodies))
 	for body, i in bodies {
 		sat_params := Params_Gravity_Nbody {
 			bodies        = &system.bodies,
@@ -67,7 +80,7 @@ update_system :: proc(system: ^AstroSystem, dt, time: f64) {
 			&sat_params,
 			integrator,
 		)
-		
+
 	}
 
 	for i := 0; i < N_bodies; i += 1 {
