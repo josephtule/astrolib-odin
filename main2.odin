@@ -38,13 +38,15 @@ main :: proc() {
 	ast.add_celestialbody(&celestialbodies, earth)
 	ast.add_celestialbody_model(&celestialbody_models, earth_model)
 
-	moon := ast.luna_params()
-	moon_model := ast.gen_celestialbody_model(f32(moon.semimajor_axis))
-	ast.add_celestialbody(&celestialbodies, moon)
-	ast.add_celestialbody_model(&celestialbody_models, moon_model)
+	// moon := ast.luna_params()
+	// moon.pos = {100000., 1000, 1000}
+	// moon_model := ast.gen_celestialbody_model(f32(moon.semimajor_axis))
+	// ast.add_celestialbody(&celestialbodies, moon)
+	// ast.add_celestialbody_model(&celestialbody_models, moon_model)
+
 
 	// generate orbits/satellites
-	num_sats := 10
+	num_sats := 1
 	satellites: [dynamic]ast.Satellite
 	satellite_models: [dynamic]ast.SatelliteModel
 	for i := 0; i < num_sats; i += 1 {
@@ -98,17 +100,13 @@ main :: proc() {
 	real_time: f64
 	time_scale: f64 = 1
 	fps: f64
-	substeps: int = 1
+	substeps: int = 256
 	last_time := time.tick_now()
 
 	// 3D camera
 	camera: rl.Camera3D
 	// camera.position = 1.001 * la.array_cast(satellite.pos, f32) + {15, 15, 0}
-	camera_azel := [3]f64 {
-		7500. * u_to_rl,
-		math.to_radians(f64(45.)),
-		math.to_radians(f64(45.)),
-	}
+	camera_azel := am.cart_to_azel([3]f64{10000, 10000, 10000} * u_to_rl)
 	camera.target = la.array_cast(origin, f32) * u_to_rl
 	camera.position =
 		am.azel_to_cart(la.array_cast(camera_azel, f32)) + camera.target
@@ -132,8 +130,9 @@ main :: proc() {
 
 	for !rl.WindowShouldClose() {
 		// dt = get_delta_time(time.tick_now(), &last_time)
-		dt = f64(rl.GetFrameTime())
-		fps = 1 / dt
+		// dt = f64(rl.GetFrameTime())
+		dt = 1. / 60.
+		fps = 1. / dt
 		cum_time += dt
 
 		// update
