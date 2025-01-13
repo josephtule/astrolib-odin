@@ -45,7 +45,8 @@ gravity_nbody :: proc(t: f64, x: [6]f64, params: rawptr) -> [6]f64 {
 					body.max_degree,
 				)
 				fallthrough
-			case .pointmass: a += accel_pointmass(r_rel, body.mu)
+			case .pointmass: 
+			a += accel_pointmass(r_rel, body.mu)
 			case .spherical_harmonic:
 				panic("ERROR: ")
 			case:

@@ -1,1 +1,1 @@
-odin run . -out:build/out.exe
+odin run . -out:build/out.exe -o:aggressive

@@ -1,10 +1,15 @@
 package astrolib
 
-import ast "../astrolib"
-import am "../astromath"
 import "core:math"
 import la "core:math/linalg"
 import rl "vendor:raylib"
+import "core:thread"
+import "core:sync"
+
+import ast "../astrolib"
+import am "../astromath"
+
+
 
 AstroSystem :: struct {
 	// satellites

@@ -2,14 +2,17 @@
 
 ## Library for orbital mechanics and attitude dynamics for spacecraft
 
+## Controls
+
+
 ## TODO
 
 - [x] Implement adding multiple satellites
-- [ ] Implement adding multiple celestial bodies
+- [x] Implement adding multiple celestial bodies
 - [ ] Need to figure out how to do floating origin for rendering (and simulations)
   (move origin point to currently viewed object (ie. earth or the any satellite)) to reduce jittering in motion
-- [ ] Add n-body dynamics
-  - [ ] n-body for satellites
+- [x] Add n-body dynamics
+  - [x] n-body for satellites
   - [x] n-body for celestial bodies
   - [x] add switch to control which model to use (lowest precision between two bodies, certain bodies may not have zonal spherical harmonic parameters)
 - [ ] Add spherical harmonics
@@ -19,11 +22,19 @@
   - [ ] add support for rotating frames
   - [ ] add picker for example configurations 
 - [ ] Add different controllers
-- [ ] Implement/fix locked camera view
+- [ ] Add different cameras (inertial/origin, satellite/body, fixed)
   - NOTE: currently only locks, cannot pan
+  - [ ] adjust clipping planes dynamically depending on distance
 - [ ] Implement multiple hold for camera movement
-- Add orbit generating functions 
-
+- Add orbit generating functions
+  - [ ] classical orbital elements
+  - [ ] n-body
+- [ ] Add orbit data monitors
+- [ ] Add example scenarios
+- [ ] Add game states (paused, play, restart, etc.)
+- [ ] Profile and speed up simulation
+  - [ ] add multi-threading (separate translational and rotational dynamics?)
+  - [ ] 
 
 ## How to Build
 

@@ -25,8 +25,8 @@ main :: proc() {
 	window_height: i32 = 1024
 	// rl.SetConfigFlags({.WINDOW_TRANSPARENT, .MSAA_4X_HINT})
 	rl.InitWindow(window_width, window_height, "AstroLib")
-	rl.SetWindowState({.VSYNC_HINT, .WINDOW_RESIZABLE})
-	rl.SetTargetFPS(rl.GetMonitorRefreshRate(0))
+	rl.SetWindowState({.WINDOW_RESIZABLE})
+	// rl.SetTargetFPS(rl.GetMonitorRefreshRate(0))
 	defer rl.CloseWindow()
 
 	// generate celestial bodies
@@ -47,7 +47,7 @@ main :: proc() {
 
 
 	// generate orbits/satellites
-	num_sats := 100
+	num_sats := 24
 	satellites: [dynamic]ast.Satellite
 	satellite_models: [dynamic]ast.SatelliteModel
 	for i := 0; i < num_sats; i += 1 {
@@ -99,7 +99,7 @@ main :: proc() {
 	dt: f64
 	cum_time: f64
 	real_time: f64
-	time_scale: f64 = 4
+	time_scale: f64 = 8
 	fps: f64
 	substeps: int = 16
 	last_time := time.tick_now()
@@ -129,7 +129,7 @@ main :: proc() {
 		time_scale       = time_scale,
 	}
 
-	target_sat := num_sats / 4
+	target_sat := num_sats / 8
 
 	for !rl.WindowShouldClose() {
 		// dt = get_delta_time(time.tick_now(), &last_time)
@@ -137,6 +137,7 @@ main :: proc() {
 		// dt = 1. / 60.
 		fps = 1. / dt
 		cum_time += dt
+		fmt.println(fps)
 
 		// update
 		for k := 0; k < substeps; k += 1 {
@@ -155,7 +156,7 @@ main :: proc() {
 		)
 
 		camera_azel = {
-			f64(cube_size) * 20,
+			f64(cube_size) * 500000,
 			math.to_radians(f64(45.)),
 			math.to_radians(f64(15.)),
 		}
@@ -163,12 +164,12 @@ main :: proc() {
 			la.array_cast(am.azel_to_cart(la.array_cast(camera_azel, f64)), f32) +
 			sat_pos_f32 * u_to_rl
 		camera.target = sat_pos_f32 * u_to_rl
-		rlgl.SetClipPlanes(5.0e-5, 5e2)
+		rlgl.SetClipPlanes(5.0e-5, 5e3)
 
 		// draw
 		rl.BeginDrawing()
 		rl.BeginMode3D(camera)
-		rlgl.SetClipPlanes(1.0e-3, 1.0e4)
+		// rlgl.SetClipPlanes(1.0e-3, 1.0e4)
 
 		// rl.ClearBackground(rl.GetColor(0x181818ff))
 		rl.ClearBackground(rl.Color({24, 24, 24, 255}))
