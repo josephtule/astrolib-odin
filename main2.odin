@@ -76,9 +76,14 @@ main :: proc() {
 			vel0,
 			ep0,
 			omega0,
-			cube_size,
+			{cube_size, cube_size * 2, cube_size * 3},
 		)
-
+		sat_model.draw_axes = true
+		sat.inertia = matrix[3, 3]f64{
+			100., 0., 0., 
+			0., 200., 0., 
+			0., 0., 300., 
+		}
 		ast.add_satellite(&satellites, sat)
 		ast.add_satellite_model(&satellite_models, sat_model)
 	}
@@ -90,23 +95,13 @@ main :: proc() {
 	y_axis: [3]f32 : {0, 1, 0}
 	z_axis: [3]f32 : {0, 0, 1}
 
-	// attitude dynamics params
-	attitude_params := ast.Params_EulerParam {
-		inertia = matrix[3, 3]f64{
-			100, 0, 0, 
-			0, 200, 0, 
-			0, 0, 300, 
-		},
-		torque  = {0, 0, 0},
-	}
-
 	// Time --------------------------------------------------------------------
 	dt: f64
 	cum_time: f64
 	real_time: f64
-	time_scale: f64 = 10
+	time_scale: f64 = 4
 	fps: f64
-	substeps: int = 128
+	substeps: int = 16
 	last_time := time.tick_now()
 
 	// 3D camera
@@ -134,6 +129,8 @@ main :: proc() {
 		time_scale       = time_scale,
 	}
 
+	target_sat := num_sats / 4
+
 	for !rl.WindowShouldClose() {
 		// dt = get_delta_time(time.tick_now(), &last_time)
 		dt = f64(rl.GetFrameTime())
@@ -145,6 +142,28 @@ main :: proc() {
 		for k := 0; k < substeps; k += 1 {
 			ast.update_system(&asystem, dt, cum_time)
 		}
+
+
+		// update camera
+		sat_pos_f32 := la.array_cast(satellites[target_sat].pos, f32)
+		cube_size := min(
+			satellite_models[target_sat].model_size[0],
+			min(
+				satellite_models[target_sat].model_size[1],
+				satellite_models[target_sat].model_size[2],
+			),
+		)
+
+		camera_azel = {
+			f64(cube_size) * 20,
+			math.to_radians(f64(45.)),
+			math.to_radians(f64(15.)),
+		}
+		camera.position =
+			la.array_cast(am.azel_to_cart(la.array_cast(camera_azel, f64)), f32) +
+			sat_pos_f32 * u_to_rl
+		camera.target = sat_pos_f32 * u_to_rl
+		rlgl.SetClipPlanes(5.0e-5, 5e2)
 
 		// draw
 		rl.BeginDrawing()

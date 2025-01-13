@@ -24,6 +24,7 @@ euler_param_dyanmics :: proc(
 	params := cast(^Params_EulerParam)(params)
 	ep: [4]f64
 	am.set_vector_slice_1(&ep, x, s1 = 0, l1 = 4)
+	ep = la.vector_normalize0(ep)
 	omega: [3]f64
 	am.set_vector_slice_1(&omega, x, s1 = 4, l1 = 3)
 	depdt := euler_param_kinematics(ep, omega)

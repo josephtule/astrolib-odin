@@ -36,7 +36,7 @@ gen_satellite_and_mesh :: proc(
 	pos, vel: [3]f64,
 	ep: [4]f64,
 	omega: [3]f64,
-	cube_size: f32,
+	model_size: [3]f32,
 	u_to_rl: f64 = u_to_rl,
 ) -> (
 	s: Satellite,
@@ -54,12 +54,12 @@ gen_satellite_and_mesh :: proc(
 		angular_units = .RADIANS,
 	}
 
-	// default to cube
+	// default to rectangular prism
 	m.draw_model = true
 	m.model = rl.LoadModelFromMesh(
-		rl.GenMeshCube(cube_size, cube_size, cube_size),
+		rl.GenMeshCube(model_size[0], model_size[1], model_size[2]),
 	)
-	m.model_size = {cube_size, cube_size, cube_size}
+	m.model_size = model_size
 	am.SetTranslation(&m.model.transform, la.array_cast(s.pos * u_to_rl, f32))
 
 	// checker pattern

@@ -37,11 +37,11 @@ update_system :: proc(system: ^AstroSystem, dt, time: f64) {
 			euler_param_dyanmics,
 			time,
 			attitude_current,
-			dt,
+			dt * time_scale,
 			&attitude_params,
 			integrator,
 		)
-		sat.ep, sat.omega = am.state_to_epomega(attitude_new)		// TODO: add attitude dynamics
+		sat.ep, sat.omega = am.state_to_epomega(attitude_new)
 
 		// translational dynamics
 		sat_params := Params_Gravity_Nbody {
@@ -99,13 +99,30 @@ draw_system :: proc(system: ^AstroSystem, u_to_rl: f32 = u_to_rl) {
 	for sat, i in satellites {
 		q := am.euler_param_to_quaternion(la.array_cast(sat.ep, f32))
 		rot := rl.QuaternionToMatrix(q)
+		sat_pos_f32 := la.array_cast(sat.pos, f32) * u_to_rl
 		satellite_models[i].model.transform = rot
-		am.SetTranslation(
-			&satellite_models[i].model.transform,
-			la.array_cast(sat.pos, f32) * u_to_rl,
-		)
+		am.SetTranslation(&satellite_models[i].model.transform, sat_pos_f32)
 
 		rl.DrawModel(satellite_models[i].model, am.origin_f32, 1, rl.WHITE)
+
+		if satellite_models[i].draw_axes {
+			R := am.GetRotation(satellite_models[i].model.transform)
+			cube_size := min(
+				satellite_models[i].model_size[0],
+				min(satellite_models[i].model_size[1], satellite_models[i].model_size[2]),
+			)
+			x_axis := R * (am.xaxis_f32 * cube_size * 10)
+			y_axis := R * (am.yaxis_f32 * cube_size * 10)
+			z_axis := R * (am.zaxis_f32 * cube_size * 10)
+
+			rl.DrawLine3D(sat_pos_f32, sat_pos_f32 + x_axis, rl.MAGENTA)
+			rl.DrawLine3D(sat_pos_f32, sat_pos_f32 + y_axis, rl.YELLOW)
+			rl.DrawLine3D(
+				sat_pos_f32,
+				sat_pos_f32 + z_axis,
+				rl.Color({0, 255, 255, 255}),
+			)
+		}
 
 		if satellite_models[i].draw_trail {
 			// update and draw trails
