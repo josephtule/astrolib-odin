@@ -34,6 +34,7 @@ main :: proc() {
 	celestialbody_models: [dynamic]ast.CelestialBodyModel
 
 	earth := ast.wgs84()
+	earth.gravity_model = .pointmass
 	earth_model := ast.gen_celestialbody_model(f32(earth.semimajor_axis))
 	ast.add_celestialbody(&celestialbodies, earth)
 	ast.add_celestialbody_model(&celestialbody_models, earth_model)
@@ -46,7 +47,7 @@ main :: proc() {
 
 
 	// generate orbits/satellites
-	num_sats := 1
+	num_sats := 10
 	satellites: [dynamic]ast.Satellite
 	satellite_models: [dynamic]ast.SatelliteModel
 	for i := 0; i < num_sats; i += 1 {
@@ -61,6 +62,11 @@ main :: proc() {
 			earth.mu,
 		)
 
+		alt: f64 = 1000 + f64(i) * 100
+		pos0 = (alt + earth.semimajor_axis) * [3]f64{1., 0., 0.}
+		v_mag0 := math.sqrt(earth.mu / la.vector_length(pos0))
+		angle0: f64 = la.to_radians(25.)
+		vel0 = v_mag0 * [3]f64{0., math.cos(angle0), math.sin(angle0)}
 		ep0: [4]f64 = {0, 0, 0, 1}
 		omega0: [3]f64 = {0.0001, .05, 0.0001}
 
@@ -98,7 +104,7 @@ main :: proc() {
 	dt: f64
 	cum_time: f64
 	real_time: f64
-	time_scale: f64 = 1
+	time_scale: f64 = 10
 	fps: f64
 	substeps: int = 256
 	last_time := time.tick_now()
