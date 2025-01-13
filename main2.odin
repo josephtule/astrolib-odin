@@ -34,17 +34,20 @@ main :: proc() {
 	celestialbody_models: [dynamic]ast.CelestialBodyModel
 
 	earth := ast.wgs84()
+	earth.gravity_model = .pointmass
 	earth_model := ast.gen_celestialbody_model(f32(earth.semimajor_axis))
 	ast.add_celestialbody(&celestialbodies, earth)
 	ast.add_celestialbody_model(&celestialbody_models, earth_model)
 
-	moon := ast.luna_params()
-	moon_model := ast.gen_celestialbody_model(f32(moon.semimajor_axis))
-	ast.add_celestialbody(&celestialbodies, moon)
-	ast.add_celestialbody_model(&celestialbody_models, moon_model)
+	// moon := ast.luna_params()
+	// moon.pos = {100000., 1000, 1000}
+	// moon_model := ast.gen_celestialbody_model(f32(moon.semimajor_axis))
+	// ast.add_celestialbody(&celestialbodies, moon)
+	// ast.add_celestialbody_model(&celestialbody_models, moon_model)
+
 
 	// generate orbits/satellites
-	num_sats := 10
+	num_sats := 100
 	satellites: [dynamic]ast.Satellite
 	satellite_models: [dynamic]ast.SatelliteModel
 	for i := 0; i < num_sats; i += 1 {
@@ -59,6 +62,11 @@ main :: proc() {
 			earth.mu,
 		)
 
+		alt: f64 = 1000 //+ f64(i) * 100
+		pos0 = (alt + earth.semimajor_axis) * [3]f64{1., 0., 0.}
+		v_mag0 := math.sqrt(earth.mu / la.vector_length(pos0))
+		angle0: f64 = la.to_radians(15. + f64(i) * 5)
+		vel0 = v_mag0 * [3]f64{0., math.cos(angle0), math.sin(angle0)}
 		ep0: [4]f64 = {0, 0, 0, 1}
 		omega0: [3]f64 = {0.0001, .05, 0.0001}
 
@@ -96,19 +104,15 @@ main :: proc() {
 	dt: f64
 	cum_time: f64
 	real_time: f64
-	time_scale: f64 = 1
+	time_scale: f64 = 10
 	fps: f64
-	substeps: int = 1
+	substeps: int = 128
 	last_time := time.tick_now()
 
 	// 3D camera
 	camera: rl.Camera3D
 	// camera.position = 1.001 * la.array_cast(satellite.pos, f32) + {15, 15, 0}
-	camera_azel := [3]f64 {
-		7500. * u_to_rl,
-		math.to_radians(f64(45.)),
-		math.to_radians(f64(45.)),
-	}
+	camera_azel := am.cart_to_azel([3]f64{10000, 10000, 10000} * u_to_rl)
 	camera.target = la.array_cast(origin, f32) * u_to_rl
 	camera.position =
 		am.azel_to_cart(la.array_cast(camera_azel, f32)) + camera.target
@@ -133,7 +137,8 @@ main :: proc() {
 	for !rl.WindowShouldClose() {
 		// dt = get_delta_time(time.tick_now(), &last_time)
 		dt = f64(rl.GetFrameTime())
-		fps = 1 / dt
+		// dt = 1. / 60.
+		fps = 1. / dt
 		cum_time += dt
 
 		// update

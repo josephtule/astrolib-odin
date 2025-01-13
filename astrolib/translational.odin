@@ -36,13 +36,22 @@ gravity_nbody :: proc(t: f64, x: [6]f64, params: rawptr) -> [6]f64 {
 			lowest_model: GravityModel = min(params.gravity_model, body.gravity_model)
 
 			switch lowest_model {
+			case .zonal:
+				a += accel_zonal(
+					r_rel,
+					body.mu,
+					body.semimajor_axis,
+					body.J,
+					body.max_degree,
+				)
+				fallthrough
 			case .pointmass: a += accel_pointmass(r_rel, body.mu)
-			case .zonal: a += accel_zonal(r_rel, body.mu, body.semimajor_axis, body.J, body.max_degree)
 			case .spherical_harmonic:
 				panic("ERROR: ")
 			case:
 				panic("ERROR: ")
 			}
+
 		}
 	}
 	am.set_vector_slice_2(&dxdt, v, a)

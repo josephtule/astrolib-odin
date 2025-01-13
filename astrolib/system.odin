@@ -41,7 +41,7 @@ update_system :: proc(system: ^AstroSystem, dt, time: f64) {
 			&attitude_params,
 			integrator,
 		)
-		sat.ep, sat.omega = am.state_to_epomega(attitude_new)
+		sat.ep, sat.omega = am.state_to_epomega(attitude_new)		// TODO: add attitude dynamics
 
 		// translational dynamics
 		sat_params := Params_Gravity_Nbody {
@@ -71,6 +71,7 @@ update_system :: proc(system: ^AstroSystem, dt, time: f64) {
 			gravity_model = body.gravity_model,
 			idx           = i,
 		}
+		// FIXME: fix this, currently returning NaN
 		state_current := am.posvel_to_state(body.pos, body.vel)
 		_, state_new_body[i] = am.integrate(
 			ast.gravity_nbody,
