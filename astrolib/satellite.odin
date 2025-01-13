@@ -1,7 +1,6 @@
 package astrolib
 
 import am "../astromath"
-import ode "../ode"
 import "core:math"
 import la "core:math/linalg"
 import rl "vendor:raylib"
@@ -16,7 +15,7 @@ Satellite :: struct {
 	name:          string,
 	linear_units:  am.UnitsLinear,
 	angular_units: am.UnitsAngle,
-	gravity_model: ode.GravityModel,
+	gravity_model: GravityModel,
 }
 
 SatelliteModel :: struct {
@@ -31,8 +30,6 @@ SatelliteModel :: struct {
 }
 
 update_satellite :: proc(sat: ^Satellite, params: rawptr, dt: f64) {
-
-
 }
 
 gen_satellite_and_mesh :: proc(

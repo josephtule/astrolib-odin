@@ -1,4 +1,4 @@
-package ode
+package astrolib
 
 import "core:fmt"
 import "core:math"

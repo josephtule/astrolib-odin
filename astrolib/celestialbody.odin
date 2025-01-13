@@ -5,7 +5,6 @@ import la "core:math/linalg"
 import rl "vendor:raylib"
 
 import am "../astromath"
-import ode "../ode"
 
 u_to_rl :: am.u_to_rl
 
@@ -22,7 +21,7 @@ CelestialBody :: struct {
 	surface_area:   f64,
 	volume:         f64,
 	pos, vel:       [3]f64,
-	gravity_model:  ode.GravityModel,
+	gravity_model:  GravityModel,
 	max_degree:     int,
 	max_order:      int,
 	J:              [7]f64,

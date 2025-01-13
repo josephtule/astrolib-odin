@@ -2,6 +2,16 @@ package astromath
 
 import "core:math"
 
+origin_f64: [3]f64 : {0., 0., 0.}
+xaxis_f64: [3]f64 : {1., 0., 0.}
+yaxis_f64: [3]f64 : {0., 1., 0.}
+zaxis_f64: [3]f64 : {0., 0., 1.}
+origin_f32: [3]f32 : {0., 0., 0.}
+xaxis_f32: [3]f32 : {1., 0., 0.}
+yaxis_f32: [3]f32 : {0., 1., 0.}
+zaxis_f32: [3]f32 : {0., 0., 1.}
+
+
 posvel_to_state :: proc(pos, vel: [3]$T) -> (state: [6]T) {
 	set_vector_slice(&state, pos, vel)
 	return state
@@ -23,14 +33,14 @@ state_to_epomega :: proc(state: [7]$T) -> (ep: [4]T, omega: [3]T) {
 }
 
 is_diagonal :: proc(mat: matrix[$N, N]$T, tol := 1.0e-6) -> bool {
-    for i := 0; i < N; i += 1 {
-        for j := 0; j < N; j += 1 {
-            if i != j && math.abs(mat[i, j]) > tol {
-                return false
-            }
-        }
-    }
-    return true
+	for i := 0; i < N; i += 1 {
+		for j := 0; j < N; j += 1 {
+			if i != j && math.abs(mat[i, j]) > tol {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 set_vector_slice :: proc {

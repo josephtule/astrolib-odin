@@ -15,7 +15,6 @@ import "vendor:raylib/rlgl"
 
 import ast "astrolib"
 import am "astromath"
-import "ode"
 
 // u_to_rl :: am.u_to_rl
 // rl_to_u :: am.rl_to_u
@@ -114,10 +113,10 @@ main2 :: proc() {
 	trail_ind := 0
 
 	// ODE/Integrator ----------------------------------------------------------
-	gravity_params := ode.Params_Gravity_Pointmass {
+	gravity_params := ast.Params_Gravity_Pointmass {
 		mu = earth.mu,
 	}
-	attitude_params := ode.Params_EulerParam {
+	attitude_params := ast.Params_EulerParam {
 		inertia = matrix[3, 3]f64{
 			100, 0, 0, 
 			0, 200, 0, 
@@ -125,7 +124,7 @@ main2 :: proc() {
 		},
 		torque  = {0, 0, 0},
 	}
-	zonal_params := ode.Params_Gravity_SphHarmon {
+	zonal_params := ast.Params_Gravity_SphHarmon {
 		J          = earth.J,
 		max_degree = 2,
 		mu         = earth.mu,
@@ -190,21 +189,21 @@ main2 :: proc() {
 				am.set_vector_slice(&xlk, satellite.pos, satellite.vel)
 				am.set_vector_slice(&xrk, satellite.ep, satellite.omega)
 				// _, xlk = am.rk4_step(
-				// 	ode.gravity_pointmass,
+				// 	ast.gravity_pointmass,
 				// 	f64(cum_time),
 				// 	xlk,
 				// 	f64(dt) * time_scale,
 				// 	&gravity_params,
 				// )
 				_, xlk = am.rk4_step(
-					ode.gravity_zonal,
+					ast.gravity_zonal,
 					f64(cum_time),
 					xlk,
 					f64(dt) * time_scale,
 					&zonal_params,
 				)
 				_, xrk = am.rk4_step(
-					ode.euler_param_dyanmics,
+					ast.euler_param_dyanmics,
 					f64(cum_time),
 					xrk,
 					f64(dt) * time_scale,

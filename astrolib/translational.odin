@@ -1,4 +1,4 @@
-package ode
+package astrolib
 
 import "core:math"
 import la "core:math/linalg"
@@ -14,6 +14,41 @@ GravityModel :: enum {
 Params_Gravity_Pointmass :: struct {
 	mu: f64,
 }
+Params_Gravity_Nbody :: struct {
+	bodies:        ^[dynamic]CelestialBody,
+	gravity_model: GravityModel,
+	idx:           int,
+}
+
+gravity_nbody :: proc(t: f64, x: [6]f64, params: rawptr) -> [6]f64 {
+	dxdt: [6]f64
+
+	params := cast(^Params_Gravity_Nbody)(params)
+	r: [3]f64
+	am.set_vector_slice(&r, x, l1 = 3)
+	v: [3]f64
+	am.set_vector_slice_1(&v, x, s1 = 3, l1 = 3)
+
+	a: [3]f64
+	for body, i in params.bodies {
+		if params.idx == -1 || params.idx != i {
+			r_rel := r - body.pos
+			lowest_model: GravityModel = min(params.gravity_model, body.gravity_model)
+
+			switch lowest_model {
+			case .pointmass: a += accel_pointmass(r_rel, body.mu)
+			case .zonal: a += accel_zonal(r_rel, body.mu, body.semimajor_axis, body.J, body.max_degree)
+			case .spherical_harmonic:
+				panic("ERROR: ")
+			case:
+				panic("ERROR: ")
+			}
+		}
+	}
+	am.set_vector_slice_2(&dxdt, v, a)
+	return dxdt
+}
+
 gravity_pointmass :: proc(t: f64, x: [6]f64, params: rawptr) -> [6]f64 {
 	dxdt: [6]f64
 

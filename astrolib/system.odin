@@ -1,7 +1,7 @@
 package astrolib
 
+import ast "../astrolib"
 import am "../astromath"
-import ode "../ode"
 import "core:math"
 import la "core:math/linalg"
 import rl "vendor:raylib"
@@ -26,134 +26,48 @@ update_system :: proc(system: ^AstroSystem, dt, time: f64) {
 	N_bodies := len(bodies)
 
 	// update satellites first
-	state_new_sat: [dynamic][6]f64
-	for sat, i in satellites {
-		for body, j in bodies {
-			rel_pos := sat.pos - body.pos
-			rel_vel := sat.vel - body.vel
-			state_current := am.posvel_to_state(rel_pos, rel_vel)
+	for &sat, i in satellites {
+		// attitude dynamics
 
-			// determine which gravity model to use
-			lowest_model: ode.GravityModel = min(sat.gravity_model, body.gravity_model)
 
-			switch lowest_model {
-			case .pointmass:
-				// update params
-				// sat_params := cast(^ode.Params_Gravity_Pointmass)satellite_odeparams[i]
-				// sat_params.mu = body.mu
-				sat_params := ode.Params_Gravity_Pointmass {
-					mu = body.mu,
-				}
-
-				_, state_new := am.integrate(
-					ode.gravity_pointmass,
-					time,
-					state_current,
-					dt * time_scale,
-					&sat_params,
-					integrator,
-				)
-			case .zonal:
-				// update params
-				// sat_params := cast(^ode.Params_Gravity_SphHarmon)satellite_odeparams[i]
-				// sat_params.mu = body.mu
-				// sat_params.J = body.J
-				// sat_params.max_degree = body.max_degree
-				// sat_params.R_cb = body.semimajor_axis
-				sat_params := ode.Params_Gravity_SphHarmon {
-					mu         = body.mu,
-					J          = body.J,
-					R_cb       = body.semimajor_axis,
-					max_degree = body.max_degree,
-				}
-
-				_, state_new := am.integrate(
-					ode.gravity_zonal,
-					time,
-					state_current,
-					dt * time_scale,
-					&sat_params,
-					integrator,
-				)
-			case .spherical_harmonic:
-				panic("ERROR: Spherical harmonics gravity has not been implemented yet")
-			case:
-				panic("ERROR: invalid gravity model for celestial body")
-			}
+		// translational dynamics
+		sat_params := Params_Gravity_Nbody {
+			bodies        = &system.bodies,
+			gravity_model = sat.gravity_model,
+			idx           = -1,
 		}
+		state_current := am.posvel_to_state(sat.pos, sat.vel)
+		_, state_new := am.integrate(
+			ast.gravity_nbody,
+			time,
+			state_current,
+			dt * time_scale,
+			&sat_params,
+			integrator,
+		)
+		sat.pos, sat.vel = am.state_to_posvel(state_new)
 	}
 
 	// update celestial bodies
 	// store celestial body current positions
 	// rk4 based on old positions
-	state_new_body: [dynamic][6]f64
+	state_new_body:= make( [dynamic][6]f64, len(bodies))
 	for body, i in bodies {
-		// update body i
-		for other, j in bodies {
-			if i != j {
-				// get relative position
-				rel_pos := body.pos - other.pos
-				rel_vel := body.vel - other.vel
-				state_current := am.posvel_to_state(rel_pos, rel_vel)
-
-				lowest_model: ode.GravityModel = min(
-					body.gravity_model,
-					other.gravity_model,
-				)
-
-				switch lowest_model {
-				case .pointmass:
-					// update params
-					// body_params := cast(^ode.Params_Gravity_Pointmass)body_odeparams[i]
-					// body_params.mu = other.mu
-
-					body_params := ode.Params_Gravity_Pointmass {
-						mu = body.mu,
-					}
-
-					_, state_temp := am.integrate(
-						ode.gravity_pointmass,
-						time,
-						state_current,
-						dt * time_scale,
-						&body_params,
-						integrator,
-					)
-					append_elem(&state_new_body, state_temp)
-				case .zonal:
-					// update params
-					// body_params := cast(^ode.Params_Gravity_SphHarmon)body_odeparams[i]
-					// body_params.mu = other.mu
-					// body_params.J = other.J
-					// body_params.max_degree = other.max_degree
-					// body_params.R_cb = other.semimajor_axis
-
-					body_params := ode.Params_Gravity_SphHarmon {
-						mu         = other.mu,
-						J          = other.J,
-						R_cb       = other.semimajor_axis,
-						max_degree = other.max_degree,
-					}
-
-					_, state_temp := am.integrate(
-						ode.gravity_zonal,
-						time,
-						state_current,
-						dt * time_scale,
-						&body_params,
-						integrator,
-					)
-					append_elem(&state_new_body, state_temp)
-
-				case .spherical_harmonic:
-					panic("ERROR: Spherical harmonics gravity has not been implemented yet")
-				case:
-					panic("ERROR: invalid gravity model for celestial body")
-				}
-
-
-			}
+		sat_params := Params_Gravity_Nbody {
+			bodies        = &system.bodies,
+			gravity_model = body.gravity_model,
+			idx           = i,
 		}
+		state_current := am.posvel_to_state(body.pos, body.vel)
+		_, state_new_body[i] = am.integrate(
+			ast.gravity_nbody,
+			time,
+			state_current,
+			dt * time_scale,
+			&sat_params,
+			integrator,
+		)
+		
 	}
 
 	for i := 0; i < N_bodies; i += 1 {
@@ -164,4 +78,40 @@ update_system :: proc(system: ^AstroSystem, dt, time: f64) {
 
 }
 
-// draw_system :: proc(system: ^Astrosystem) {}
+
+draw_system :: proc(system: ^AstroSystem, u_to_rl: f32 = u_to_rl) {
+	using system
+	// satellite models
+	for sat, i in satellites {
+		q := am.euler_param_to_quaternion(la.array_cast(sat.ep, f32))
+		rot := rl.QuaternionToMatrix(q)
+		satellite_models[i].model.transform = rot
+		am.SetTranslation(
+			&satellite_models[i].model.transform,
+			la.array_cast(sat.pos, f32) * u_to_rl,
+		)
+
+		rl.DrawModel(satellite_models[i].model, am.origin_f32, 1, rl.WHITE)
+
+		if satellite_models[i].draw_trail {
+			// update and draw trails
+		}
+	}
+
+	// celestial body models
+	for body, i in bodies {
+		am.SetTranslation(
+			&body_models[i].model.transform,
+			la.array_cast(body.pos, f32) * u_to_rl,
+		)
+
+		rl.DrawModel(body_models[i].model, am.origin_f32, 1, rl.WHITE)
+
+		if body_models[i].draw_trail {
+			// update and draw trails
+		}
+	}
+}
+
+
+update_trail :: proc() {}

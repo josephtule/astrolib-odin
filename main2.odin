@@ -11,7 +11,6 @@ import "core:unicode/utf8"
 
 import ast "astrolib"
 import am "astromath"
-import ode "ode"
 import rl "vendor:raylib"
 import "vendor:raylib/rlgl"
 
@@ -24,7 +23,7 @@ main :: proc() {
 	// raylib init
 	window_width: i32 = 1024
 	window_height: i32 = 1024
-	rl.SetConfigFlags({.WINDOW_TRANSPARENT, .MSAA_4X_HINT})
+	// rl.SetConfigFlags({.WINDOW_TRANSPARENT, .MSAA_4X_HINT})
 	rl.InitWindow(window_width, window_height, "AstroLib")
 	rl.SetWindowState({.VSYNC_HINT, .WINDOW_RESIZABLE})
 	rl.SetTargetFPS(rl.GetMonitorRefreshRate(0))
@@ -84,7 +83,7 @@ main :: proc() {
 	z_axis: [3]f32 : {0, 0, 1}
 
 	// attitude dynamics params
-	attitude_params := ode.Params_EulerParam {
+	attitude_params := ast.Params_EulerParam {
 		inertia = matrix[3, 3]f64{
 			100, 0, 0, 
 			0, 200, 0, 
@@ -106,7 +105,7 @@ main :: proc() {
 	camera: rl.Camera3D
 	// camera.position = 1.001 * la.array_cast(satellite.pos, f32) + {15, 15, 0}
 	camera_azel := [3]f64 {
-		7500.,
+		7500. * u_to_rl,
 		math.to_radians(f64(45.)),
 		math.to_radians(f64(45.)),
 	}
@@ -132,15 +131,39 @@ main :: proc() {
 	}
 
 	for !rl.WindowShouldClose() {
-		dt = get_delta_time(time.tick_now(), &last_time)
+		// dt = get_delta_time(time.tick_now(), &last_time)
+		dt = f64(rl.GetFrameTime())
 		fps = 1 / dt
 		cum_time += dt
 
+		// update
 		for k := 0; k < substeps; k += 1 {
 			ast.update_system(&asystem, dt, cum_time)
 		}
-		// ast.draw_system(&asystem)
 
+		// draw
+		rl.BeginDrawing()
+		rl.BeginMode3D(camera)
+		rlgl.SetClipPlanes(1.0e-3, 1.0e4)
+
+		// rl.ClearBackground(rl.GetColor(0x181818ff))
+		rl.ClearBackground(rl.Color({24, 24, 24, 255}))
+
+		ast.draw_system(&asystem)
+
+		// draw inertial axes
+		rl.DrawLine3D(origin, x_axis * 100, rl.RED)
+		rl.DrawLine3D(origin, y_axis * 100, rl.GREEN)
+		rl.DrawLine3D(origin, z_axis * 100, rl.DARKBLUE)
+
+		// line from origin to satellite
+		for sat, i in asystem.satellites {
+			rl.DrawLine3D(origin, la.array_cast(sat.pos, f32) * u_to_rl, rl.GOLD)
+		}
+
+		rl.EndMode3D()
+
+		rl.EndDrawing()
 	}
 }
 
