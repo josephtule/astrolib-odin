@@ -47,7 +47,7 @@ main :: proc() {
 
 
 	// generate orbits/satellites
-	num_sats := 10
+	num_sats := 100
 	satellites: [dynamic]ast.Satellite
 	satellite_models: [dynamic]ast.SatelliteModel
 	for i := 0; i < num_sats; i += 1 {
@@ -62,10 +62,10 @@ main :: proc() {
 			earth.mu,
 		)
 
-		alt: f64 = 1000 + f64(i) * 100
+		alt: f64 = 1000 //+ f64(i) * 100
 		pos0 = (alt + earth.semimajor_axis) * [3]f64{1., 0., 0.}
 		v_mag0 := math.sqrt(earth.mu / la.vector_length(pos0))
-		angle0: f64 = la.to_radians(25.)
+		angle0: f64 = la.to_radians(15. + f64(i) * 5)
 		vel0 = v_mag0 * [3]f64{0., math.cos(angle0), math.sin(angle0)}
 		ep0: [4]f64 = {0, 0, 0, 1}
 		omega0: [3]f64 = {0.0001, .05, 0.0001}
@@ -106,7 +106,7 @@ main :: proc() {
 	real_time: f64
 	time_scale: f64 = 10
 	fps: f64
-	substeps: int = 256
+	substeps: int = 128
 	last_time := time.tick_now()
 
 	// 3D camera
@@ -136,8 +136,8 @@ main :: proc() {
 
 	for !rl.WindowShouldClose() {
 		// dt = get_delta_time(time.tick_now(), &last_time)
-		// dt = f64(rl.GetFrameTime())
-		dt = 1. / 60.
+		dt = f64(rl.GetFrameTime())
+		// dt = 1. / 60.
 		fps = 1. / dt
 		cum_time += dt
 
