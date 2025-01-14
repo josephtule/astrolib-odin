@@ -22,10 +22,12 @@ SatelliteModel :: struct {
 	model:      rl.Model,
 	model_size: [3]f32,
 	local_axes: [3][3]f32,
+	tint:       rl.Color,
 	trail:      [dynamic][3]f32,
 	draw_model: bool,
 	draw_axes:  bool,
 	draw_trail: bool,
+
 	// TODO: add trails
 }
 
@@ -37,6 +39,10 @@ gen_satellite_and_mesh :: proc(
 	ep: [4]f64,
 	omega: [3]f64,
 	model_size: [3]f32,
+	mass: f64 = 100.,
+	tint: rl.Color = rl.RED,
+	primary_color: rl.Color = rl.Color({200, 200, 200, 255}),
+	secondary_color: rl.Color = rl.Color({150, 150, 150, 255}),
 	u_to_rl: f64 = u_to_rl,
 ) -> (
 	s: Satellite,
@@ -54,6 +60,7 @@ gen_satellite_and_mesh :: proc(
 		angular_units = .RADIANS,
 	}
 
+
 	// default to rectangular prism
 	m.draw_model = true
 	m.model = rl.LoadModelFromMesh(
@@ -61,9 +68,19 @@ gen_satellite_and_mesh :: proc(
 	)
 	m.model_size = model_size
 	am.SetTranslation(&m.model.transform, la.array_cast(s.pos * u_to_rl, f32))
+	m.tint = tint
+
+	s.radius = f64(min(model_size[0], min(model_size[1], model_size[2])))
 
 	// checker pattern
-	image_checker := rl.GenImageChecked(2, 2, 1, 1, rl.GOLD, rl.SKYBLUE)
+	image_checker := rl.GenImageChecked(
+		2,
+		2,
+		1,
+		1,
+		primary_color,
+		secondary_color,
+	)
 	texture := rl.LoadTextureFromImage(image_checker)
 	rl.UnloadImage(image_checker)
 	m.model.materials[0].maps[rl.MaterialMapIndex.ALBEDO].texture = texture

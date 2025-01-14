@@ -10,6 +10,7 @@ u_to_rl :: am.u_to_rl
 
 CelestialBody :: struct {
 	mu:             f64,
+	mass:           f64,
 	omega:          f64,
 	semimajor_axis: f64,
 	semiminor_axis: f64,
@@ -39,10 +40,57 @@ CelestialBodyModel :: struct {
 	draw_axes:  bool,
 	draw_model: bool,
 	draw_trail: bool,
+	tint:       rl.Color,
 }
+
+gen_celestialbody :: proc(
+	pos, vel: [3]f64,
+	mass: f64,
+	eccentricity: f64 = 0,
+	semimajor_axis: f64,
+	semiminor_axis: f64 = 0,
+	mean_radius: f64 = 0,
+	gravity_model: GravityModel = .pointmass,
+	units: am.UnitsLinear = .KILOMETER,
+) {
+	body: CelestialBody
+
+	// state
+	body.pos = pos
+	body.vel = vel
+
+	// mass
+	body.mass = mass
+	#partial switch units {
+	case .KILOMETER: body.mu = am.G_km * body.mass
+	case .METER: body.mu = am.G_m * body.mass
+	case:
+		panic("ERROR: input units not yet supported")
+	}
+
+	// geometry
+	body.eccentricity = eccentricity
+	body.flattening = 1 - math.sqrt(1 - eccentricity * eccentricity)
+	body.semimajor_axis = semimajor_axis
+	if semiminor_axis == 0. && body.eccentricity == 0. {
+		body.semiminor_axis = body.semimajor_axis
+	} else {
+		body.semiminor_axis =
+			semimajor_axis * math.sqrt(1 - eccentricity * eccentricity)
+	}
+
+	if mean_radius == 0. {
+		body.mean_radius = (2 * body.semimajor_axis + body.semiminor_axis) / 3.
+	}
+}
+
+
 gen_celestialbody_model :: proc(
 	radius: f32,
 	faces: i32 = 64,
+	tint: rl.Color = rl.BLUE,
+	primary_color: rl.Color = rl.Color({200, 200, 200, 255}),
+	secondary_color: rl.Color = rl.Color({150, 150, 150, 255}),
 	u_to_rl: f32 = u_to_rl,
 ) -> CelestialBodyModel {
 	c_model: CelestialBodyModel
@@ -50,6 +98,7 @@ gen_celestialbody_model :: proc(
 	c_model.draw_model = true
 	c_model.draw_axes = true
 	c_model.draw_trail = false
+	c_model.tint = tint
 
 	for i := 0; i < 3; i += 1 {
 		c_model.local_axes[i][i] = 1.
@@ -60,8 +109,8 @@ gen_celestialbody_model :: proc(
 		8,
 		1,
 		1,
-		rl.Color({30, 102, 245, 255}),
-		rl.BLUE,
+		primary_color,
+		secondary_color,
 	)
 	texture := rl.LoadTextureFromImage(image_checker)
 	rl.UnloadImage(image_checker)
@@ -118,7 +167,8 @@ wgs84 :: proc(
 ) -> CelestialBody {
 	earth: CelestialBody
 	#partial switch units {
-	case .METER: earth = CelestialBody {
+	case .METER:
+		earth = CelestialBody {
 			mu             = 3.986004418000000e+14,
 			omega          = 7.292115000000000e-05,
 			semimajor_axis = 6378137.,
@@ -141,7 +191,9 @@ wgs84 :: proc(
 			},
 			base_unit      = units,
 		}
-	case .KILOMETER: earth = CelestialBody {
+		earth.mass = earth.mu / am.G_m
+	case .KILOMETER:
+		earth = CelestialBody {
 			mu             = 3.986004418000000e+05,
 			omega          = 7.292115000000000e-05,
 			semimajor_axis = 6378.137,
@@ -164,6 +216,7 @@ wgs84 :: proc(
 			},
 			base_unit      = units,
 		}
+		earth.mass = earth.mu / am.G_km
 	case:
 		panic("ERROR: units for wgs84 are incorrect")
 	}
@@ -189,6 +242,7 @@ luna_params :: proc(units: am.UnitsLinear = .KILOMETER) -> CelestialBody {
 			base_unit      = units,
 		}
 		moon.eccentricity = am.ecc_from_flat(moon.flattening)
+		moon.mass = moon.mu / am.G_km
 	case .METER:
 		moon = {
 			mu             = 4902.800118 * 1000 * 1000 * 1000,
@@ -203,6 +257,7 @@ luna_params :: proc(units: am.UnitsLinear = .KILOMETER) -> CelestialBody {
 			base_unit      = units,
 		}
 		moon.eccentricity = am.ecc_from_flat(moon.flattening)
+		moon.mass = moon.mu / am.G_m
 	case:
 		panic("ERROR: incorrect units for the moon")
 	}

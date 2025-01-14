@@ -27,7 +27,7 @@ main :: proc() {
 	// rl.SetConfigFlags({.WINDOW_TRANSPARENT, .MSAA_4X_HINT})
 	rl.InitWindow(window_width, window_height, "AstroLib")
 	rl.SetWindowState({.WINDOW_RESIZABLE})
-	// rl.SetTargetFPS(rl.GetMonitorRefreshRate(0))
+	rl.SetTargetFPS(rl.GetMonitorRefreshRate(0))
 	defer rl.CloseWindow()
 
 	// generate celestial bodies
@@ -38,17 +38,43 @@ main :: proc() {
 	earth.gravity_model = .pointmass
 	earth.max_degree = 2
 	earth.fixed = true
-	earth_model := ast.gen_celestialbody_model(f32(earth.semimajor_axis))
+	earth_model := ast.gen_celestialbody_model(
+		f32(earth.semimajor_axis),
+		faces = 128,
+	)
 	ast.add_celestialbody(&celestialbodies, earth)
 	ast.add_celestialbody_model(&celestialbody_models, earth_model)
 
 	moon := ast.luna_params()
-	moon.pos, moon.vel = ast.coe_to_rv(1e4, 0, 5.145, 0, 0, 0, earth.mu)
-	moon.fixed = true
-	moon_model := ast.gen_celestialbody_model(f32(moon.semimajor_axis))
+	moon.semimajor_axis = 200.
+	moon.pos, moon.vel = ast.coe_to_rv(3.0e4, .25, -20, 0, 0, 0, earth.mu)
+	moon_model := ast.gen_celestialbody_model(
+		f32(moon.semimajor_axis),
+		tint = rl.GOLD,
+	)
 	ast.add_celestialbody(&celestialbodies, moon)
 	ast.add_celestialbody_model(&celestialbody_models, moon_model)
 
+	moon2 := ast.luna_params()
+	moon2.semimajor_axis = 200.
+	moon2.pos, moon2.vel = ast.coe_to_rv(1.25e4, 0, 0, 35., 0, 0., earth.mu)
+	moon2_model := ast.gen_celestialbody_model(
+		f32(moon2.semimajor_axis),
+		tint = rl.RAYWHITE,
+	)
+	ast.add_celestialbody(&celestialbodies, moon2)
+	ast.add_celestialbody_model(&celestialbody_models, moon2_model)
+
+	moon3 := ast.luna_params()
+	moon3.semimajor_axis = 200.
+	// moon3.pos, moon3.vel = ast.coe_to_rv(5.0e4, .5, 20., 0, 0, 15., earth.mu)
+	moon3.pos, moon3.vel = ast.coe_to_rv(1.25e4, 0, 180, 45., 0, 0., earth.mu)
+	moon3_model := ast.gen_celestialbody_model(
+		f32(moon3.semimajor_axis),
+		tint = rl.GREEN,
+	)
+	ast.add_celestialbody(&celestialbodies, moon3)
+	ast.add_celestialbody_model(&celestialbody_models, moon3_model)
 
 	// generate orbits/satellites
 	num_sats := 8
@@ -138,14 +164,14 @@ main :: proc() {
 
 	for !rl.WindowShouldClose() {
 		// dt = get_delta_time(time.tick_now(), &last_time)
-		dt = f64(rl.GetFrameTime())
-		// dt = 1. / 60.
+		// dt = f64(rl.GetFrameTime())
+		dt = 1. / 60.
 		fps = 1. / dt
 		cum_time += dt
 		fmt.println(fps)
 
 		// update
-		update_system(asystem, asystem0)
+		update_simulation(asystem, asystem0)
 		if asystem.simulate {
 			for k := 0; k < asystem.substeps; k += 1 {
 				sim_time += dt
@@ -167,9 +193,9 @@ main :: proc() {
 		ast.draw_system(asystem)
 
 		// draw inertial axes
-		rl.DrawLine3D(origin, x_axis * 100, rl.RED)
-		rl.DrawLine3D(origin, y_axis * 100, rl.GREEN)
-		rl.DrawLine3D(origin, z_axis * 100, rl.DARKBLUE)
+		rl.DrawLine3D(origin, x_axis * 10, rl.RED)
+		rl.DrawLine3D(origin, y_axis * 10, rl.GREEN)
+		rl.DrawLine3D(origin, z_axis * 10, rl.DARKBLUE)
 
 		// line from origin to satellite
 		for sat, i in asystem.satellites {
@@ -189,7 +215,10 @@ get_delta_time :: proc(current: time.Tick, last: ^time.Tick) -> (dt: f64) {
 	return dt
 }
 
-update_system :: proc(system: ^ast.AstroSystem, system0: ^ast.AstroSystem) {
+update_simulation :: proc(
+	system: ^ast.AstroSystem,
+	system0: ^ast.AstroSystem,
+) {
 	using system
 	// handle adding / removing bodies and satellites
 	if rl.IsKeyPressed(.UP) && (f64(substeps) * time_scale < 100000) {

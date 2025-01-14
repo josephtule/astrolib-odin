@@ -103,6 +103,8 @@ update_system :: proc(system: ^AstroSystem, dt, time: f64) {
 		// translational dynamics
 		sat_params := Params_Gravity_Nbody {
 			bodies        = &system.bodies,
+			self_mass     = sat.mass,
+			self_radius   = sat.radius,
 			gravity_model = sat.gravity_model,
 			idx           = -1,
 		}
@@ -129,6 +131,7 @@ update_system :: proc(system: ^AstroSystem, dt, time: f64) {
 				gravity_model = body.gravity_model,
 				idx           = i,
 				self_radius   = body.semimajor_axis,
+				self_mass     = body.mass,
 			}
 			state_current := am.posvel_to_state(body.pos, body.vel)
 			_, state_new_body[i] = am.integrate(
@@ -163,18 +166,21 @@ draw_system :: proc(system: ^AstroSystem, u_to_rl: f32 = u_to_rl) {
 		satellite_models[i].model.transform = rot
 		am.SetTranslation(&satellite_models[i].model.transform, sat_pos_f32)
 
-		rl.DrawModel(satellite_models[i].model, am.origin_f32, 1, rl.WHITE)
+		rl.DrawModel(
+			satellite_models[i].model,
+			am.origin_f32,
+			1,
+			satellite_models[i].tint,
+		)
 
 		if satellite_models[i].draw_axes {
 			R := am.GetRotation(satellite_models[i].model.transform)
-			cube_size := min(
-				satellite_models[i].model_size[0],
-				min(satellite_models[i].model_size[1], satellite_models[i].model_size[2]),
-			)
-			x_axis := R * (am.xaxis_f32 * cube_size * 10)
-			y_axis := R * (am.yaxis_f32 * cube_size * 10)
-			z_axis := R * (am.zaxis_f32 * cube_size * 10)
 
+			x_axis := R * (am.xaxis_f32 * f32(sat.radius) * 10)
+			y_axis := R * (am.yaxis_f32 * f32(sat.radius) * 10)
+			z_axis := R * (am.zaxis_f32 * f32(sat.radius) * 10)
+
+			// cmy colors for axes
 			rl.DrawLine3D(sat_pos_f32, sat_pos_f32 + x_axis, rl.MAGENTA)
 			rl.DrawLine3D(sat_pos_f32, sat_pos_f32 + y_axis, rl.YELLOW)
 			rl.DrawLine3D(
@@ -196,7 +202,7 @@ draw_system :: proc(system: ^AstroSystem, u_to_rl: f32 = u_to_rl) {
 			la.array_cast(body.pos, f32) * u_to_rl,
 		)
 
-		rl.DrawModel(body_models[i].model, am.origin_f32, 1, rl.WHITE)
+		rl.DrawModel(body_models[i].model, am.origin_f32, 1, body_models[i].tint)
 
 		if body_models[i].draw_trail {
 			// update and draw trails
