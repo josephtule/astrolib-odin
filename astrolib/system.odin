@@ -123,27 +123,30 @@ update_system :: proc(system: ^AstroSystem, dt, time: f64) {
 	// rk4 based on old positions
 	state_new_body := make([dynamic][6]f64, len(bodies))
 	for body, i in bodies {
-		sat_params := Params_Gravity_Nbody {
-			bodies        = &system.bodies,
-			gravity_model = body.gravity_model,
-			idx           = i,
+		if !body.fixed {
+			sat_params := Params_Gravity_Nbody {
+				bodies        = &system.bodies,
+				gravity_model = body.gravity_model,
+				idx           = i,
+				self_radius   = body.semimajor_axis,
+			}
+			state_current := am.posvel_to_state(body.pos, body.vel)
+			_, state_new_body[i] = am.integrate(
+				ast.gravity_nbody,
+				time,
+				state_current,
+				dt * time_scale,
+				&sat_params,
+				integrator,
+			)
 		}
-		// FIXME: fix this, currently returning NaN
-		state_current := am.posvel_to_state(body.pos, body.vel)
-		_, state_new_body[i] = am.integrate(
-			ast.gravity_nbody,
-			time,
-			state_current,
-			dt * time_scale,
-			&sat_params,
-			integrator,
-		)
-
 	}
 
 	for i := 0; i < N_bodies; i += 1 {
 		// assign new states after computing
-		bodies[i].pos, bodies[i].vel = am.state_to_posvel(state_new_body[i])
+		if !bodies[i].fixed {
+			bodies[i].pos, bodies[i].vel = am.state_to_posvel(state_new_body[i])
+		}
 	}
 
 

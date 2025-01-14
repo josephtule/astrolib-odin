@@ -29,6 +29,7 @@ CelestialBody :: struct {
 	S:              ^[dynamic]f64,
 	base_unit:      am.UnitsLinear,
 	name:           string,
+	fixed:          bool,
 }
 
 CelestialBodyModel :: struct {

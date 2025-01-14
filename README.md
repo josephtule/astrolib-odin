@@ -40,6 +40,8 @@ Camera Azimuth/Elevation: w/a/s/d
 - [ ] Profile and speed up simulation
   - [ ] add multi-threading (separate translational and rotational dynamics?)
   - [x] different integrators
+- [ ] Add rotation to celestial bodies?
+- [ ] Add flag to turn on/off attitude/rotational dynamics
 
 ## How to Build
 

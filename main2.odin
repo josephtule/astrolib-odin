@@ -36,15 +36,18 @@ main :: proc() {
 
 	earth := ast.wgs84()
 	earth.gravity_model = .pointmass
+	earth.max_degree = 2
+	earth.fixed = true
 	earth_model := ast.gen_celestialbody_model(f32(earth.semimajor_axis))
 	ast.add_celestialbody(&celestialbodies, earth)
 	ast.add_celestialbody_model(&celestialbody_models, earth_model)
 
-	// moon := ast.luna_params()
-	// moon.pos = {100000., 1000, 1000}
-	// moon_model := ast.gen_celestialbody_model(f32(moon.semimajor_axis))
-	// ast.add_celestialbody(&celestialbodies, moon)
-	// ast.add_celestialbody_model(&celestialbody_models, moon_model)
+	moon := ast.luna_params()
+	moon.pos, moon.vel = ast.coe_to_rv(1e4, 0, 5.145, 0, 0, 0, earth.mu)
+	moon.fixed = true
+	moon_model := ast.gen_celestialbody_model(f32(moon.semimajor_axis))
+	ast.add_celestialbody(&celestialbodies, moon)
+	ast.add_celestialbody_model(&celestialbody_models, moon_model)
 
 
 	// generate orbits/satellites
@@ -79,6 +82,7 @@ main :: proc() {
 			omega0,
 			{cube_size, cube_size * 2, cube_size * 3},
 		)
+		sat.gravity_model = .zonal
 		sat_model.draw_axes = true
 		sat.inertia = matrix[3, 3]f64{
 			100., 0., 0., 
@@ -235,16 +239,20 @@ update_camera :: proc(
 	}
 	params.target_sat = &system.satellites[params.target_sat_id]
 	params.target_body = &system.bodies[params.target_body_id]
+
 	// switch camera type
-	if rl.IsKeyPressed(rl.KeyboardKey.C) && !rl.IsKeyDown(.LEFT_CONTROL){
+	if rl.IsKeyPressed(rl.KeyboardKey.C) && !rl.IsKeyDown(.LEFT_CONTROL) {
 		if params.frame == .origin {
 			// switch to satellite
 			params.azel = am.cart_to_azel([3]f64{1, 1, 1} * u_to_rl)
 			params.frame = .satellite
 		} else if params.frame == .satellite {
+			params.azel = {10000 * u_to_rl, math.PI / 4, math.PI / 4}
+			params.frame = .body
+		} else if params.frame == .body {
 			params.azel = {15000 * u_to_rl, math.PI / 4, math.PI / 4}
 			params.frame = .origin
-		} else {
+		} else  /* default to satellite camera*/{
 			params.azel = am.cart_to_azel([3]f64{1, 1, 1} * u_to_rl)
 			params.frame = .satellite
 		}

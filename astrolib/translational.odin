@@ -16,6 +16,7 @@ Params_Gravity_Pointmass :: struct {
 }
 Params_Gravity_Nbody :: struct {
 	bodies:        ^[dynamic]CelestialBody,
+	self_radius:   f64,
 	gravity_model: GravityModel,
 	idx:           int,
 }
@@ -33,6 +34,12 @@ gravity_nbody :: proc(t: f64, x: [6]f64, params: rawptr) -> [6]f64 {
 	for body, i in params.bodies {
 		if params.idx == -1 || params.idx != i {
 			r_rel := r - body.pos
+
+			// check collision
+			if la.vector_length(r_rel) < (params.self_radius + body.semimajor_axis) {
+				return dxdt
+			}
+
 			lowest_model: GravityModel = min(params.gravity_model, body.gravity_model)
 
 			switch lowest_model {
@@ -45,8 +52,7 @@ gravity_nbody :: proc(t: f64, x: [6]f64, params: rawptr) -> [6]f64 {
 					body.max_degree,
 				)
 				fallthrough
-			case .pointmass: 
-			a += accel_pointmass(r_rel, body.mu)
+			case .pointmass: a += accel_pointmass(r_rel, body.mu)
 			case .spherical_harmonic:
 				panic("ERROR: ")
 			case:
@@ -68,8 +74,8 @@ gravity_pointmass :: proc(t: f64, x: [6]f64, params: rawptr) -> [6]f64 {
 	v: [3]f64
 	am.set_vector_slice_1(&v, x, s1 = 3, l1 = 3)
 
-
 	r_mag := la.vector_length(r)
+
 	a := accel_pointmass(r, params.mu)
 	am.set_vector_slice_2(&dxdt, v, a)
 
