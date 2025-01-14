@@ -2,8 +2,12 @@
 
 ## Library for orbital mechanics and attitude dynamics for spacecraft
 
-## Controls
-
+## Controls (subject to change)
+Camera Switching (satellite target, body target, origin): c
+Camera Lock: Ctrl+c
+Cycle Target: n/Ctrl+n
+Zoom into target: Mousewheel up/down
+Camera Azimuth/Elevation: w/a/s/d
 
 ## TODO
 
@@ -22,7 +26,7 @@
   - [ ] add support for rotating frames
   - [ ] add picker for example configurations 
 - [ ] Add different controllers
-- [ ] Add different cameras (inertial/origin, satellite/body, fixed)
+- [x] Add different cameras (inertial/origin, satellite/body, fixed)
   - NOTE: currently only locks, cannot pan
   - [ ] adjust clipping planes dynamically depending on distance
 - [ ] Implement multiple hold for camera movement
@@ -32,9 +36,10 @@
 - [ ] Add orbit data monitors
 - [ ] Add example scenarios
 - [ ] Add game states (paused, play, restart, etc.)
+  - [x] paused
 - [ ] Profile and speed up simulation
   - [ ] add multi-threading (separate translational and rotational dynamics?)
-  - [ ] 
+  - [x] different integrators
 
 ## How to Build
 

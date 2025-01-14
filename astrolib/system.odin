@@ -1,28 +1,80 @@
 package astrolib
 
-import "core:math"
-import la "core:math/linalg"
-import rl "vendor:raylib"
-import "core:thread"
-import "core:sync"
-
 import ast "../astrolib"
 import am "../astromath"
+import "core:math"
+import la "core:math/linalg"
+import "core:slice"
+import "core:sync"
+import "core:thread"
+import rl "vendor:raylib"
 
+
+create_system :: proc(
+	sats: [dynamic]Satellite,
+	sat_models: [dynamic]SatelliteModel,
+	bodies: [dynamic]CelestialBody,
+	body_models: [dynamic]CelestialBodyModel,
+	// defaults
+	integrator: am.IntegratorType = .rk4,
+	time_scale: f64 = 8,
+	substeps: int = 8,
+) -> AstroSystem {
+	system: AstroSystem
+	system0: AstroSystem
+
+	system.satellites = slice.clone_to_dynamic(sats[:])
+	system.satellite_models = slice.clone_to_dynamic(sat_models[:])
+	system.num_satellites = len(system.satellites)
+
+	system.bodies = slice.clone_to_dynamic(bodies[:])
+	system.body_models = slice.clone_to_dynamic(body_models[:])
+	system.num_bodies = len(system.bodies)
+
+	system.integrator = integrator
+	system.time_scale = time_scale
+	system.substeps = substeps
+
+	return system
+}
+
+
+copy_system :: proc(system_dst, system_src: ^AstroSystem) {
+
+	system_dst.satellites = slice.clone_to_dynamic(system_src.satellites[:])
+	system_dst.satellite_models = slice.clone_to_dynamic(
+		system_src.satellite_models[:],
+	)
+	system_dst.num_satellites = len(system_src.satellites)
+
+	system_dst.bodies = slice.clone_to_dynamic(system_src.bodies[:])
+	system_dst.body_models = slice.clone_to_dynamic(system_src.body_models[:])
+	system_dst.num_bodies = len(system_src.bodies)
+
+	system_dst.integrator = system_src.integrator
+	system_dst.time_scale = system_src.time_scale
+	system_dst.substeps = system_src.substeps
+	system_dst.simulate = system_src.simulate
+
+}
 
 
 AstroSystem :: struct {
 	// satellites
 	satellites:       [dynamic]Satellite,
 	satellite_models: [dynamic]SatelliteModel,
+	num_satellites:   int,
 	// satellite_odeparams: [dynamic]rawptr,
 	// bodies
 	bodies:           [dynamic]CelestialBody,
 	body_models:      [dynamic]CelestialBodyModel,
+	num_bodies:       int,
 	// body_odeparams:      [dynamic]rawptr,
 	// integrator
 	integrator:       am.IntegratorType,
 	time_scale:       f64,
+	substeps:         int,
+	simulate:         bool,
 }
 
 update_system :: proc(system: ^AstroSystem, dt, time: f64) {
