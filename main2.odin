@@ -27,7 +27,7 @@ main :: proc() {
 	// rl.SetConfigFlags({.WINDOW_TRANSPARENT, .MSAA_4X_HINT})
 	rl.InitWindow(window_width, window_height, "AstroLib")
 	rl.SetWindowState({.WINDOW_RESIZABLE})
-	rl.SetTargetFPS(rl.GetMonitorRefreshRate(0))
+	// rl.SetTargetFPS(rl.GetMonitorRefreshRate(0))
 	defer rl.CloseWindow()
 
 	// generate celestial bodies
@@ -45,9 +45,13 @@ main :: proc() {
 	ast.add_celestialbody(&celestialbodies, earth)
 	ast.add_celestialbody_model(&celestialbody_models, earth_model)
 
+	rp := 12500.
+	ra := 15000.
+	a := (rp + ra) / 2.
+	ecc := (ra - rp) / (ra + rp)
 	moon := ast.luna_params()
-	moon.semimajor_axis = 200.
-	moon.pos, moon.vel = ast.coe_to_rv(3.0e4, .25, -20, 0, 0, 0, earth.mu)
+	moon.semimajor_axis = 500.
+	moon.pos, moon.vel = ast.coe_to_rv(a, ecc, 14, 120., 0, 140., earth.mu)
 	moon_model := ast.gen_celestialbody_model(
 		f32(moon.semimajor_axis),
 		tint = rl.GOLD,
@@ -55,9 +59,13 @@ main :: proc() {
 	ast.add_celestialbody(&celestialbodies, moon)
 	ast.add_celestialbody_model(&celestialbody_models, moon_model)
 
+	rp = 15000.
+	ra = 2.0e5
+	a = (rp + ra) / 2.
+	ecc = (ra - rp) / (ra + rp)
 	moon2 := ast.luna_params()
-	moon2.semimajor_axis = 200.
-	moon2.pos, moon2.vel = ast.coe_to_rv(1.25e4, 0, 0, 35., 0, 0., earth.mu)
+	moon2.semimajor_axis = 400.
+	moon2.pos, moon2.vel = ast.coe_to_rv(a, ecc, 45, 35., 15., 45., earth.mu)
 	moon2_model := ast.gen_celestialbody_model(
 		f32(moon2.semimajor_axis),
 		tint = rl.RAYWHITE,
@@ -65,10 +73,14 @@ main :: proc() {
 	ast.add_celestialbody(&celestialbodies, moon2)
 	ast.add_celestialbody_model(&celestialbody_models, moon2_model)
 
+
+	rp = 30000.
+	ra = 1.0e5
+	a = (rp + ra) / 2.
+	ecc = (ra - rp) / (ra + rp)
 	moon3 := ast.luna_params()
-	moon3.semimajor_axis = 200.
-	// moon3.pos, moon3.vel = ast.coe_to_rv(5.0e4, .5, 20., 0, 0, 15., earth.mu)
-	moon3.pos, moon3.vel = ast.coe_to_rv(1.25e4, 0, 180, 45., 0, 0., earth.mu)
+	moon3.semimajor_axis = 700.
+	moon3.pos, moon3.vel = ast.coe_to_rv(a, ecc, 0, 45., 60., 180., earth.mu)
 	moon3_model := ast.gen_celestialbody_model(
 		f32(moon3.semimajor_axis),
 		tint = rl.GREEN,
@@ -164,8 +176,8 @@ main :: proc() {
 
 	for !rl.WindowShouldClose() {
 		// dt = get_delta_time(time.tick_now(), &last_time)
-		// dt = f64(rl.GetFrameTime())
-		dt = 1. / 60.
+		dt = f64(rl.GetFrameTime())
+		// dt = 1. / 60.
 		fps = 1. / dt
 		cum_time += dt
 		fmt.println(fps)
@@ -230,10 +242,6 @@ update_simulation :: proc(
 		time_scale *= 2
 	} else if rl.IsKeyPressed(.LEFT) {
 		time_scale /= 2
-	}
-	if rl.IsKeyPressed(rl.KeyboardKey.ENTER) {
-		substeps = 1
-		time_scale = 1
 	}
 	if rl.IsKeyPressed(rl.KeyboardKey.SPACE) {
 		simulate = !simulate

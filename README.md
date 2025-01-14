@@ -11,6 +11,7 @@ Zoom into target: Mousewheel up/down
 Camera Azimuth/Elevation: w/a/s/d
 Toggle Wireframes: tbd
 Toggle Axes: tbd
+Toggle Position Vectors: tbd
 
 ## TODO
 
@@ -57,6 +58,8 @@ Toggle Axes: tbd
     - [ ] add spatial partitioning
   - [ ] collision resolution
     - should the bodies slide/bounce/etc.
+    - idk how to do this, so far they have been hitting, sliding, then shooting off 
+- [ ] Add ability to change position vector origin
 
 ## How to Build
 
