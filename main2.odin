@@ -104,7 +104,7 @@ main :: proc() {
 			earth.mu,
 		)
 
-		alt: f64 = 1000 //+ f64(i) * 100
+		alt: f64 = 2000 //+ f64(i) * 100
 		pos0 = (alt + earth.semimajor_axis) * [3]f64{1., 0., 0.}
 		v_mag0 := math.sqrt(earth.mu / la.vector_length(pos0))
 		angle0: f64 = la.to_radians(0. + f64(i) / f64(num_sats) * 360.)
@@ -209,11 +209,6 @@ main :: proc() {
 		rl.DrawLine3D(origin, y_axis * 10, rl.GREEN)
 		rl.DrawLine3D(origin, z_axis * 10, rl.DARKBLUE)
 
-		// line from origin to satellite
-		for sat, i in asystem.satellites {
-			rl.DrawLine3D(origin, la.array_cast(sat.pos, f32) * u_to_rl, rl.GOLD)
-		}
-
 		rl.EndMode3D()
 		// draw 2D stuff here
 		rl.EndDrawing()
@@ -252,6 +247,14 @@ update_simulation :: proc(
 	}
 	if rl.IsKeyDown(.LEFT_CONTROL) && rl.IsKeyPressed(.R) {
 		ast.copy_system(system, system0)
+	}
+	if rl.IsKeyPressed(.T) {
+		for &model, i in satellite_models {
+			if rl.IsKeyPressed(rl.KeyboardKey.T) {
+				model.draw_trail = !model.draw_trail
+				ast.create_sat_trail(&satellites[i], &model)
+			}
+		}
 	}
 
 }
@@ -340,8 +343,6 @@ update_camera :: proc(
 		rlgl.SetClipPlanes(5.0e-3, 5e3)
 	case .locked:
 	}
-
-
 }
 
 CameraType :: enum {

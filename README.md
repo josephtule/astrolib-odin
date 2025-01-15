@@ -34,7 +34,7 @@ Toggle Position Vectors: tbd
   - NOTE: currently only locks, cannot pan
   - [ ] adjust clipping planes dynamically depending on distance to target
 - [ ] Implement multiple hold for camera movement
-- Add orbit generating functions
+- [ ] Add orbit generating functions
   - [ ] classical orbital elements
   - [ ] n-body
 - [ ] Add orbit data monitors
@@ -60,6 +60,7 @@ Toggle Position Vectors: tbd
     - should the bodies slide/bounce/etc.
     - idk how to do this, so far they have been hitting, sliding, then shooting off 
 - [ ] Add ability to change position vector origin
+  - [ ] Show available origin targets (bodies and other satellites)
 
 ## How to Build
 

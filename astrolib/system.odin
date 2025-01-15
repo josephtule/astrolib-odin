@@ -77,6 +77,9 @@ AstroSystem :: struct {
 	simulate:         bool,
 }
 
+N_trail :: 200
+trail_mod :: 25
+
 update_system :: proc(system: ^AstroSystem, dt, time: f64) {
 	using system
 	N_sats := len(satellites)
@@ -118,6 +121,7 @@ update_system :: proc(system: ^AstroSystem, dt, time: f64) {
 			integrator,
 		)
 		sat.pos, sat.vel = am.state_to_posvel(state_new)
+		update_sat_trail(&sat, &satellite_models[i])
 	}
 
 	// update celestial bodies
@@ -187,6 +191,16 @@ draw_system :: proc(system: ^AstroSystem, u_to_rl: f32 = u_to_rl) {
 				sat_pos_f32,
 				sat_pos_f32 + z_axis,
 				rl.Color({0, 255, 255, 255}),
+			)
+			draw_sat_trail(satellite_models[i])
+		}
+
+		// line from origin to satellite
+		if satellite_models[i].draw_pos {
+			rl.DrawLine3D(
+				satellite_models[i].target_origin,
+				la.array_cast(sat.pos, f32) * u_to_rl,
+				rl.GOLD,
 			)
 		}
 

@@ -34,13 +34,18 @@ CelestialBody :: struct {
 }
 
 CelestialBodyModel :: struct {
-	model:      rl.Model,
-	radius:     f32,
-	local_axes: [3][3]f32,
-	draw_axes:  bool,
-	draw_model: bool,
-	draw_trail: bool,
-	tint:       rl.Color,
+	model:         rl.Model,
+	radius:        f32,
+	local_axes:    [3][3]f32,
+	target_origin: [3]f32,
+	target_id:     int,
+	trail:         [N_trail][3]f32,
+	trail_ind:     int,
+	draw_model:    bool,
+	draw_axes:     bool,
+	draw_pos:      bool,
+	draw_trail:    bool,
+	tint:          rl.Color,
 }
 
 gen_celestialbody :: proc(
@@ -263,4 +268,27 @@ luna_params :: proc(units: am.UnitsLinear = .KILOMETER) -> CelestialBody {
 	}
 	moon.name = "Luna"
 	return moon
+}
+
+create_body_trail :: proc(body: ^CelestialBody, model: ^CelestialBodyModel) {
+	for i := 0; i < N_trail; i += 1 {
+		model.trail[i] = la.array_cast(body.pos, f32)
+	}
+	model.trail_ind = 0
+}
+update_body_trail :: proc(body: ^CelestialBody, model: ^CelestialBodyModel) {
+	model.trail[model.trail_ind] = la.array_cast(body.pos, f32) * u_to_rl
+	model.trail_ind = (model.trail_ind + 1) % N_trail
+}
+draw_body_trail :: proc(model: CelestialBodyModel) {
+	using model
+	if draw_trail {
+		for i := 0; i < N_trail - 1; i += 1 {
+			current := (trail_ind + i) % N_trail
+			next := (current + 1) % N_trail
+
+			color := tint
+			rl.DrawLine3D(trail[current], trail[next], color)
+		}
+	}
 }
