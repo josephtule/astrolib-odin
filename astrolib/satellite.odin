@@ -5,10 +5,14 @@ import "core:math"
 import la "core:math/linalg"
 import rl "vendor:raylib"
 
+g_sat_id_base : int : 10000
+g_sat_id: int = g_sat_id_base
+
 // -----------------------------------------------------------------------------
 // Structs
 // -----------------------------------------------------------------------------
 Satellite :: struct {
+	id:              int,
 	pos, vel:        [3]f64,
 	ep:              [4]f64,
 	omega:           [3]f64,
@@ -23,13 +27,14 @@ Satellite :: struct {
 }
 
 SatelliteModel :: struct {
+	id:            int,
 	model:         rl.Model,
 	model_size:    [3]f32,
 	local_axes:    [3][3]f32,
 	tint:          rl.Color,
 	target_origin: [3]f32,
 	target_id:     int,
-	trail:         [N_trail][3]f32,
+	trail:         [dynamic][3]f32,
 	trail_ind:     int,
 	trail_inc:     int,
 	draw_model:    bool,
@@ -100,6 +105,7 @@ gen_satellite_and_mesh :: proc(
 	tint: rl.Color = rl.RED,
 	primary_color: rl.Color = rl.Color({200, 200, 200, 255}),
 	secondary_color: rl.Color = rl.Color({150, 150, 150, 255}),
+	id: int = g_sat_id,
 	u_to_rl: f64 = u_to_rl,
 ) -> (
 	s: Satellite,
@@ -143,17 +149,25 @@ gen_satellite_and_mesh :: proc(
 	texture := rl.LoadTextureFromImage(image_checker)
 	rl.UnloadImage(image_checker)
 	m.model.materials[0].maps[rl.MaterialMapIndex.ALBEDO].texture = texture
-
+	s.id = id
+	m.id = id
+	g_sat_id += 1
 	return s, m
 }
 
 // -----------------------------------------------------------------------------
 // Trails
 // -----------------------------------------------------------------------------
-N_trail :: 256
-trail_mod :: N_trail / 4
+N_trail := 256
+trail_mod := N_trail / 4
 
 create_sat_trail :: proc(sat: ^Satellite, model: ^SatelliteModel) {
+	for i := 0; i < N_trail; i += 1 {
+		append_elem(&model.trail, la.array_cast(sat.pos, f32) * u_to_rl)
+	}
+	model.trail_ind = 0
+}
+reset_sat_trail :: proc(sat: ^Satellite, model: ^SatelliteModel) {
 	for i := 0; i < N_trail; i += 1 {
 		model.trail[i] = la.array_cast(sat.pos, f32) * u_to_rl
 	}

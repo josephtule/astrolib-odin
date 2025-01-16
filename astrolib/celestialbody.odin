@@ -7,8 +7,11 @@ import rl "vendor:raylib"
 import am "../astromath"
 
 u_to_rl :: am.u_to_rl
+g_body_id_base : int : 0
+g_body_id: int = g_body_id_base
 
 CelestialBody :: struct {
+	id:              int,
 	mu:              f64,
 	mass:            f64,
 	omega:           f64,
@@ -31,12 +34,13 @@ CelestialBody :: struct {
 }
 
 CelestialBodyModel :: struct {
+	id:            int,
 	model:         rl.Model,
 	radius:        f32,
 	local_axes:    [3][3]f32,
 	target_origin: [3]f32,
 	target_id:     int,
-	trail:         [N_trail][3]f32,
+	trail:         [dynamic][3]f32,
 	trail_ind:     int,
 	draw_model:    bool,
 	draw_axes:     bool,
@@ -166,6 +170,7 @@ wgs84 :: proc(
 	units: am.UnitsLinear = .KILOMETER,
 	max_degree: int = 0,
 	max_order: int = 0,
+	id: int = g_body_id,
 ) -> CelestialBody {
 	earth: CelestialBody
 	#partial switch units {
@@ -223,11 +228,17 @@ wgs84 :: proc(
 		panic("ERROR: units for wgs84 are incorrect")
 	}
 	earth.name = "Earth"
+	earth.id = id
+	g_body_id += 1
 	return earth
 }
 
-luna_params :: proc(units: am.UnitsLinear = .KILOMETER) -> CelestialBody {
-
+luna_params :: proc(
+	units: am.UnitsLinear = .KILOMETER,
+	max_degree: int = 0,
+	max_order: int = 0,
+	id: int = g_body_id,
+) -> CelestialBody {
 	moon: CelestialBody
 	#partial switch units {
 	case .KILOMETER:
@@ -264,6 +275,8 @@ luna_params :: proc(units: am.UnitsLinear = .KILOMETER) -> CelestialBody {
 		panic("ERROR: incorrect units for the moon")
 	}
 	moon.name = "Luna"
+	moon.id = id
+	g_body_id += 1
 	return moon
 }
 

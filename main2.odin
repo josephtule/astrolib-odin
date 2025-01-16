@@ -45,8 +45,8 @@ main :: proc() {
 	ast.add_celestialbody(&celestialbodies, earth)
 	ast.add_celestialbody_model(&celestialbody_models, earth_model)
 
-	rp := 12500.
-	ra := 15000.
+	rp := 22500.
+	ra := 34000.
 	a := (rp + ra) / 2.
 	ecc := (ra - rp) / (ra + rp)
 	moon := ast.luna_params()
@@ -59,8 +59,8 @@ main :: proc() {
 	ast.add_celestialbody(&celestialbodies, moon)
 	ast.add_celestialbody_model(&celestialbody_models, moon_model)
 
-	rp = 15000.
-	ra = 2.0e5
+	rp = 10000.
+	ra = 15000.
 	a = (rp + ra) / 2.
 	ecc = (ra - rp) / (ra + rp)
 	moon2 := ast.luna_params()
@@ -75,7 +75,7 @@ main :: proc() {
 
 
 	rp = 30000.
-	ra = 1.0e5
+	ra = 40320
 	a = (rp + ra) / 2.
 	ecc = (ra - rp) / (ra + rp)
 	moon3 := ast.luna_params()
@@ -89,7 +89,7 @@ main :: proc() {
 	ast.add_celestialbody_model(&celestialbody_models, moon3_model)
 
 	// generate orbits/satellites
-	num_sats := 8
+	num_sats := 256
 	satellites: [dynamic]ast.Satellite
 	satellite_models: [dynamic]ast.SatelliteModel
 	for i := 0; i < num_sats; i += 1 {
@@ -104,7 +104,7 @@ main :: proc() {
 			earth.mu,
 		)
 
-		alt: f64 = 2000 //+ f64(i) * 100
+		alt: f64 = 35670 //+ f64(i) * 100
 		pos0 = (alt + earth.semimajor_axis) * [3]f64{1., 0., 0.}
 		v_mag0 := math.sqrt(earth.mu / la.vector_length(pos0))
 		angle0: f64 = la.to_radians(0. + f64(i) / f64(num_sats) * 360.)
@@ -120,13 +120,67 @@ main :: proc() {
 			omega0,
 			{cube_size, cube_size * 2, cube_size * 3},
 		)
-		sat.gravity_model = .zonal
+		sat.gravity_model = .pointmass
 		sat_model.draw_axes = true
 		sat.inertia = matrix[3, 3]f64{
 			100., 0., 0., 
 			0., 200., 0., 
 			0., 0., 300., 
 		}
+		sat.update_attitude = true
+		ast.add_satellite(&satellites, sat)
+		ast.add_satellite_model(&satellite_models, sat_model)
+	}
+
+	// gen satellite orbiting green body
+	{
+		pos0, vel0 := ast.coe_to_rv(1000, 0.01, 15., 227.89, 53.38, 10., moon3.mu)
+		pos0 = pos0 + moon3.pos
+		vel0 = vel0 + moon3.vel
+		ep0: [4]f64 = {0, 0, 0, 1}
+		omega0: [3]f64 = {0.0001, .05, 0.0001}
+		cube_size: f32 = 50 / 1000. * u_to_rl
+		sat, sat_model := ast.gen_satellite_and_mesh(
+			pos0,
+			vel0,
+			ep0,
+			omega0,
+			{cube_size, cube_size * 2, cube_size * 3},
+		)
+		sat.gravity_model = .pointmass
+		sat_model.draw_axes = true
+		sat.inertia = matrix[3, 3]f64{
+			100., 0., 0., 
+			0., 200., 0., 
+			0., 0., 300., 
+		}
+		sat_model.target_id = moon3.id
+		sat.update_attitude = true
+		ast.add_satellite(&satellites, sat)
+		ast.add_satellite_model(&satellite_models, sat_model)
+	}
+	{
+		pos0, vel0 := ast.coe_to_rv(1000, 0.01, 15., 227.89, 53.38, 75., moon3.mu)
+		pos0 = pos0 + moon3.pos
+		vel0 = vel0 + moon3.vel
+		ep0: [4]f64 = {0, 0, 0, 1}
+		omega0: [3]f64 = {0.0001, .05, 0.0001}
+		cube_size: f32 = 50 / 1000. * u_to_rl
+		sat, sat_model := ast.gen_satellite_and_mesh(
+			pos0,
+			vel0,
+			ep0,
+			omega0,
+			{cube_size, cube_size * 2, cube_size * 3},
+		)
+		sat.gravity_model = .pointmass
+		sat_model.draw_axes = true
+		sat.inertia = matrix[3, 3]f64{
+			100., 0., 0., 
+			0., 200., 0., 
+			0., 0., 300., 
+		}
+		sat_model.target_id = moon3.id
 		sat.update_attitude = true
 		ast.add_satellite(&satellites, sat)
 		ast.add_satellite_model(&satellite_models, sat_model)
@@ -242,17 +296,21 @@ update_simulation :: proc(
 	if rl.IsKeyPressed(rl.KeyboardKey.SPACE) {
 		simulate = !simulate
 	}
-	if !rl.IsKeyDown(.LEFT_CONTROL) && rl.IsKeyPressed(.R) {
-		substeps = 1
-		time_scale = 1
+	if !rl.IsKeyDown(.LEFT_SHIFT) && rl.IsKeyPressed(.R) {
+		// TODO: handle this later
+		substeps = 8
+		time_scale = 8
 	}
-	if rl.IsKeyDown(.LEFT_CONTROL) && rl.IsKeyPressed(.R) {
+	if rl.IsKeyDown(.LEFT_SHIFT) && rl.IsKeyPressed(.R) {
 		ast.copy_system(system, system0)
+		for &model, i in satellite_models {
+			ast.reset_sat_trail(&satellites[i], &model)
+		}
 	}
 	if rl.IsKeyPressed(.T) {
 		for &model, i in satellite_models {
 			model.draw_trail = !model.draw_trail
-			ast.create_sat_trail(&satellites[i], &model)
+			ast.reset_sat_trail(&satellites[i], &model)
 		}
 	}
 	if rl.IsKeyPressed(.P) {
@@ -266,7 +324,7 @@ update_simulation :: proc(
 		}
 	}
 	if rl.IsKeyPressed(.I) {
-		for &sat in satellites{
+		for &sat in satellites {
 			sat.update_attitude = !sat.update_attitude
 		}
 	}
@@ -280,12 +338,12 @@ update_camera :: proc(
 	dt: f64,
 ) {
 	// cycle through satellites/bodies
-	if !rl.IsKeyDown(.LEFT_CONTROL) && rl.IsKeyPressed(.N) {
+	if !rl.IsKeyDown(.LEFT_SHIFT) && rl.IsKeyPressed(.N) {
 		#partial switch params.frame {
 		case .satellite: params.target_sat_id = (params.target_sat_id + 1) % system.num_satellites
 		case .body: params.target_body_id = (params.target_body_id + 1) % system.num_bodies
 		}
-	} else if rl.IsKeyDown(.LEFT_CONTROL) && rl.IsKeyPressed(.N) {
+	} else if rl.IsKeyDown(.LEFT_SHIFT) && rl.IsKeyPressed(.N) {
 		#partial switch params.frame {
 		case .satellite: params.target_sat_id = (params.target_sat_id - 1 + system.num_satellites) % system.num_satellites
 		case .body: params.target_body_id = (params.target_body_id - 1 + system.num_bodies) % system.num_bodies
@@ -295,7 +353,7 @@ update_camera :: proc(
 	params.target_body = &system.bodies[params.target_body_id]
 
 	// switch camera type
-	if rl.IsKeyPressed(rl.KeyboardKey.C) && !rl.IsKeyDown(.LEFT_CONTROL) {
+	if rl.IsKeyPressed(rl.KeyboardKey.C) && !rl.IsKeyDown(.LEFT_SHIFT) {
 		if params.frame == .origin {
 			// switch to satellite
 			params.azel = am.cart_to_azel([3]f64{1, 1, 1} * u_to_rl)
@@ -310,7 +368,7 @@ update_camera :: proc(
 			params.azel = am.cart_to_azel([3]f64{1, 1, 1} * u_to_rl)
 			params.frame = .satellite
 		}
-	} else if rl.IsKeyPressed(.C) && rl.IsKeyDown(.LEFT_CONTROL) {
+	} else if rl.IsKeyPressed(.C) && rl.IsKeyDown(.LEFT_SHIFT) {
 		params.frame = .locked
 	}
 

@@ -35,6 +35,14 @@ create_system :: proc(
 	system.time_scale = time_scale
 	system.substeps = substeps
 
+	// create id map
+	for sat, i in system.satellites {
+		system.id[sat.id] = i
+	}
+	for body, i in system.bodies {
+		system.id[body.id] = i
+	}
+
 	return system
 }
 
@@ -60,6 +68,8 @@ copy_system :: proc(system_dst, system_src: ^AstroSystem) {
 
 
 AstroSystem :: struct {
+	// entity ids 
+	id:               map[int]int,
 	// satellites
 	satellites:       [dynamic]Satellite,
 	satellite_models: [dynamic]SatelliteModel,
@@ -134,7 +144,6 @@ update_system :: proc(system: ^AstroSystem, dt, time: f64) {
 			&params_attitude,
 		)
 	}
-
 	for i := 0; i < N_bodies; i += 1 {
 		// assign new states after computing
 		if !bodies[i].fixed {
@@ -181,6 +190,17 @@ draw_system :: proc(system: ^AstroSystem, u_to_rl: f32 = u_to_rl) {
 
 		// line from origin to satellite
 		if model.draw_pos {
+			ind: int
+			if model.target_id >= g_body_id_base {
+				// target is a body
+				ind = system.id[model.target_id]
+				model.target_origin = am.cast_f32(bodies[ind].pos) * u_to_rl
+			} else {
+				// target is satellite
+				ind = system.id[model.target_id]
+				model.target_origin = am.cast_f32(satellites[ind].pos) * u_to_rl
+			}
+			// model.target_origin = am.cast_f32()
 			rl.DrawLine3D(
 				model.target_origin,
 				la.array_cast(satellites[i].pos, f32) * u_to_rl,
@@ -203,6 +223,5 @@ draw_system :: proc(system: ^AstroSystem, u_to_rl: f32 = u_to_rl) {
 		}
 	}
 }
-
 
 update_trail :: proc() {}

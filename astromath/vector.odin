@@ -1,6 +1,7 @@
 package astromath
 
 import "core:math"
+import la "core:math/linalg"
 
 origin_f64: [3]f64 : {0., 0., 0.}
 xaxis_f64: [3]f64 : {1., 0., 0.}
@@ -159,12 +160,12 @@ set_vector_slice_4 :: proc(
 	}
 }
 
-cast_f32 :: proc(v: $T/[$N]$E) -> T {
+cast_f32 :: proc(v: $T/[$N]$E) -> [N]f32 {
 	out := la.array_cast(v, f32)
 	return out
 }
 
-cast_f64 :: proc(v: $T/[$N]$E) -> T {
+cast_f64 :: proc(v: $T/[$N]$E) -> [N]f64 {
 	out := la.array_cast(v, f64)
 	return out
 }

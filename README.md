@@ -8,17 +8,17 @@
 
 ## Controls (subject to change)
 
-Camera Switching (satellite target, body target, origin): c
-Camera Lock: Ctrl+c
-Cycle Target: n/Ctrl+n
-Zoom into target: Mousewheel up/down
-Camera Azimuth/Elevation: w/a/s/d
-Increment Substeps (physics iterations per frame): up/down
-Increment Time Scale (delta time scaling): left/right
-Toggle Trails: t
-Toggle Wireframes: tbd
-Toggle Axes: o
-Toggle Position Vectors: p
+- Camera Switching (satellite target, body target, origin): c
+- Camera Lock: Ctrl+c
+- Cycle Target: n/Ctrl+n
+- Zoom into target: Mousewheel up/down
+- Camera Azimuth/Elevation: w/a/s/d
+- Increment Substeps (physics iterations per frame): up/down
+- Increment Time Scale (delta time scaling): left/right
+- Toggle Trails: t
+- Toggle Wireframes: tbd
+- Toggle Axes: o
+- Toggle Position Vectors: p
 
 ## How to Build
 
