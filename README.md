@@ -2,6 +2,9 @@
 
 ## Library for orbital mechanics and attitude dynamics for spacecraft
 
+## Example
+![Example](assets/example.gif)
+
 ## Controls (subject to change)
 
 Camera Switching (satellite target, body target, origin): c
