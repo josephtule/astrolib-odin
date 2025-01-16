@@ -3,7 +3,7 @@
 ## Library for orbital mechanics and attitude dynamics for spacecraft
 
 ## Example
-![Example](assets/example.gif)
+<img src="assets/example.gif" width="512">
 
 ## Controls (subject to change)
 
