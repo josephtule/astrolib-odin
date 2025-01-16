@@ -127,6 +127,7 @@ main :: proc() {
 			0., 200., 0., 
 			0., 0., 300., 
 		}
+		sat.update_attitude = true
 		ast.add_satellite(&satellites, sat)
 		ast.add_satellite_model(&satellite_models, sat_model)
 	}
@@ -250,10 +251,8 @@ update_simulation :: proc(
 	}
 	if rl.IsKeyPressed(.T) {
 		for &model, i in satellite_models {
-			// if rl.IsKeyPressed(rl.KeyboardKey.T) {
 			model.draw_trail = !model.draw_trail
 			ast.create_sat_trail(&satellites[i], &model)
-			// }
 		}
 	}
 	if rl.IsKeyPressed(.P) {
@@ -264,6 +263,11 @@ update_simulation :: proc(
 	if rl.IsKeyPressed(.O) {
 		for &model, i in satellite_models {
 			model.draw_axes = !model.draw_axes
+		}
+	}
+	if rl.IsKeyPressed(.I) {
+		for &sat in satellites{
+			sat.update_attitude = !sat.update_attitude
 		}
 	}
 
@@ -317,16 +321,16 @@ update_camera :: proc(
 		params.azel.x /= 1.1
 	}
 	if rl.IsKeyDown(.A) {
-		params.azel.y -= math.to_radians(f64(45.)) * dt
+		params.azel.y -= math.to_radians(f64(90.)) * dt
 	}
 	if rl.IsKeyDown(.D) {
-		params.azel.y += math.to_radians(f64(45.)) * dt
+		params.azel.y += math.to_radians(f64(90.)) * dt
 	}
 	if rl.IsKeyDown(.S) {
-		params.azel.z -= math.to_radians(f64(45.)) * dt
+		params.azel.z -= math.to_radians(f64(90.)) * dt
 	}
 	if rl.IsKeyDown(.W) {
-		params.azel.z += math.to_radians(f64(45.)) * dt
+		params.azel.z += math.to_radians(f64(90.)) * dt
 	}
 
 	#partial switch params.frame {

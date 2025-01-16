@@ -49,6 +49,8 @@ Toggle Position Vectors: p
   - [ ] add multi-threading (separate translational and rotational dynamics?)
   - [x] different integrators
 - [ ] Add rotation to celestial bodies?
+  - [ ] Initial atittude -> set model rotation matrix, update using fixed rotation speed
+  - [ ] Use angle-axis?
 - [ ] Add flag to turn on/off attitude/rotational dynamics
 - [ ] Add draw axes for celestial bodies
 - [ ] Add celestial body constuctor
@@ -62,7 +64,7 @@ Toggle Position Vectors: p
     - [ ] add spatial partitioning
   - [ ] collision resolution
     - should the bodies slide/bounce/etc.
-    - idk how to do this, so far they have been hitting, sliding, then shooting off 
+    - idk how to do this, so far they have been hitting, sliding, then shooting off
 - [ ] Add ability to change position vector origin
   - [ ] Show available origin targets (bodies and other satellites)
 

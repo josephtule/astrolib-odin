@@ -6,16 +6,17 @@ import la "core:math/linalg"
 import rl "vendor:raylib"
 
 Satellite :: struct {
-	pos, vel:      [3]f64,
-	ep:            [4]f64,
-	omega:         [3]f64,
-	mass:          f64,
-	inertia:       matrix[3, 3]f64,
-	radius:        f64, // hardbody radius
-	name:          string,
-	linear_units:  am.UnitsLinear,
-	angular_units: am.UnitsAngle,
-	gravity_model: GravityModel,
+	pos, vel:        [3]f64,
+	ep:              [4]f64,
+	omega:           [3]f64,
+	mass:            f64,
+	inertia:         matrix[3, 3]f64,
+	radius:          f64, // hardbody radius
+	name:            string,
+	linear_units:    am.UnitsLinear,
+	angular_units:   am.UnitsAngle,
+	gravity_model:   GravityModel,
+	update_attitude: bool,
 }
 
 SatelliteModel :: struct {
@@ -137,6 +138,8 @@ update_satellite_model :: proc(sat_model: ^SatelliteModel, sat: Satellite) {
 	am.SetTranslation(&model.transform, la.array_cast(sat.pos, f32))
 }
 
+N_trail :: 256
+trail_mod :: N_trail / 4
 
 create_sat_trail :: proc(sat: ^Satellite, model: ^SatelliteModel) {
 	for i := 0; i < N_trail; i += 1 {
@@ -145,10 +148,14 @@ create_sat_trail :: proc(sat: ^Satellite, model: ^SatelliteModel) {
 	model.trail_ind = 0
 }
 update_sat_trail :: proc(sat: ^Satellite, model: ^SatelliteModel) {
-	model.trail_inc = (model.trail_inc + 1) % trail_mod
-	if model.trail_inc == 0 {
+	model.trail_inc = (model.trail_inc + 1)
+	if model.trail_inc == trail_mod {
+		model.trail_inc = 0
 		model.trail[model.trail_ind] = la.array_cast(sat.pos, f32) * u_to_rl
-		model.trail_ind = (model.trail_ind + 1) % N_trail
+		model.trail_ind = (model.trail_ind + 1)
+		if model.trail_ind == N_trail {
+			model.trail_ind = 0 // Wrap around without modulo
+		}
 	}
 }
 draw_sat_trail :: proc(model: SatelliteModel) {
@@ -158,8 +165,7 @@ draw_sat_trail :: proc(model: SatelliteModel) {
 			current := (trail_ind + i) % N_trail
 			next := (current + 1) % N_trail
 
-			color := tint
-			rl.DrawLine3D(trail[current], trail[next], color)
+			rl.DrawLine3D(trail[current], trail[next], tint)
 		}
 	}
 }

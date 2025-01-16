@@ -77,8 +77,6 @@ AstroSystem :: struct {
 	simulate:         bool,
 }
 
-N_trail :: 256
-trail_mod :: N_trail/4
 
 update_system :: proc(system: ^AstroSystem, dt, time: f64) {
 	using system
@@ -87,22 +85,24 @@ update_system :: proc(system: ^AstroSystem, dt, time: f64) {
 
 	// update satellites first
 	for &sat, i in satellites {
-		// attitude dynamics
-		attitude_params := Params_EulerParam {
-			inertia = sat.inertia,
-			torque  = {0, 0, 0}, // NOTE: no control for now
-		}
-		attitude_current := am.epomega_to_state(sat.ep, sat.omega)
-		_, attitude_new := am.integrate(
-			euler_param_dyanmics,
-			time,
-			attitude_current,
-			dt * time_scale,
-			&attitude_params,
-			integrator,
-		)
-		sat.ep, sat.omega = am.state_to_epomega(attitude_new)
 
+		if sat.update_attitude {
+			// attitude dynamics
+			attitude_params := Params_EulerParam {
+				inertia = sat.inertia,
+				torque  = {0, 0, 0}, // NOTE: no control for now
+			}
+			attitude_current := am.epomega_to_state(sat.ep, sat.omega)
+			_, attitude_new := am.integrate(
+				euler_param_dyanmics,
+				time,
+				attitude_current,
+				dt * time_scale,
+				&attitude_params,
+				integrator,
+			)
+			sat.ep, sat.omega = am.state_to_epomega(attitude_new)
+		}
 		// translational dynamics
 		sat_params := Params_Gravity_Nbody {
 			bodies        = &system.bodies,
