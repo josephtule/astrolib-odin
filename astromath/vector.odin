@@ -158,3 +158,13 @@ set_vector_slice_4 :: proc(
 		vout[i - s4 + offset + l1 + l2 + l3] = v4[i]
 	}
 }
+
+cast_f32 :: proc(v: $T/[$N]$E) -> T {
+	out := la.array_cast(v, f32)
+	return out
+}
+
+cast_f64 :: proc(v: $T/[$N]$E) -> T {
+	out := la.array_cast(v, f64)
+	return out
+}

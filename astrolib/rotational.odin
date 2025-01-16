@@ -14,6 +14,7 @@ Params_EulerParam :: struct {
 	inertia: matrix[3, 3]f64, // in body frame
 	torque:  [3]f64, // in body frame
 }
+Params_BodyAttitude :: struct {}
 euler_param_dyanmics :: proc(
 	t: f64,
 	x: [7]f64,
@@ -67,6 +68,3 @@ angular_velocty_dynamics :: proc(
 		return dwdt
 	}
 }
-
-
-

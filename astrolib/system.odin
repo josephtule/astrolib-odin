@@ -85,68 +85,54 @@ update_system :: proc(system: ^AstroSystem, dt, time: f64) {
 
 	// update satellites first
 	for &sat, i in satellites {
-
-		if sat.update_attitude {
-			// attitude dynamics
-			attitude_params := Params_EulerParam {
-				inertia = sat.inertia,
-				torque  = {0, 0, 0}, // NOTE: no control for now
-			}
-			attitude_current := am.epomega_to_state(sat.ep, sat.omega)
-			_, attitude_new := am.integrate(
-				euler_param_dyanmics,
-				time,
-				attitude_current,
-				dt * time_scale,
-				&attitude_params,
-				integrator,
-			)
-			sat.ep, sat.omega = am.state_to_epomega(attitude_new)
+		// gen params
+		params_attitude := Params_EulerParam {
+			inertia = sat.inertia,
+			torque  = {0, 0, 0}, // NOTE: no control for now
 		}
-		// translational dynamics
-		sat_params := Params_Gravity_Nbody {
+		params_translate := Params_Gravity_Nbody {
 			bodies        = &system.bodies,
 			self_mass     = sat.mass,
 			self_radius   = sat.radius,
 			gravity_model = sat.gravity_model,
 			idx           = -1,
 		}
-		state_current := am.posvel_to_state(sat.pos, sat.vel)
-		_, state_new := am.integrate(
-			ast.gravity_nbody,
+		update_satellite(
+			&sat,
+			&satellite_models[i],
+			dt,
 			time,
-			state_current,
-			dt * time_scale,
-			&sat_params,
+			time_scale,
 			integrator,
+			&params_translate,
+			&params_attitude,
 		)
-		sat.pos, sat.vel = am.state_to_posvel(state_new)
-		update_sat_trail(&sat, &satellite_models[i])
 	}
 
 	// update celestial bodies
 	// store celestial body current positions
 	// rk4 based on old positions
 	state_new_body := make([dynamic][6]f64, len(bodies))
-	for body, i in bodies {
-		if !body.fixed {
-			sat_params := Params_Gravity_Nbody {
-				bodies        = &system.bodies,
-				gravity_model = body.gravity_model,
-				idx           = i,
-				self_radius   = body.semimajor_axis,
-				self_mass     = body.mass,
-			}
-			state_current := am.posvel_to_state(body.pos, body.vel)
-			_, state_new_body[i] = am.integrate(
-				ast.gravity_nbody,
-				time,
-				state_current,
-				dt * time_scale,
-				&sat_params,
-				integrator,
-			)
+	for &body, i in bodies {
+		params_translate := Params_Gravity_Nbody {
+			bodies        = &system.bodies,
+			gravity_model = body.gravity_model,
+			idx           = i,
+			self_radius   = body.semimajor_axis,
+			self_mass     = body.mass,
 		}
+		params_attitude := Params_BodyAttitude{}
+		update_body(
+			&body,
+			&body_models[i],
+			&state_new_body[i],
+			dt,
+			time,
+			time_scale,
+			integrator,
+			&params_translate,
+			&params_attitude,
+		)
 	}
 
 	for i := 0; i < N_bodies; i += 1 {
@@ -155,59 +141,51 @@ update_system :: proc(system: ^AstroSystem, dt, time: f64) {
 			bodies[i].pos, bodies[i].vel = am.state_to_posvel(state_new_body[i])
 		}
 	}
-
-
 }
 
 
 draw_system :: proc(system: ^AstroSystem, u_to_rl: f32 = u_to_rl) {
 	using system
 	// satellite models
-	for sat, i in satellites {
-		q := am.euler_param_to_quaternion(la.array_cast(sat.ep, f32))
-		rot := rl.QuaternionToMatrix(q)
-		sat_pos_f32 := la.array_cast(sat.pos, f32) * u_to_rl
-		satellite_models[i].model.transform = rot
-		am.SetTranslation(&satellite_models[i].model.transform, sat_pos_f32)
+	for &model, i in satellite_models {
+		if satellites[i].update_attitude {
+			q := am.euler_param_to_quaternion(la.array_cast(satellites[i].ep, f32))
+			rot := rl.QuaternionToMatrix(q)
+			model.model.transform = rot
+		}
+		sat_pos_f32 := la.array_cast(satellites[i].pos, f32) * u_to_rl
+		am.SetTranslation(&model.model.transform, sat_pos_f32)
 
-		rl.DrawModel(
-			satellite_models[i].model,
-			am.origin_f32,
-			1,
-			satellite_models[i].tint,
-		)
+		rl.DrawModel(model.model, am.origin_f32, 1, model.tint)
 
-		if satellite_models[i].draw_axes {
-			R := am.GetRotation(satellite_models[i].model.transform)
-
-			x_axis := R * (am.xaxis_f32 * f32(sat.radius) * 10)
-			y_axis := R * (am.yaxis_f32 * f32(sat.radius) * 10)
-			z_axis := R * (am.zaxis_f32 * f32(sat.radius) * 10)
+		if model.draw_axes {
+			if satellites[i].update_attitude {
+				R := am.GetRotation(model.model.transform)
+				model.local_axes[0] = R * (am.xaxis_f32 * f32(satellites[i].radius) * 10)
+				model.local_axes[1] = R * (am.yaxis_f32 * f32(satellites[i].radius) * 10)
+				model.local_axes[2] = R * (am.zaxis_f32 * f32(satellites[i].radius) * 10)
+			}
 
 			// cmy colors for axes
-			rl.DrawLine3D(sat_pos_f32, sat_pos_f32 + x_axis, rl.MAGENTA)
-			rl.DrawLine3D(sat_pos_f32, sat_pos_f32 + y_axis, rl.YELLOW)
+			rl.DrawLine3D(sat_pos_f32, sat_pos_f32 + model.local_axes[0], rl.MAGENTA)
+			rl.DrawLine3D(sat_pos_f32, sat_pos_f32 + model.local_axes[1], rl.YELLOW)
 			rl.DrawLine3D(
 				sat_pos_f32,
-				sat_pos_f32 + z_axis,
+				sat_pos_f32 + model.local_axes[2],
 				rl.Color({0, 255, 255, 255}),
 			)
 		}
-		if satellite_models[i].draw_trail {
+		if model.draw_trail {
 			draw_sat_trail(satellite_models[i])
 		}
 
 		// line from origin to satellite
-		if satellite_models[i].draw_pos {
+		if model.draw_pos {
 			rl.DrawLine3D(
-				satellite_models[i].target_origin,
-				la.array_cast(sat.pos, f32) * u_to_rl,
+				model.target_origin,
+				la.array_cast(satellites[i].pos, f32) * u_to_rl,
 				rl.GOLD,
 			)
-		}
-
-		if satellite_models[i].draw_trail {
-			// update and draw trails
 		}
 	}
 

@@ -48,6 +48,9 @@ Toggle Position Vectors: p
 - [ ] Profile and speed up simulation
   - [ ] add multi-threading (separate translational and rotational dynamics?)
   - [x] different integrators
+- [ ] Separate body/sat update and drawing from system
+  - [x] separate updates
+  - [ ] separate drawing
 - [ ] Add rotation to celestial bodies?
   - [ ] Initial atittude -> set model rotation matrix, update using fixed rotation speed
   - [ ] Use angle-axis?

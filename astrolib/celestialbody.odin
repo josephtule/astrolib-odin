@@ -267,6 +267,33 @@ luna_params :: proc(units: am.UnitsLinear = .KILOMETER) -> CelestialBody {
 	return moon
 }
 
+
+update_body :: proc(
+	body: ^CelestialBody,
+	model: ^CelestialBodyModel,
+	state_new: ^[6]f64,
+	dt, time, time_scale: f64,
+	integrator: am.IntegratorType,
+	params_translate, params_attitude: rawptr,
+) {
+	if body.update_atittude {
+		// update body attitude
+	}
+	if !body.fixed {
+
+		// update body translation
+		state_current := am.posvel_to_state(body.pos, body.vel)
+		_, state_new^ = am.integrate(
+			gravity_nbody,
+			time,
+			state_current,
+			dt * time_scale,
+			params_translate,
+			integrator,
+		)
+	}
+}
+
 create_body_trail :: proc(body: ^CelestialBody, model: ^CelestialBodyModel) {
 	for i := 0; i < N_trail; i += 1 {
 		model.trail[i] = la.array_cast(body.pos, f32)

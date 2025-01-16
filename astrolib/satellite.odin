@@ -5,6 +5,9 @@ import "core:math"
 import la "core:math/linalg"
 import rl "vendor:raylib"
 
+// -----------------------------------------------------------------------------
+// Structs
+// -----------------------------------------------------------------------------
 Satellite :: struct {
 	pos, vel:        [3]f64,
 	ep:              [4]f64,
@@ -37,9 +40,57 @@ SatelliteModel :: struct {
 	// TODO: add trails
 }
 
-update_satellite :: proc(sat: ^Satellite, params: rawptr, dt: f64) {
+// -----------------------------------------------------------------------------
+// Update Functions
+// -----------------------------------------------------------------------------
+update_satellite :: proc(
+	sat: ^Satellite,
+	model: ^SatelliteModel,
+	dt, time, time_scale: f64,
+	integrator: am.IntegratorType,
+	params_translate, params_attitude: rawptr,
+) {
+	// attitude dynamics
+	if sat.update_attitude {
+		attitude_current := am.epomega_to_state(sat.ep, sat.omega)
+		_, attitude_new := am.integrate(
+			euler_param_dyanmics,
+			time,
+			attitude_current,
+			dt * time_scale,
+			params_attitude,
+			integrator,
+		)
+		sat.ep, sat.omega = am.state_to_epomega(attitude_new)
+	}
+
+	// translational dynamics
+	state_current := am.posvel_to_state(sat.pos, sat.vel)
+	_, state_new := am.integrate(
+		gravity_nbody,
+		time,
+		state_current,
+		dt * time_scale,
+		params_translate,
+		integrator,
+	)
+	sat.pos, sat.vel = am.state_to_posvel(state_new)
+	update_sat_trail(sat, model)
 }
 
+update_satellite_model :: proc(sat_model: ^SatelliteModel, sat: Satellite) {
+	using sat_model
+	// set rotation
+	q := am.euler_param_to_quaternion(la.array_cast(sat.ep, f32))
+	N_R_B := rl.QuaternionToMatrix(q)
+	model.transform = N_R_B
+	// set translation
+	am.SetTranslation(&model.transform, la.array_cast(sat.pos, f32))
+}
+
+// -----------------------------------------------------------------------------
+// Generate Satellite Functions
+// -----------------------------------------------------------------------------
 gen_satellite_and_mesh :: proc(
 	pos, vel: [3]f64,
 	ep: [4]f64,
@@ -65,7 +116,6 @@ gen_satellite_and_mesh :: proc(
 		linear_units  = .KILOMETER,
 		angular_units = .RADIANS,
 	}
-
 
 	// default to rectangular prism
 	m.draw_model = true
@@ -97,47 +147,9 @@ gen_satellite_and_mesh :: proc(
 	return s, m
 }
 
-
-add_satellite :: proc {
-	add_satellite_ptr,
-	add_satellite_copy,
-}
-add_satellite_ptr :: proc(sats: ^[dynamic]Satellite, sat: ^Satellite) {
-	append_elem(sats, sat^)
-	free(sat)
-}
-add_satellite_copy :: proc(sats: ^[dynamic]Satellite, sat: Satellite) {
-	append_elem(sats, sat)
-}
-
-add_satellite_model :: proc {
-	add_satellite_model_ptr,
-	add_satellite_model_copy,
-}
-add_satellite_model_ptr :: proc(
-	sat_models: ^[dynamic]SatelliteModel,
-	model: ^SatelliteModel,
-) {
-	append_elem(sat_models, model^)
-	free(model)
-}
-add_satellite_model_copy :: proc(
-	sat_models: ^[dynamic]SatelliteModel,
-	model: SatelliteModel,
-) {
-	append_elem(sat_models, model)
-}
-
-update_satellite_model :: proc(sat_model: ^SatelliteModel, sat: Satellite) {
-	using sat_model
-	// set rotation
-	q := am.euler_param_to_quaternion(la.array_cast(sat.ep, f32))
-	N_R_B := rl.QuaternionToMatrix(q)
-	model.transform = N_R_B
-	// set translation
-	am.SetTranslation(&model.transform, la.array_cast(sat.pos, f32))
-}
-
+// -----------------------------------------------------------------------------
+// Trails
+// -----------------------------------------------------------------------------
 N_trail :: 256
 trail_mod :: N_trail / 4
 
@@ -168,4 +180,37 @@ draw_sat_trail :: proc(model: SatelliteModel) {
 			rl.DrawLine3D(trail[current], trail[next], tint)
 		}
 	}
+}
+
+/// -----------------------------------------------------------------------------
+// Add/Remove Functions
+// -----------------------------------------------------------------------------
+add_satellite :: proc {
+	add_satellite_ptr,
+	add_satellite_copy,
+}
+add_satellite_ptr :: proc(sats: ^[dynamic]Satellite, sat: ^Satellite) {
+	append_elem(sats, sat^)
+	free(sat)
+}
+add_satellite_copy :: proc(sats: ^[dynamic]Satellite, sat: Satellite) {
+	append_elem(sats, sat)
+}
+
+add_satellite_model :: proc {
+	add_satellite_model_ptr,
+	add_satellite_model_copy,
+}
+add_satellite_model_ptr :: proc(
+	sat_models: ^[dynamic]SatelliteModel,
+	model: ^SatelliteModel,
+) {
+	append_elem(sat_models, model^)
+	free(model)
+}
+add_satellite_model_copy :: proc(
+	sat_models: ^[dynamic]SatelliteModel,
+	model: SatelliteModel,
+) {
+	append_elem(sat_models, model)
 }
