@@ -77,8 +77,8 @@ AstroSystem :: struct {
 	simulate:         bool,
 }
 
-N_trail :: 200
-trail_mod :: 25
+N_trail :: 256
+trail_mod :: N_trail/4
 
 update_system :: proc(system: ^AstroSystem, dt, time: f64) {
 	using system
@@ -192,6 +192,8 @@ draw_system :: proc(system: ^AstroSystem, u_to_rl: f32 = u_to_rl) {
 				sat_pos_f32 + z_axis,
 				rl.Color({0, 255, 255, 255}),
 			)
+		}
+		if satellite_models[i].draw_trail {
 			draw_sat_trail(satellite_models[i])
 		}
 

@@ -250,10 +250,20 @@ update_simulation :: proc(
 	}
 	if rl.IsKeyPressed(.T) {
 		for &model, i in satellite_models {
-			if rl.IsKeyPressed(rl.KeyboardKey.T) {
-				model.draw_trail = !model.draw_trail
-				ast.create_sat_trail(&satellites[i], &model)
-			}
+			// if rl.IsKeyPressed(rl.KeyboardKey.T) {
+			model.draw_trail = !model.draw_trail
+			ast.create_sat_trail(&satellites[i], &model)
+			// }
+		}
+	}
+	if rl.IsKeyPressed(.P) {
+		for &model, i in satellite_models {
+			model.draw_pos = !model.draw_pos
+		}
+	}
+	if rl.IsKeyPressed(.O) {
+		for &model, i in satellite_models {
+			model.draw_axes = !model.draw_axes
 		}
 	}
 

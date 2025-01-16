@@ -9,9 +9,12 @@ Camera Lock: Ctrl+c
 Cycle Target: n/Ctrl+n
 Zoom into target: Mousewheel up/down
 Camera Azimuth/Elevation: w/a/s/d
+Increment Substeps (physics iterations per frame): up/down
+Increment Time Scale (delta time scaling): left/right
+Toggle Trails: t
 Toggle Wireframes: tbd
-Toggle Axes: tbd
-Toggle Position Vectors: tbd
+Toggle Axes: o
+Toggle Position Vectors: p
 
 ## TODO
 
@@ -25,6 +28,7 @@ Toggle Position Vectors: tbd
   - [x] add switch to control which model to use (lowest precision between two bodies, certain bodies may not have zonal spherical harmonic parameters)
 - [ ] Add spherical harmonics
 - [ ] Implement rotation vector for zonal (not negligible) and spherical harmonics
+- [ ] Add Julian date and simulation current time
 - [ ] Add UI to be able to spawn new bodies (both celestial and satellite)
   - [ ] Adding new body should pause simulation
   - [ ] add support for rotating frames
@@ -33,7 +37,7 @@ Toggle Position Vectors: tbd
 - [x] Add different cameras (inertial/origin, satellite/body, fixed)
   - NOTE: currently only locks, cannot pan
   - [ ] adjust clipping planes dynamically depending on distance to target
-- [ ] Implement multiple hold for camera movement
+- [x] Implement multiple buttons for camera movement
 - [ ] Add orbit generating functions
   - [ ] classical orbital elements
   - [ ] n-body
