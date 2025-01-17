@@ -16,3 +16,9 @@ small6 :: 1.0e-6
 small9 :: 1.0e-9
 small12 :: 1.0e-12
 small16 :: 1.0e-16
+
+
+// max iterations
+max_iter_small :: 10000
+max_iter_medium :: 100000
+max_iter_large :: 1000000

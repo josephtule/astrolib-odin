@@ -10,63 +10,6 @@ import "core:thread"
 import rl "vendor:raylib"
 
 
-create_system :: proc(
-	sats: [dynamic]Satellite,
-	sat_models: [dynamic]SatelliteModel,
-	bodies: [dynamic]CelestialBody,
-	body_models: [dynamic]CelestialBodyModel,
-	// defaults
-	integrator: am.IntegratorType = .rk4,
-	time_scale: f64 = 8,
-	substeps: int = 8,
-) -> AstroSystem {
-	system: AstroSystem
-	system0: AstroSystem
-
-	system.satellites = slice.clone_to_dynamic(sats[:])
-	system.satellite_models = slice.clone_to_dynamic(sat_models[:])
-	system.num_satellites = len(system.satellites)
-
-	system.bodies = slice.clone_to_dynamic(bodies[:])
-	system.body_models = slice.clone_to_dynamic(body_models[:])
-	system.num_bodies = len(system.bodies)
-
-	system.integrator = integrator
-	system.time_scale = time_scale
-	system.substeps = substeps
-
-	// create id map
-	for sat, i in system.satellites {
-		system.id[sat.id] = i
-	}
-	for body, i in system.bodies {
-		system.id[body.id] = i
-	}
-
-	return system
-}
-
-
-copy_system :: proc(system_dst, system_src: ^AstroSystem) {
-
-	system_dst.satellites = slice.clone_to_dynamic(system_src.satellites[:])
-	system_dst.satellite_models = slice.clone_to_dynamic(
-		system_src.satellite_models[:],
-	)
-	system_dst.num_satellites = len(system_src.satellites)
-
-	system_dst.bodies = slice.clone_to_dynamic(system_src.bodies[:])
-	system_dst.body_models = slice.clone_to_dynamic(system_src.body_models[:])
-	system_dst.num_bodies = len(system_src.bodies)
-
-	system_dst.integrator = system_src.integrator
-	system_dst.time_scale = system_src.time_scale
-	system_dst.substeps = system_src.substeps
-	system_dst.simulate = system_src.simulate
-
-}
-
-
 AstroSystem :: struct {
 	// entity ids 
 	id:               map[int]int,
@@ -85,6 +28,7 @@ AstroSystem :: struct {
 	time_scale:       f64,
 	substeps:         int,
 	simulate:         bool,
+	JD0:              f64,
 }
 
 
@@ -224,4 +168,60 @@ draw_system :: proc(system: ^AstroSystem, u_to_rl: f32 = u_to_rl) {
 	}
 }
 
-update_trail :: proc() {}
+create_system :: proc(
+	sats: [dynamic]Satellite,
+	sat_models: [dynamic]SatelliteModel,
+	bodies: [dynamic]CelestialBody,
+	body_models: [dynamic]CelestialBodyModel,
+	// defaults
+	JD0: f64 = 2451545.0, // default to J2000 TT
+	integrator: am.IntegratorType = .rk4,
+	time_scale: f64 = 8,
+	substeps: int = 8,
+) -> AstroSystem {
+	system: AstroSystem
+	system0: AstroSystem
+
+	system.satellites = slice.clone_to_dynamic(sats[:])
+	system.satellite_models = slice.clone_to_dynamic(sat_models[:])
+	system.num_satellites = len(system.satellites)
+
+	system.bodies = slice.clone_to_dynamic(bodies[:])
+	system.body_models = slice.clone_to_dynamic(body_models[:])
+	system.num_bodies = len(system.bodies)
+
+	system.integrator = integrator
+	system.time_scale = time_scale
+	system.substeps = substeps
+
+
+	// create id map
+	for sat, i in system.satellites {
+		system.id[sat.id] = i
+	}
+	for body, i in system.bodies {
+		system.id[body.id] = i
+	}
+
+	return system
+}
+
+
+copy_system :: proc(system_dst, system_src: ^AstroSystem) {
+
+	system_dst.satellites = slice.clone_to_dynamic(system_src.satellites[:])
+	system_dst.satellite_models = slice.clone_to_dynamic(
+		system_src.satellite_models[:],
+	)
+	system_dst.num_satellites = len(system_src.satellites)
+
+	system_dst.bodies = slice.clone_to_dynamic(system_src.bodies[:])
+	system_dst.body_models = slice.clone_to_dynamic(system_src.body_models[:])
+	system_dst.num_bodies = len(system_src.bodies)
+
+	system_dst.integrator = system_src.integrator
+	system_dst.time_scale = system_src.time_scale
+	system_dst.substeps = system_src.substeps
+	system_dst.simulate = system_src.simulate
+
+}

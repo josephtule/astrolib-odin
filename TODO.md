@@ -23,7 +23,9 @@
 
 ## Physics/Astrodynamics
 
-- [ ] Add tle reader and parser
+- [x] Add tle reader and parser
+  - [x] parse for time only option
+  - [ ] simulate satellite back/forward from tle time to system initial time
 - [ ] Add collision detection and resolution
   - [ ] collision detection
     - [ ] add spatial partitioning
@@ -32,9 +34,9 @@
     - idk how to do this, so far they have been hitting, sliding, then shooting off
 - [ ] Add rotation to celestial bodies?
   - [ ] Initial atittude -> set model rotation matrix, update using fixed rotation speed
-  - [ ] Use angle-axis?
+  - [ ] Use angle-axis or dcm
 - [ ] Add orbit generating functions
-  - [ ] classical orbital elements
+  - [x] classical orbital elements
   - [ ] n-body
 - [ ] Add different controllers
 - [ ] Add example scenarios
@@ -46,6 +48,8 @@
 - [ ] Add spherical harmonics
 - [ ] Implement rotation vector for zonal (not negligible) and spherical harmonics
 - [ ] Add Julian date and simulation current time (sim time = 0 at initial JD)
+  - [x] jd in system
+  - [ ] simulation current time
 
 ## Visual
 

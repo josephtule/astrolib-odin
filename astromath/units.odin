@@ -11,3 +11,12 @@ UnitsLinear :: enum {
 	KILOMETER,
 	AU,
 }
+
+UnitsTime :: enum {
+	YEAR,
+	MONTH,
+	DAY,
+	HOUR,
+	MINUTE,
+	SECOND,
+}

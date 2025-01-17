@@ -5,7 +5,7 @@ import "core:math"
 import la "core:math/linalg"
 import rl "vendor:raylib"
 
-g_sat_id_base : int : 10000
+g_sat_id_base: int : 10000
 g_sat_id: int = g_sat_id_base
 
 // -----------------------------------------------------------------------------
@@ -126,9 +126,8 @@ gen_satellite_and_mesh :: proc(
 	// default to rectangular prism
 	m.draw_model = true
 	m.draw_pos = true
-	m.model = rl.LoadModelFromMesh(
-		rl.GenMeshCube(model_size[0], model_size[1], model_size[2]),
-	)
+	mesh := rl.GenMeshCube(model_size[0], model_size[1], model_size[2])
+	m.model = rl.LoadModelFromMesh(mesh)
 	m.model_size = model_size
 	am.SetTranslation(&m.model.transform, la.array_cast(s.pos * u_to_rl, f32))
 	m.tint = tint
@@ -151,7 +150,9 @@ gen_satellite_and_mesh :: proc(
 	m.model.materials[0].maps[rl.MaterialMapIndex.ALBEDO].texture = texture
 	s.id = id
 	m.id = id
-	g_sat_id += 1
+	if id == g_sat_id {
+		g_sat_id += 1
+	}
 	return s, m
 }
 
