@@ -32,6 +32,8 @@ AstroSystem :: struct {
 }
 
 
+
+
 update_system :: proc(system: ^AstroSystem, dt, time: f64) {
 	using system
 	N_sats := len(satellites)
@@ -224,4 +226,68 @@ copy_system :: proc(system_dst, system_src: ^AstroSystem) {
 	system_dst.substeps = system_src.substeps
 	system_dst.simulate = system_src.simulate
 
+}
+
+
+add_to_system :: proc {
+	add_satellite_to_system,
+	add_satellites_to_system,
+	add_satmodel_to_system,
+	add_satmodels_to_system,
+	add_bodymodel_to_system,
+	add_bodymodels_to_system,
+}
+add_satellite_to_system :: proc(system: ^AstroSystem, sat: Satellite) {
+	using system
+	add_satellite(&satellites, sat)
+	num_satellites += 1
+}
+add_satellites_to_system :: proc(system: ^AstroSystem, sats: []Satellite) {
+	using system
+	for sat in sats {
+		add_satellite(&satellites, sat)
+	}
+	num_satellites += len(sats)
+}
+add_satmodel_to_system :: proc(system: ^AstroSystem, model: SatelliteModel) {
+	using system
+	add_satellite_model(&satellite_models, model)
+}
+add_satmodels_to_system :: proc(
+	system: ^AstroSystem,
+	models: []SatelliteModel,
+) {
+	using system
+	for model in models {
+		add_satellite_model(&satellite_models, model)
+	}
+}
+
+add_body_to_system :: proc(system: ^AstroSystem, body: CelestialBody) {
+	using system
+	add_celestialbody(&bodies, body)
+	num_satellites += 1
+}
+add_bodies_to_system :: proc(system: ^AstroSystem, bodies: []CelestialBody) {
+	using system
+	for body in bodies {
+		add_celestialbody(&bodies, body)
+	}
+	num_satellites += len(bodies)
+}
+add_bodymodel_to_system :: proc(
+	system: ^AstroSystem,
+	model: CelestialBodyModel,
+) {
+	using system
+	add_celestialbody_model(&body_models, model)
+}
+add_bodymodels_to_system :: proc(
+	system: ^AstroSystem,
+	models: []CelestialBodyModel,
+) {
+	using system
+	for model in models {
+		add_celestialbody_model(&body_models, model)
+	}
 }

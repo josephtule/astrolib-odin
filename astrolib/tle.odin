@@ -17,12 +17,20 @@ Millenium :: enum (int) {
 
 parse_tle :: proc(
 	file: string,
-	cb: ^CelestialBody,
+	cb_id: int = -1,
 	system: ^AstroSystem,
 	millenium: Millenium = .two_thousand,
 	time_only: bool = false,
-	num_to_read: int = -1,
+	num_to_read: int = -1, // number of satellites to read
+	start_sat: int = 1, // starting satellite number in file
 ) -> int {
+	cb: ^CelestialBody
+	if cb_id == -1 {
+		e := wgs84() // default to earth (km) at origin if no central body input
+		cb = &e
+	} else {
+		cb = &system.bodies[system.id[cb_id]]
+	}
 	prev_len := len(system.satellites)
 	num_read := 0
 	// open/read file
@@ -30,7 +38,9 @@ parse_tle :: proc(
 	if err != os.ERROR_NONE {
 		panic("ERROR: TLE file does not exist or could not be found")
 	}
-	data, ok := os.read_entire_file(f)
+	data: []byte
+	ok: bool
+	data, ok = os.read_entire_file(f)
 	if !ok {
 		panic("ERROR: TLE data could not be read")
 	}
@@ -38,9 +48,13 @@ parse_tle :: proc(
 	defer delete(data, context.allocator)
 
 	it := string(data)
+	// fmt.println(it)
 	lines := str.split_lines(it)
 	// loop through all strings
 	for i := 0; i < len(lines); i += 1 {
+		if (num_to_read != -1) && (num_read >= (num_to_read + start_sat)) {
+			break
+		}
 		if len(lines[i]) == 0 {
 			continue // skip blank lines
 		} else if lines[i][0] == 2 {
@@ -48,17 +62,18 @@ parse_tle :: proc(
 		}
 		if lines[i][0] == '0' {
 			lines_temp: []string = {lines[i], lines[i + 1], lines[i + 2]}
-			extract_tle(lines_temp, cb, system, millenium, time_only)
+			if num_read >= start_sat {
+				extract_tle(lines_temp, cb, system, millenium, time_only)
+			}
 			i = i + 2
 		} else {
 			lines_temp: []string = {lines[i], lines[i + 1]}
-			extract_tle(lines_temp, cb, system, millenium, time_only)
+			if num_read >= start_sat {
+				extract_tle(lines_temp, cb, system, millenium, time_only)
+			}
 			i += 1
 		}
 		num_read += 1
-		if (num_to_read != -1) && (num_read >= num_to_read) {
-			break
-		}
 	}
 	// parse line 1
 	// parse line 2
@@ -93,7 +108,8 @@ extract_tle :: proc(
 	}
 
 	// parse line 1
-	fmt.println(name)
+	catalog_number := strconv.atoi(line1[2:7])
+	intl_designator := line1[9:17]
 	date: Date
 	date.year = int(millenium) + strconv.atoi(line1[18:20])
 	date.month, date.day, date.hour = dayofyear_to_monthdayhr(
@@ -142,9 +158,12 @@ extract_tle :: proc(
 		vel,
 		ep,
 		omega,
-		[3]f32{cube_size, cube_size * 2, cube_size * 3},
+		[3]f32{cube_size, cube_size, cube_size}, // default to cube
 	)
 	sat.name = name
+	sat.info.name = name
+	sat.info.intl_designator = intl_designator
+	sat.info.tle_index = catalog_number
 
 	// propagate to target time
 	JD := date_to_jd(date)
@@ -154,6 +173,6 @@ extract_tle :: proc(
 	}
 
 	// copy satellite into system
-	add_satellite(&system.satellites, sat)
-	add_satellite_model(&system.satellite_models, model)
+	add_to_system(system, sat)
+	add_to_system(system, model)
 }

@@ -6,7 +6,7 @@
 - [x] Implement adding multiple celestial bodies
 - [ ] Need to figure out how to do floating origin for rendering (and simulations)
       (move origin point to currently viewed object (ie. earth or the any satellite)) to reduce jittering in motion
-- [ ] Create add/remove sat/body to system not just array
+- [x] Create add/remove sat/body to system not just array
 - [ ] Add celestial body constuctor
   - [ ] compute mass/mu depending on input
   - [ ] compute radii (semimajor, semiminor, mean) based on input
@@ -71,6 +71,9 @@
   - [ ] add support for rotating frames
   - [ ] add picker for example configurations
 - [x] Implement multiple buttons for camera movement
+- [ ] Display info of currently target
+  - [x] create info struct for satellites
+  - [ ] create info struct for celestial bodies
 
 ## Misc
 

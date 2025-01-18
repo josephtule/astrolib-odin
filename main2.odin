@@ -89,7 +89,7 @@ main :: proc() {
 	ast.add_celestialbody_model(&celestialbody_models, moon3_model)
 
 	// generate orbits/satellites
-	num_sats := 256
+	num_sats := 2
 	satellites: [dynamic]ast.Satellite
 	satellite_models: [dynamic]ast.SatelliteModel
 	for i := 0; i < num_sats; i += 1 {
@@ -213,6 +213,16 @@ main :: proc() {
 	)
 	asystem0 := new(ast.AstroSystem)
 	ast.copy_system(asystem0, asystem)
+
+	// gen satellites from tle
+	filename := "assets/TLE_data.txt"
+	ast.parse_tle(
+		filename,
+		earth.id,
+		asystem,
+		start_sat = 1000,
+		num_to_read = 1000,
+	)
 
 	// 3D camera
 	target_sat := num_sats / 8

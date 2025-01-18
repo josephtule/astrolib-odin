@@ -24,6 +24,14 @@ Satellite :: struct {
 	angular_units:   am.UnitsAngle,
 	gravity_model:   GravityModel,
 	update_attitude: bool,
+	info:            ^SatelliteInfo,
+}
+
+SatelliteInfo :: struct {
+	name:            string,
+	intl_designator: string,
+	tle_index:       int,
+	catalog_number:  int,
 }
 
 SatelliteModel :: struct {
@@ -122,6 +130,8 @@ gen_satellite_and_mesh :: proc(
 		linear_units  = .KILOMETER,
 		angular_units = .RADIANS,
 	}
+	info: SatelliteInfo
+	s.info = &info
 
 	// default to rectangular prism
 	m.draw_model = true
