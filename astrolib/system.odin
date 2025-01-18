@@ -32,8 +32,6 @@ AstroSystem :: struct {
 }
 
 
-
-
 update_system :: proc(system: ^AstroSystem, dt, time: f64) {
 	using system
 	N_sats := len(satellites)
