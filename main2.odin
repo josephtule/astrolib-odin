@@ -296,12 +296,12 @@ update_simulation :: proc(
 ) {
 	using system
 
-	dt_sim := dt * time_scale
 	dt_max_attitude := 2.
-	dt_in_range := dt_sim <= dt_max_attitude
+
 
 	time_scale_prev := time_scale
 	substeps_prev := substeps
+
 	// handle adding / removing bodies and satellites
 	if rl.IsKeyPressed(.UP) && (f64(substeps) * time_scale < 100000) {
 		substeps *= 2
@@ -316,19 +316,27 @@ update_simulation :: proc(
 	if rl.IsKeyPressed(rl.KeyboardKey.SPACE) {
 		simulate = !simulate
 	}
+
+	dt_in_range_prev := dt * time_scale_prev <= dt_max_attitude
+	dt_in_range_new := dt * time_scale <= dt_max_attitude
 	time_scale_changed := time_scale_prev != time_scale
 	substeps_changed := substeps_prev != substeps
 	fmt.println(
-		!dt_in_range,
-		(time_scale_changed || substeps_changed),
 		"dt sim: ",
 		dt * time_scale,
 	)
-	if !dt_in_range && (time_scale_changed || substeps_changed) {
+	// TODO: save state for attitude then update accordingly, currently turns all attitude on
+	// NOTE: attitude switches only when time_scale changes for now
+	if (dt_in_range_prev && !dt_in_range_new) &&
+	   (time_scale_changed || substeps_changed) {
 		// turn off attitude 
 		for &sat in satellites {
-			// TODO: save state for attitude then update accordingly, currently turns all attitude on
-			sat.update_attitude = dt_in_range
+			sat.update_attitude = false
+		}
+	} else if (!dt_in_range_prev && dt_in_range_new) &&
+	   (time_scale_changed || substeps_changed) {
+		for &sat in satellites {
+			sat.update_attitude = true
 		}
 	}
 
