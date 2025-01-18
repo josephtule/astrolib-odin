@@ -49,8 +49,6 @@ SatelliteModel :: struct {
 	draw_axes:     bool,
 	draw_pos:      bool,
 	draw_trail:    bool,
-
-	// TODO: add trails
 }
 
 // -----------------------------------------------------------------------------
@@ -217,6 +215,7 @@ draw_sat_trail :: proc(model: SatelliteModel) {
 add_satellite :: proc {
 	add_satellite_ptr,
 	add_satellite_copy,
+	add_satellite_soa,
 }
 add_satellite_ptr :: proc(sats: ^[dynamic]Satellite, sat: ^Satellite) {
 	append_elem(sats, sat^)
@@ -224,6 +223,9 @@ add_satellite_ptr :: proc(sats: ^[dynamic]Satellite, sat: ^Satellite) {
 }
 add_satellite_copy :: proc(sats: ^[dynamic]Satellite, sat: Satellite) {
 	append_elem(sats, sat)
+}
+add_satellite_soa :: proc(sats: ^#soa[dynamic]Satellite, sat: Satellite) {
+	append_soa(sats, sat)
 }
 
 add_satellite_model :: proc {

@@ -40,11 +40,25 @@ main :: proc() {
 	}
 
 	cc: [dynamic]int
-	ccc : [4]int
+	ccc: [4]int
 	append(&cc, 1)
 	print_dynamic(ccc[:])
-}
 
+
+	s1: #soa[dynamic]person
+	s2: #soa[dynamic]person
+	append(&s1, person{age = 3, height = 2})
+	append(&s1, person{age = 3, height = 2})
+	append(&s1, person{age = 3, height = 2})
+	append(&s1, person{age = 3, height = 2})
+	s2 = am.copy_soa_array(s1)
+	s1[0].age = 999
+	fmt.println(s2[0].age)
+}
+person :: struct {
+	age:    int,
+	height: int,
+}
 
 print_dynamic :: proc(v: []int) {
 	fmt.println(v)
