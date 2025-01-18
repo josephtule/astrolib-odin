@@ -15,24 +15,8 @@ Millenium :: enum (int) {
 	two_thousand = 2000,
 }
 
-parse_tle :: proc(
-	file: string,
-	cb_id: int = -1,
-	system: ^AstroSystem,
-	millenium: Millenium = .two_thousand,
-	time_only: bool = false,
-	num_to_read: int = -1, // number of satellites to read
-	start_sat: int = 1, // starting satellite number in file
-) -> int {
-	cb: ^CelestialBody
-	if cb_id == -1 {
-		e := wgs84() // default to earth (km) at origin if no central body input
-		cb = &e
-	} else {
-		cb = &system.bodies[system.id[cb_id]]
-	}
-	prev_len := len(system.satellites)
-	num_read := 0
+
+tle_read :: proc(file: string) -> []string {
 	// open/read file
 	f, err := os.open(file)
 	if err != os.ERROR_NONE {
@@ -45,11 +29,35 @@ parse_tle :: proc(
 		panic("ERROR: TLE data could not be read")
 	}
 	defer os.close(f)
-	defer delete(data, context.allocator)
-
+	// defer delete(data, context.allocator)
 	it := string(data)
-	// fmt.println(it)
 	lines := str.split_lines(it)
+	return lines
+}
+
+tle_read_extract :: proc(
+	file: string,
+	cb_id: int = -1,
+	system: ^AstroSystem,
+	millenium: Millenium = .two_thousand,
+	time_only: bool = false,
+	num_to_read: int = -1, // number of satellites to read
+	start_sat: int = 0, // starting satellite index in file
+	gen_model: bool = true,
+) -> int {
+	cb: ^CelestialBody
+	if cb_id == -1 {
+		e := wgs84() // default to earth (km) at origin if no central body input
+		cb = &e
+	} else {
+		cb = &system.bodies[system.id[cb_id]]
+	}
+	prev_len := len(system.satellites)
+	num_read := 0
+
+	lines: []string = tle_read(file)
+	defer delete(lines)
+
 	// loop through all strings
 	for i := 0; i < len(lines); i += 1 {
 		if (num_to_read != -1) && (num_read >= (num_to_read + start_sat)) {
@@ -63,21 +71,18 @@ parse_tle :: proc(
 		if lines[i][0] == '0' {
 			lines_temp: []string = {lines[i], lines[i + 1], lines[i + 2]}
 			if num_read >= start_sat {
-				extract_tle(lines_temp, cb, system, millenium, time_only)
+				extract_tle(lines_temp, cb, system, millenium, time_only, gen_model)
 			}
 			i = i + 2
 		} else {
 			lines_temp: []string = {lines[i], lines[i + 1]}
 			if num_read >= start_sat {
-				extract_tle(lines_temp, cb, system, millenium, time_only)
+				extract_tle(lines_temp, cb, system, millenium, time_only, gen_model)
 			}
 			i += 1
 		}
 		num_read += 1
 	}
-	// parse line 1
-	// parse line 2
-	// propagate to target time
 	return len(system.satellites) - prev_len
 }
 
@@ -88,6 +93,7 @@ extract_tle :: proc(
 	system: ^AstroSystem,
 	millenium: Millenium = .two_thousand,
 	time_only: bool = false,
+	gen_model: bool = false,
 ) {
 	// parse line 0
 	name: string
@@ -96,11 +102,11 @@ extract_tle :: proc(
 		line0 = lines[0]
 		line1 = lines[1]
 		line2 = lines[2]
-		name = line0[2:]
+		name = str.clone(line0[2:])
 	} else if len(lines) == 2 {
 		line1 = lines[0]
 		line2 = lines[1]
-		name = line1[2:8]
+		name = str.clone(line1[2:8])
 	} else {
 		panic(
 			"ERROR: TLE file contains multiple satellites, use parse_tle_multiple instead",
@@ -109,7 +115,7 @@ extract_tle :: proc(
 
 	// parse line 1
 	catalog_number := strconv.atoi(line1[2:7])
-	intl_designator := line1[9:17]
+	intl_designator := str.clone(line1[9:17])
 	date: Date
 	date.year = int(millenium) + strconv.atoi(line1[18:20])
 	date.month, date.day, date.hour = dayofyear_to_monthdayhr(
@@ -153,7 +159,7 @@ extract_tle :: proc(
 	omega: [3]f64 = {0., 0., 0.}
 	// TODO: change this later
 	cube_size: f32 = 500 / 1000. * am.u_to_rl
-	sat, model := gen_satellite_and_mesh(
+	sat, model := gen_sat_and_model(
 		pos,
 		vel,
 		ep,

@@ -26,6 +26,7 @@
 - [x] Add tle reader and parser
   - [x] parse for time only option
   - [ ] simulate satellite back/forward from tle time to system initial time
+  - [ ] separate satellite generation for tle parsing
 - [ ] Add collision detection and resolution
   - [ ] collision detection
     - [ ] add spatial partitioning

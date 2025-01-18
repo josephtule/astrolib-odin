@@ -34,7 +34,7 @@ main :: proc() {
 	a = ast.create_system(ss, sm, bb, bm)
 	ast.add_celestialbody(&a.bodies, earth)
 	// ast.parse_tle_single(filename, &a)
-	fmt.println("Satellites added:", ast.parse_tle(filename, earth.id, &a))
+	fmt.println("Satellites added:", ast.tle_read_extract(filename, earth.id, &a))
 	for sat in a.satellites {
 		fmt.println(sat.name)
 	}

@@ -106,23 +106,18 @@ update_satellite_model :: proc(sat_model: ^SatelliteModel, sat: Satellite) {
 // -----------------------------------------------------------------------------
 // Generate Satellite Functions
 // -----------------------------------------------------------------------------
-gen_satellite_and_mesh :: proc(
+gen_sat :: proc(
 	pos, vel: [3]f64,
 	ep: [4]f64,
 	omega: [3]f64,
-	model_size: [3]f32,
 	mass: f64 = 100.,
-	tint: rl.Color = rl.RED,
-	primary_color: rl.Color = rl.Color({200, 200, 200, 255}),
-	secondary_color: rl.Color = rl.Color({150, 150, 150, 255}),
 	id: int = g_sat_id,
-	u_to_rl: f64 = u_to_rl,
 ) -> (
 	s: Satellite,
-	m: SatelliteModel,
 ) {
 	// defaults to kilometers and radians
 	// default zero mass and radius
+	info: SatelliteInfo
 	s = Satellite {
 		pos           = pos,
 		vel           = vel,
@@ -131,9 +126,24 @@ gen_satellite_and_mesh :: proc(
 		inertia       = la.MATRIX3F64_IDENTITY,
 		linear_units  = .KILOMETER,
 		angular_units = .RADIANS,
+		id            = id,
+		info          = &info,
 	}
-	info: SatelliteInfo
-	s.info = &info
+	if id == g_sat_id {
+		g_sat_id += 1
+	}
+	return s
+}
+gen_satmodel :: proc(
+	sat: ^Satellite,
+	model_size: [3]f32,
+	tint: rl.Color = rl.RED,
+	primary_color: rl.Color = rl.Color({200, 200, 200, 255}),
+	secondary_color: rl.Color = rl.Color({150, 150, 150, 255}),
+) -> (
+	m: SatelliteModel,
+) {
+	sat.radius = f64(min(model_size[0], min(model_size[1], model_size[2])))
 
 	// default to rectangular prism
 	m.draw_model = true
@@ -141,12 +151,11 @@ gen_satellite_and_mesh :: proc(
 	mesh := rl.GenMeshCube(model_size[0], model_size[1], model_size[2])
 	m.model = rl.LoadModelFromMesh(mesh)
 	m.model_size = model_size
-	am.SetTranslation(&m.model.transform, la.array_cast(s.pos * u_to_rl, f32))
+	am.SetTranslation(&m.model.transform, la.array_cast(sat.pos * u_to_rl, f32))
 	m.tint = tint
-	create_sat_trail(&s, &m)
+	create_sat_trail(sat, &m)
 	m.draw_trail = true
 
-	s.radius = f64(min(model_size[0], min(model_size[1], model_size[2])))
 
 	// checker pattern
 	image_checker := rl.GenImageChecked(
@@ -160,11 +169,25 @@ gen_satellite_and_mesh :: proc(
 	texture := rl.LoadTextureFromImage(image_checker)
 	rl.UnloadImage(image_checker)
 	m.model.materials[0].maps[rl.MaterialMapIndex.ALBEDO].texture = texture
-	s.id = id
-	m.id = id
-	if id == g_sat_id {
-		g_sat_id += 1
-	}
+	m.id = sat.id
+	return m
+}
+gen_sat_and_model :: proc(
+	pos, vel: [3]f64,
+	ep: [4]f64,
+	omega: [3]f64,
+	model_size: [3]f32,
+	mass: f64 = 100.,
+	tint: rl.Color = rl.RED,
+	primary_color: rl.Color = rl.Color({200, 200, 200, 255}),
+	secondary_color: rl.Color = rl.Color({150, 150, 150, 255}),
+	id: int = g_sat_id,
+) -> (
+	s: Satellite,
+	m: SatelliteModel,
+) {
+	s = gen_sat(pos, vel, ep, omega, mass)
+	m = gen_satmodel(&s, model_size)
 	return s, m
 }
 

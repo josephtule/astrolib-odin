@@ -100,7 +100,7 @@ main2 :: proc() {
 
 	s2 := new(ast.Satellite)
 	ms2 := new(ast.SatelliteModel)
-	s2^, ms2^ = ast.gen_satellite_and_mesh(pos0, -vel0, ep0, omega0, cube_size)
+	s2^, ms2^ = ast.gen_sat_and_model(pos0, -vel0, ep0, omega0, cube_size)
 	ast.add_satellite(&sats, s2)
 
 	// Trajectory Trail

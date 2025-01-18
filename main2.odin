@@ -113,7 +113,7 @@ main :: proc() {
 		omega0: [3]f64 = {0.0001, .05, 0.0001}
 
 		cube_size: f32 = 50 / 1000. * u_to_rl
-		sat, sat_model := ast.gen_satellite_and_mesh(
+		sat, sat_model := ast.gen_sat_and_model(
 			pos0,
 			vel0,
 			ep0,
@@ -140,7 +140,7 @@ main :: proc() {
 		ep0: [4]f64 = {0, 0, 0, 1}
 		omega0: [3]f64 = {0.0001, .05, 0.0001}
 		cube_size: f32 = 50 / 1000. * u_to_rl
-		sat, sat_model := ast.gen_satellite_and_mesh(
+		sat, sat_model := ast.gen_sat_and_model(
 			pos0,
 			vel0,
 			ep0,
@@ -166,7 +166,7 @@ main :: proc() {
 		ep0: [4]f64 = {0, 0, 0, 1}
 		omega0: [3]f64 = {0.0001, .05, 0.0001}
 		cube_size: f32 = 50 / 1000. * u_to_rl
-		sat, sat_model := ast.gen_satellite_and_mesh(
+		sat, sat_model := ast.gen_sat_and_model(
 			pos0,
 			vel0,
 			ep0,
@@ -211,19 +211,28 @@ main :: proc() {
 		integrator = .ralston,
 		// integrator = .rk4,
 	)
-	asystem0 := new(ast.AstroSystem)
-	ast.copy_system(asystem0, asystem)
 
 	// gen satellites from tle
 	filename := "assets/TLE_data.txt"
-	ast.parse_tle(
+	ast.tle_read_extract(
 		filename,
 		earth.id,
 		asystem,
-		start_sat = 1000,
-		num_to_read = 1000,
+		start_sat = 2492,
+		num_to_read = 24,
 	)
+	// ast.tle_read_extract(filename, earth.id, asystem)
+
+	filename = "assets/ISS_TLE_HW7.txt"
+	ast.tle_read_extract(filename, earth.id, asystem)
+
+	fmt.println("Loaded the following satellites:")
+	for sat in asystem.satellites {
+		fmt.println(sat.name)
+	}
+	asystem0 := new(ast.AstroSystem)
 	ast.copy_system(asystem0, asystem)
+
 
 	// 3D camera
 	target_sat := num_sats / 8
@@ -321,15 +330,13 @@ update_simulation :: proc(
 	dt_in_range_new := dt * time_scale <= dt_max_attitude
 	time_scale_changed := time_scale_prev != time_scale
 	substeps_changed := substeps_prev != substeps
-	fmt.println(
-		"dt sim: ",
-		dt * time_scale,
-	)
+	// fmt.println("dt sim: ", dt * time_scale)
+	fmt.println(dt_in_range_prev, dt_in_range_prev)
 	// TODO: save state for attitude then update accordingly, currently turns all attitude on
 	// NOTE: attitude switches only when time_scale changes for now
 	if (dt_in_range_prev && !dt_in_range_new) &&
 	   (time_scale_changed || substeps_changed) {
-		// turn off attitude 
+		// turn off attitude
 		for &sat in satellites {
 			sat.update_attitude = false
 		}

@@ -12,7 +12,7 @@ import rl "vendor:raylib"
 
 AstroSystem :: struct {
 	// entity ids 
-	id:               map[int]int, // maps 
+	id:               map[int]int, // maps id to index 
 	// satellites
 	satellites:       [dynamic]Satellite,
 	satellite_models: [dynamic]SatelliteModel,
@@ -227,18 +227,22 @@ add_to_system :: proc {
 	add_satellites_to_system,
 	add_satmodel_to_system,
 	add_satmodels_to_system,
+	add_body_to_system,
+	add_bodies_to_system,
 	add_bodymodel_to_system,
 	add_bodymodels_to_system,
 }
 add_satellite_to_system :: proc(system: ^AstroSystem, sat: Satellite) {
 	using system
 	add_satellite(&satellites, sat)
+	id[sat.id] = num_satellites
 	num_satellites += 1
 }
 add_satellites_to_system :: proc(system: ^AstroSystem, sats: []Satellite) {
 	using system
-	for sat in sats {
+	for sat, i in sats {
 		add_satellite(&satellites, sat)
+		id[sat.id] = num_satellites + i
 	}
 	num_satellites += len(sats)
 }
@@ -259,12 +263,14 @@ add_satmodels_to_system :: proc(
 add_body_to_system :: proc(system: ^AstroSystem, body: CelestialBody) {
 	using system
 	add_celestialbody(&bodies, body)
-	num_satellites += 1
+	id[body.id] = num_bodies
+	num_bodies += 1
 }
 add_bodies_to_system :: proc(system: ^AstroSystem, bodies: []CelestialBody) {
 	using system
-	for body in bodies {
+	for body, i in bodies {
 		add_celestialbody(&bodies, body)
+		id[body.id] = num_bodies + i
 	}
 	num_satellites += len(bodies)
 }
