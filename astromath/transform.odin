@@ -77,6 +77,10 @@ quaternion_to_euler_param :: proc(q: quaternion256) -> (ep: [4]f64) {
 	return ep
 }
 
+// euler_param_to_dcm :: proc(ep: [4]f64) -> matrix[3,3]f64 {
+
+// }
+
 rot :: proc(
 	angle: $T,
 	axis: int,

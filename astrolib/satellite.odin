@@ -67,13 +67,14 @@ update_satellite :: proc(
 	if sat.update_attitude {
 		attitude_current := am.epomega_to_state(sat.ep, sat.omega)
 		_, attitude_new := am.integrate(
-			euler_param_dyanmics,
+			euler_param_dynamics,
 			time,
 			attitude_current,
 			dt * time_scale,
 			params_attitude,
 			integrator,
 		)
+		sat.ep = la.vector_normalize0(sat.ep)
 		sat.ep, sat.omega = am.state_to_epomega(attitude_new)
 	}
 
@@ -94,11 +95,14 @@ update_satellite :: proc(
 update_satellite_model :: proc(sat_model: ^SatelliteModel, sat: Satellite) {
 	using sat_model
 	// set rotation
-	q := am.euler_param_to_quaternion(la.array_cast(sat.ep, f32))
-	N_R_B := rl.QuaternionToMatrix(q)
-	model.transform = N_R_B
+	if sat.update_attitude {
+		q := am.euler_param_to_quaternion(la.array_cast(sat.ep, f32))
+		N_R_B := rl.QuaternionToMatrix(q)
+		model.transform = N_R_B
+	}
 	// set translation
-	am.SetTranslation(&model.transform, la.array_cast(sat.pos, f32))
+	sat_pos_f32 := la.array_cast(sat.pos, f32) * u_to_rl
+	am.SetTranslation(&model.transform, sat_pos_f32)
 }
 
 // -----------------------------------------------------------------------------

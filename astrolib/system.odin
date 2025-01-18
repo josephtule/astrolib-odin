@@ -101,13 +101,8 @@ draw_system :: proc(system: ^AstroSystem, u_to_rl: f32 = u_to_rl) {
 	using system
 	// satellite models
 	for &model, i in satellite_models {
-		if satellites[i].update_attitude {
-			q := am.euler_param_to_quaternion(la.array_cast(satellites[i].ep, f32))
-			rot := rl.QuaternionToMatrix(q)
-			model.model.transform = rot
-		}
+		update_satellite_model(&model, satellites[i])
 		sat_pos_f32 := la.array_cast(satellites[i].pos, f32) * u_to_rl
-		am.SetTranslation(&model.model.transform, sat_pos_f32)
 
 		rl.DrawModel(model.model, am.origin_f32, 1, model.tint)
 

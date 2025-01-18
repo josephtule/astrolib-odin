@@ -22,8 +22,8 @@ rl_to_u :: am.rl_to_u
 main :: proc() {
 
 	// raylib init
-	window_width: i32 = 1024
-	window_height: i32 = 1024
+	window_width: i32 = 1024 / 2
+	window_height: i32 = 1024 / 2
 	// rl.SetConfigFlags({.WINDOW_TRANSPARENT, .MSAA_4X_HINT})
 	rl.InitWindow(window_width, window_height, "AstroLib")
 	rl.SetWindowState({.WINDOW_RESIZABLE})
@@ -208,8 +208,8 @@ main :: proc() {
 		// bodies
 		bodies = celestialbodies,
 		body_models = celestialbody_models,
-		// integrator = .ralston,
-		integrator = .rk1,
+		integrator = .ralston,
+		// integrator = .rk4,
 	)
 	asystem0 := new(ast.AstroSystem)
 	ast.copy_system(asystem0, asystem)
@@ -223,6 +223,7 @@ main :: proc() {
 		start_sat = 1000,
 		num_to_read = 1000,
 	)
+	ast.copy_system(asystem0, asystem)
 
 	// 3D camera
 	target_sat := num_sats / 8
@@ -246,10 +247,10 @@ main :: proc() {
 		// dt = 1. / 60.
 		fps = 1. / dt
 		cum_time += dt
-		fmt.println(fps)
+		// fmt.println(fps)
 
 		// update
-		update_simulation(asystem, asystem0)
+		update_simulation(asystem, asystem0, dt)
 		if asystem.simulate {
 			for k := 0; k < asystem.substeps; k += 1 {
 				sim_time += dt
@@ -291,8 +292,16 @@ get_delta_time :: proc(current: time.Tick, last: ^time.Tick) -> (dt: f64) {
 update_simulation :: proc(
 	system: ^ast.AstroSystem,
 	system0: ^ast.AstroSystem,
+	dt: f64,
 ) {
 	using system
+
+	dt_sim := dt * time_scale
+	dt_max_attitude := 2.
+	dt_in_range := dt_sim <= dt_max_attitude
+
+	time_scale_prev := time_scale
+	substeps_prev := substeps
 	// handle adding / removing bodies and satellites
 	if rl.IsKeyPressed(.UP) && (f64(substeps) * time_scale < 100000) {
 		substeps *= 2
@@ -307,6 +316,22 @@ update_simulation :: proc(
 	if rl.IsKeyPressed(rl.KeyboardKey.SPACE) {
 		simulate = !simulate
 	}
+	time_scale_changed := time_scale_prev != time_scale
+	substeps_changed := substeps_prev != substeps
+	fmt.println(
+		!dt_in_range,
+		(time_scale_changed || substeps_changed),
+		"dt sim: ",
+		dt * time_scale,
+	)
+	if !dt_in_range && (time_scale_changed || substeps_changed) {
+		// turn off attitude 
+		for &sat in satellites {
+			// TODO: save state for attitude then update accordingly, currently turns all attitude on
+			sat.update_attitude = dt_in_range
+		}
+	}
+
 	if !rl.IsKeyDown(.LEFT_SHIFT) && rl.IsKeyPressed(.R) {
 		// TODO: handle this later
 		substeps = 8

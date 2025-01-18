@@ -203,7 +203,7 @@ main2 :: proc() {
 					&zonal_params,
 				)
 				_, xrk = am.rk4_step(
-					ast.euler_param_dyanmics,
+					ast.euler_param_dynamics,
 					f64(cum_time),
 					xrk,
 					f64(dt) * time_scale,
