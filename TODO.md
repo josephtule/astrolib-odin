@@ -19,7 +19,7 @@
   - [x] different integrators
 - [ ] Add game states (paused, play, restart, etc.)
   - [x] paused
-- [ ] Add skip to time function using simulation time (also add loading percentage) 
+- [ ] Add skip to time function using simulation time (also add loading percentage)
 
 ## Physics/Astrodynamics
 
@@ -64,6 +64,8 @@
 
 ## UI/Controls
 
+- [ ] Figure out how to do UI lol
+  - [ ]
 - [ ] Add UI to be able to spawn new bodies (both celestial and satellite)
   - [ ] Adding new body should pause simulation
   - [ ] add support for rotating frames

@@ -37,7 +37,11 @@
       "label": "mkdir_win",
       "type": "shell",
       "command": "cmd",
-      "args": ["/C", "if not exist .\\build mkdir .\\build"]
+      "args": [
+        "Remove-Item build/ -Recurse -Force -Confirm:$false",
+        "/C",
+        "if not exist .\\build mkdir .\\build"
+      ]
     },
     // main
     {

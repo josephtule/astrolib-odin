@@ -12,7 +12,7 @@ import rl "vendor:raylib"
 
 AstroSystem :: struct {
 	// entity ids 
-	id:               map[int]int,
+	id:               map[int]int, // maps 
 	// satellites
 	satellites:       [dynamic]Satellite,
 	satellite_models: [dynamic]SatelliteModel,

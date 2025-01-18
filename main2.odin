@@ -104,7 +104,7 @@ main :: proc() {
 			earth.mu,
 		)
 
-		alt: f64 = 35670 //+ f64(i) * 100
+		alt: f64 = 25702 //+ f64(i) * 100
 		pos0 = (alt + earth.semimajor_axis) * [3]f64{1., 0., 0.}
 		v_mag0 := math.sqrt(earth.mu / la.vector_length(pos0))
 		angle0: f64 = la.to_radians(0. + f64(i) / f64(num_sats) * 360.)
@@ -208,7 +208,8 @@ main :: proc() {
 		// bodies
 		bodies = celestialbodies,
 		body_models = celestialbody_models,
-		integrator = .ralston,
+		// integrator = .ralston,
+		integrator = .rk1,
 	)
 	asystem0 := new(ast.AstroSystem)
 	ast.copy_system(asystem0, asystem)
