@@ -222,7 +222,7 @@ create_sat_trail :: proc(sat: ^Satellite, model: ^SatelliteModel) {
 	model.trail_ind = 0
 }
 resize_sat_trail :: proc(sat: ^Satellite, model: ^SatelliteModel) {
-	delete(model.trail)
+	// delete(model.trail)
 	model.trail = make([dynamic][3]f32, N_trail_sat)
 	reset_sat_trail(sat, model)
 }

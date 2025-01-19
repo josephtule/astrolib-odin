@@ -2,137 +2,195 @@ package main
 
 import "base:intrinsics"
 import "core:fmt"
-
 import "core:math"
 import la "core:math/linalg"
-
+import "core:mem"
 import "core:strconv"
 import "core:strings"
+import "core:time"
 import "core:unicode/utf8"
-
-import rl "vendor:raylib"
-import "vendor:raylib/rlgl"
 
 import ast "astrolib"
 import am "astromath"
+import rl "vendor:raylib"
+import "vendor:raylib/rlgl"
 
-// u_to_rl :: am.u_to_rl
-// rl_to_u :: am.rl_to_u
+u_to_rl :: am.u_to_rl
+rl_to_u :: am.rl_to_u
 
-main2 :: proc() {
-	// Raylib window
-	window_width: i32 = 1024
-	window_height: i32 = 1024
-	rl.SetConfigFlags({.WINDOW_TRANSPARENT})
-	rl.InitWindow(window_width, window_height, "Test")
-	rl.SetWindowState({.VSYNC_HINT, .WINDOW_RESIZABLE, .MSAA_4X_HINT})
-	// rl.SetTargetFPS(60)
-	rl.SetTargetFPS(rl.GetMonitorRefreshRate(0)) // Dynamically align with the display
+print_fps: bool
+print_dtsim: bool
 
+
+main :: proc() {
+
+	// raylib init
+	window_width: i32 = 1024 / 2
+	window_height: i32 = 1024 / 2
+	// rl.SetConfigFlags({.WINDOW_TRANSPARENT, .MSAA_4X_HINT})
+	rl.InitWindow(window_width, window_height, "AstroLib")
+	rl.SetWindowState({.WINDOW_RESIZABLE})
+	// rl.SetTargetFPS(rl.GetMonitorRefreshRate(0))
+	rl.SetTargetFPS(60)
 	defer rl.CloseWindow()
 
-	// Textures ----------------------------------------------------------------
-	// Satellite
-	image_checker := rl.GenImageChecked(2, 2, 1, 1, rl.GOLD, rl.SKYBLUE)
-	texture_satellite := rl.LoadTextureFromImage(image_checker)
-	rl.UnloadImage(image_checker)
+	// generate celestial bodies
+	celestialbodies: [dynamic]ast.CelestialBody
+	celestialbody_models: [dynamic]ast.CelestialBodyModel
 
-	// Earth
-	image_checker = rl.GenImageChecked(
-		16,
-		16,
-		1,
-		1,
-		rl.Color({30, 102, 245, 255}),
-		rl.BLUE,
+	earth := ast.wgs84()
+	earth.gravity_model = .pointmass
+	earth.max_degree = 2
+	earth.fixed = true
+	earth_model := ast.gen_celestialbody_model(
+		f32(earth.semimajor_axis),
+		faces = 128,
 	)
-	texture_earth := rl.LoadTextureFromImage(image_checker)
-	rl.UnloadImage(image_checker)
+	ast.add_celestialbody(&celestialbodies, earth)
+	ast.add_celestialbody_model(&celestialbody_models, earth_model)
 
-
-	// Earth -------------------------------------------------------------------
-	// Physical Parameters
-	earth: ast.CelestialBody = ast.wgs84()
-	// Earth Mesh
-	model_earth := rl.LoadModelFromMesh(
-		rl.GenMeshSphere(f32(earth.semimajor_axis) * u_to_rl, 120, 120),
+	rp := 22500.
+	ra := 34000.
+	a := (rp + ra) / 2.
+	ecc := (ra - rp) / (ra + rp)
+	moon := ast.luna_params()
+	moon.semimajor_axis = 500.
+	moon.pos, moon.vel = ast.coe_to_rv(a, ecc, 14, 120., 0, 140., earth.mu)
+	moon_model := ast.gen_celestialbody_model(
+		f32(moon.semimajor_axis),
+		tint = rl.GOLD,
 	)
-	model_earth.materials[0].maps[rl.MaterialMapIndex.ALBEDO].texture =
-		texture_earth
+	ast.add_celestialbody(&celestialbodies, moon)
+	ast.add_celestialbody_model(&celestialbody_models, moon_model)
 
-	// Satellite ---------------------------------------------------------------
-	// Orbit
-	alt: f64 = 1000
-	pos0: [3]f64 = (alt + earth.semimajor_axis) * [3]f64{1., 0., 0.}
-	v_mag0 := math.sqrt(earth.mu / la.vector_length(pos0))
-	angle0: f64 = la.to_radians(25.)
-	vel0: [3]f64 = v_mag0 * [3]f64{0., math.cos(angle0), math.sin(angle0)}
-	ep0: [4]f64 = {0, 0, 0, 1}
-	omega0: [3]f64 = {0.0001, .05, 0.0001}
-
-	// Physical Parameters
-	satellite := ast.Satellite {
-		pos           = pos0,
-		vel           = vel0,
-		ep            = ep0,
-		omega         = omega0,
-		linear_units  = .KILOMETER,
-		angular_units = .RADIANS,
-	}
-	cube_size: f32 = 50 / 1000. * u_to_rl
-
-	// Satellite Mesh
-	model_size := [3]f32{cube_size, cube_size * 2, cube_size * 3}
-	model_satellite := rl.LoadModelFromMesh(
-		rl.GenMeshCube(model_size[0], model_size[1], model_size[2]),
+	rp = 10000.
+	ra = 15000.
+	a = (rp + ra) / 2.
+	ecc = (ra - rp) / (ra + rp)
+	moon2 := ast.luna_params()
+	moon2.semimajor_axis = 400.
+	moon2.pos, moon2.vel = ast.coe_to_rv(a, ecc, 45, 35., 15., 45., earth.mu)
+	moon2_model := ast.gen_celestialbody_model(
+		f32(moon2.semimajor_axis),
+		tint = rl.RAYWHITE,
 	)
-	am.SetTranslation(
-		&model_satellite.transform,
-		la.array_cast(satellite.pos * u_to_rl, f32),
+	ast.add_celestialbody(&celestialbodies, moon2)
+	ast.add_celestialbody_model(&celestialbody_models, moon2_model)
+
+
+	rp = 30000.
+	ra = 40320
+	a = (rp + ra) / 2.
+	ecc = (ra - rp) / (ra + rp)
+	moon3 := ast.luna_params()
+	moon3.semimajor_axis = 700.
+	moon3.pos, moon3.vel = ast.coe_to_rv(a, ecc, 0, 45., 60., 180., earth.mu)
+	moon3_model := ast.gen_celestialbody_model(
+		f32(moon3.semimajor_axis),
+		tint = rl.GREEN,
 	)
-	model_satellite.materials[0].maps[rl.MaterialMapIndex.ALBEDO].texture =
-		texture_satellite
+	ast.add_celestialbody(&celestialbodies, moon3)
+	ast.add_celestialbody_model(&celestialbody_models, moon3_model)
 
+	// generate orbits/satellites
+	num_sats := 2
+	satellites: [dynamic]ast.Satellite
+	satellite_models: [dynamic]ast.SatelliteModel
+	for i := 0; i < num_sats; i += 1 {
+		ta := math.lerp(0., 90., f64(i) / f64(num_sats))
+		pos0, vel0 := ast.coe_to_rv(
+			3.612664283480516e+04,
+			0.83285,
+			87.87,
+			227.89,
+			53.38,
+			ta,
+			earth.mu,
+		)
 
-	// set up satellite storage
-	sats: [dynamic]ast.Satellite
-	sat_models: [dynamic]ast.SatelliteModel
+		alt: f64 = 25702 //+ f64(i) * 100
+		pos0 = (alt + earth.semimajor_axis) * [3]f64{1., 0., 0.}
+		v_mag0 := math.sqrt(earth.mu / la.vector_length(pos0))
+		angle0: f64 = la.to_radians(0. + f64(i) / f64(num_sats) * 360.)
+		vel0 = v_mag0 * [3]f64{0., math.cos(angle0), math.sin(angle0)}
+		ep0: [4]f64 = {0, 0, 0, 1}
+		omega0: [3]f64 = {0.0001, .05, 0.0001}
 
-	s2 := new(ast.Satellite)
-	ms2 := new(ast.SatelliteModel)
-	s2^, ms2^ = ast.gen_sat_and_model(pos0, -vel0, ep0, omega0, cube_size)
-	ast.add_satellite(&sats, s2)
-
-	// Trajectory Trail
-	N_trail: int : 20000
-	trail_pos: [N_trail][3]f32
-	x0 := la.array_cast(am.GetTranslation(model_satellite.transform), f32)
-	for i := 0; i < N_trail; i += 1 {
-		trail_pos[i] = x0
+		cube_size: f32 = 50 / 1000. * u_to_rl
+		sat, sat_model := ast.gen_sat_and_model(
+			pos0,
+			vel0,
+			ep0,
+			omega0,
+			{cube_size, cube_size * 2, cube_size * 3},
+		)
+		sat.gravity_model = .pointmass
+		sat_model.draw_axes = true
+		sat.inertia = matrix[3, 3]f64{
+			100., 0., 0., 
+			0., 200., 0., 
+			0., 0., 300., 
+		}
+		sat.update_attitude = true
+		ast.add_satellite(&satellites, sat)
+		ast.add_satellite_model(&satellite_models, sat_model)
 	}
-	trail_ind := 0
 
-	// ODE/Integrator ----------------------------------------------------------
-	gravity_params := ast.Params_Gravity_Pointmass {
-		mu = earth.mu,
+	// gen satellite orbiting green body
+	{
+		pos0, vel0 := ast.coe_to_rv(1000, 0.01, 15., 227.89, 53.38, 10., moon3.mu)
+		pos0 = pos0 + moon3.pos
+		vel0 = vel0 + moon3.vel
+		ep0: [4]f64 = {0, 0, 0, 1}
+		omega0: [3]f64 = {0.0001, .05, 0.0001}
+		cube_size: f32 = 50 / 1000. * u_to_rl
+		sat, sat_model := ast.gen_sat_and_model(
+			pos0,
+			vel0,
+			ep0,
+			omega0,
+			{cube_size, cube_size * 2, cube_size * 3},
+		)
+		sat.gravity_model = .pointmass
+		sat_model.draw_axes = true
+		sat.inertia = matrix[3, 3]f64{
+			100., 0., 0., 
+			0., 200., 0., 
+			0., 0., 300., 
+		}
+		sat_model.target_id = moon3.id
+		sat.update_attitude = true
+		ast.add_satellite(&satellites, sat)
+		ast.add_satellite_model(&satellite_models, sat_model)
 	}
-	attitude_params := ast.Params_EulerParam {
-		inertia = matrix[3, 3]f64{
-			100, 0, 0, 
-			0, 200, 0, 
-			0, 0, 300, 
-		},
-		torque  = {0, 0, 0},
+	{
+		pos0, vel0 := ast.coe_to_rv(1000, 0.01, 15., 227.89, 53.38, 75., moon3.mu)
+		pos0 = pos0 + moon3.pos
+		vel0 = vel0 + moon3.vel
+		ep0: [4]f64 = {0, 0, 0, 1}
+		omega0: [3]f64 = {0.0001, .05, 0.0001}
+		cube_size: f32 = 50 / 1000. * u_to_rl
+		sat, sat_model := ast.gen_sat_and_model(
+			pos0,
+			vel0,
+			ep0,
+			omega0,
+			{cube_size, cube_size * 2, cube_size * 3},
+		)
+		sat.gravity_model = .pointmass
+		sat_model.draw_axes = true
+		sat.inertia = matrix[3, 3]f64{
+			100., 0., 0., 
+			0., 200., 0., 
+			0., 0., 300., 
+		}
+		sat_model.target_id = moon3.id
+		sat.update_attitude = true
+		ast.add_satellite(&satellites, sat)
+		ast.add_satellite_model(&satellite_models, sat_model)
 	}
-	zonal_params := ast.Params_Gravity_SphHarmon {
-		J          = earth.J,
-		max_degree = 2,
-		mu         = earth.mu,
-		R_cb       = earth.semimajor_axis,
-	}
-	xlk: [6]f64
-	xrk: [7]f64
 
+	// misc --------------------------------------------------------------------
 	// Inertial Frame
 	origin: [3]f32 : {0, 0, 0}
 	x_axis: [3]f32 : {1, 0, 0}
@@ -140,361 +198,360 @@ main2 :: proc() {
 	z_axis: [3]f32 : {0, 0, 1}
 
 	// Time --------------------------------------------------------------------
-	dt: f32
-	cum_time: f32
-	time_scale: f64 = 1
+	dt: f64
+	cum_time: f64
+	sim_time: f64
 	fps: f64
-	substeps: int = 1
+	last_time := time.tick_now()
+
+	// set up system
+	asystem := new(ast.AstroSystem)
+	asystem^ = ast.create_system(
+		sats = satellites, // satellites
+		sat_models = satellite_models,
+		// bodies
+		bodies = celestialbodies,
+		body_models = celestialbody_models,
+		integrator = .ralston,
+		// integrator = .rk4,
+	)
+
+	fmt.println(asystem.num_satellites)
+	// gen satellites from tle
+	filename := "assets/TLE_data.txt"
+	ast.tle_parse(filename, earth, asystem, start_sat = 0, num_to_read = 20)
+	// ast.tle_read_extract(filename, earth.id, asystem)
+
+	filename = "assets/ISS_TLE_HW7.txt"
+	ast.tle_parse(filename, asystem.bodies[asystem.id[earth.id]], asystem)
+
+
+	asystem0 := new(ast.AstroSystem)
+	ast.copy_system(asystem0, asystem)
+
+	for &model, i in asystem.satellite_models {
+		model.scale = 5
+	}
+
+	fmt.println("Loaded the following satellites:")
+	for sat in asystem.satellites {
+		fmt.println(sat.info.name)
+	}
+
 
 	// 3D camera
+	target_sat := num_sats / 8
 	camera: rl.Camera3D
-	// camera.position = 1.001 * la.array_cast(satellite.pos, f32) + {15, 15, 0}
-	camera_azel := [3]f64 {
-		f64(cube_size) * 25,
-		math.to_radians(f64(45.)),
-		math.to_radians(f64(45.)),
-	}
-	camera.target = la.array_cast(satellite.pos, f32) * u_to_rl
-	camera.position =
-		am.azel_to_cart(la.array_cast(camera_azel, f32)) + camera.target
+	camera.target = la.array_cast(origin, f32) * u_to_rl
+	camera.position = am.azel_to_cart(
+		[3]f32{15000 * u_to_rl, math.PI / 4, math.PI / 4},
+	)
 	camera.up = {0., 0., 1.}
 	camera.fovy = 90
 	camera.projection = .PERSPECTIVE
-	locked_target := camera.target
-
-	paused: bool = true
-	trails_flag: bool = true
-	wires: bool = true
-	camera_type :: enum {
-		origin = 0,
-		satellite,
-		locked,
+	camera_params := CameraParams {
+		azel       = am.cart_to_azel(la.array_cast(camera.position, f64)),
+		target_sat = &asystem.satellites[target_sat],
+		frame      = .origin,
 	}
-	cam_frame := camera_type.satellite
-
 
 	for !rl.WindowShouldClose() {
-		dt = rl.GetFrameTime()
+		// dt = get_delta_time(time.tick_now(), &last_time)
+		dt = f64(rl.GetFrameTime())
+		dt = 1. / 60.
 
-		// update satellite
-		input_integrator(&paused, &substeps, &time_scale)
-		if rl.IsKeyPressed(.R) {
-			reset_state(&satellite, pos0, vel0, omega0, ep0, trails_flag, &trail_pos)
+		// update
+		update_simulation(asystem, asystem0, dt)
+		fps = 1. / dt
+		cum_time += dt
+		sim_time += dt * asystem.time_scale
+
+		if print_fps {
+			fmt.println(fps)
 		}
-		update_satellite(&satellite, &model_satellite)
-		if dt != 0. && !paused {
-			cum_time += dt * f32(time_scale)
-			fps = 1 / f64(dt)
-			for k := 0; k < substeps; k += 1 {
-				am.set_vector_slice(&xlk, satellite.pos, satellite.vel)
-				am.set_vector_slice(&xrk, satellite.ep, satellite.omega)
-				// _, xlk = am.rk4_step(
-				// 	ast.gravity_pointmass,
-				// 	f64(cum_time),
-				// 	xlk,
-				// 	f64(dt) * time_scale,
-				// 	&gravity_params,
-				// )
-				_, xlk = am.rk4_step(
-					ast.gravity_zonal,
-					f64(cum_time),
-					xlk,
-					f64(dt) * time_scale,
-					&zonal_params,
-				)
-				_, xrk = am.rk4_step(
-					ast.euler_param_dynamics,
-					f64(cum_time),
-					xrk,
-					f64(dt) * time_scale,
-					&attitude_params,
-				)
-				// set rotation
-				am.set_vector_slice_1(&satellite.ep, xrk, s1 = 0, l1 = 4)
-				am.set_vector_slice_1(&satellite.omega, xrk, s1 = 4, l1 = 3)
-				satellite.ep = la.vector_normalize0(satellite.ep)
-				q := am.euler_param_to_quaternion(la.array_cast(satellite.ep, f32))
-				N_R_B := rl.QuaternionToMatrix(q)
-				model_satellite.transform = N_R_B
-				// set translation
-				am.set_vector_slice_1(&satellite.pos, xlk, l1 = 3, s1 = 0)
-				am.set_vector_slice_1(&satellite.vel, xlk, l1 = 3, s1 = 3)
-				am.SetTranslation(
-					&model_satellite.transform,
-					la.array_cast(satellite.pos * u_to_rl, f32),
-				)
+		if print_dtsim {
+			fmt.println(dt * asystem.time_scale)
+		}
+
+		if asystem.simulate {
+			for k := 0; k < asystem.substeps; k += 1 {
+				sim_time += dt
+				ast.update_system(asystem, dt, sim_time)
 			}
 		}
-
-		N_R_B_3x3 := am.GetRotation(model_satellite.transform)
-		sat_pos_f32 := la.array_cast(satellite.pos, f32)
 
 		// update camera
-		// camera update
-		if rl.IsKeyPressed(rl.KeyboardKey.C) {
-			if cam_frame == .origin {
-				// switch to satellite
-				camera_azel = am.cart_to_azel([3]f64{1, 1, 1} * u_to_rl)
-				cam_frame = .satellite
-			} else if cam_frame == .satellite {
-				camera_azel = am.cart_to_azel([3]f64{7500., 7500., 7500.} * u_to_rl)
-				cam_frame = .origin
-			} else {
-				camera_azel = am.cart_to_azel([3]f64{1, 1, 1} * u_to_rl)
-				cam_frame = .satellite
-			}
-		} else if rl.IsKeyPressed(.X) {
-			cam_frame = .locked
-			locked_target = camera.target
-		}
+		update_camera(&camera, &camera_params, asystem, dt)
 
-
-		if rl.GetMouseWheelMove() < 0 {
-			camera_azel.x *= 1.1
-		} else if rl.GetMouseWheelMove() > 0 {
-			camera_azel.x /= 1.1
-		}
-		if rl.IsKeyDown(.A) {
-			camera_azel.y -= math.to_radians(f64(1.))
-		} else if rl.IsKeyDown(.D) {
-			camera_azel.y += math.to_radians(f64(1.))
-		} else if rl.IsKeyDown(.S) {
-			camera_azel.z -= math.to_radians(f64(1.))
-		} else if rl.IsKeyDown(.W) {
-			camera_azel.z += math.to_radians(f64(1.))
-		}
-
-		switch cam_frame {
-		case .origin:
-			rlgl.SetClipPlanes(1.0e-1, 1.0e3)
-			camera.position = la.array_cast(
-				am.azel_to_cart(la.array_cast(camera_azel, f64)),
-				f32,
-			)
-			camera.target = origin
-		case .satellite:
-			camera.position =
-				la.array_cast(am.azel_to_cart(la.array_cast(camera_azel, f64)), f32) +
-				sat_pos_f32 * u_to_rl
-			camera.target = sat_pos_f32 * u_to_rl
-			rlgl.SetClipPlanes(5.0e-5, 5e2)
-		case .locked: camera.target = locked_target
-		}
-
-		// update trail buffer
-		trail_pos[trail_ind] = la.array_cast(satellite.pos, f32) * u_to_rl
-		trail_ind = (trail_ind + 1) % N_trail
-
+		// draw
 		rl.BeginDrawing()
 		rl.BeginMode3D(camera)
+		// rlgl.SetClipPlanes(1.0e-3, 1.0e4)
+
 		// rl.ClearBackground(rl.GetColor(0x181818ff))
 		rl.ClearBackground(rl.Color({24, 24, 24, 255}))
 
+		ast.draw_system(asystem)
+
 		// draw inertial axes
-		rl.DrawLine3D(origin, x_axis * 100, rl.RED)
-		rl.DrawLine3D(origin, y_axis * 100, rl.GREEN)
-		rl.DrawLine3D(origin, z_axis * 100, rl.DARKBLUE)
-
-		// draw line from center of earth to satellite
-		rl.DrawLine3D(origin, sat_pos_f32 * u_to_rl, rl.GOLD)
-
-
-		update_trails(&trails_flag, &trail_ind, &trail_pos, sat_pos_f32 * u_to_rl)
-		draw_trail(&trails_flag, &trail_pos, trail_ind)
-
-		if rl.IsKeyPressed(.Q) {
-			wires = !wires
-		}
-		if wires {
-			// draw earth 
-			rl.DrawModelWires(model_earth, origin, 1, rl.WHITE)
-			// draw satellite
-			rl.DrawModelWires(model_satellite, origin, 1, rl.WHITE)
-		} else {
-			// draw earth 
-			rl.DrawModel(model_earth, origin, 1, rl.WHITE)
-			// draw satellite
-			rl.DrawModel(model_satellite, origin, 1, rl.WHITE)
-		}
-
-		// draw satellite axes
-		rl.DrawLine3D(
-			sat_pos_f32 * u_to_rl,
-			sat_pos_f32 * u_to_rl + N_R_B_3x3 * (x_axis * cube_size * 10),
-			rl.MAGENTA,
-		)
-		rl.DrawLine3D(
-			sat_pos_f32 * u_to_rl,
-			sat_pos_f32 * u_to_rl + N_R_B_3x3 * (y_axis * cube_size * 10),
-			rl.YELLOW,
-		)
-		rl.DrawLine3D(
-			sat_pos_f32 * u_to_rl,
-			sat_pos_f32 * u_to_rl + N_R_B_3x3 * (z_axis * cube_size * 10),
-			rl.Color({0, 255, 255, 255}),
-		)
+		rl.DrawLine3D(origin, x_axis * 10, rl.RED)
+		rl.DrawLine3D(origin, y_axis * 10, rl.GREEN)
+		rl.DrawLine3D(origin, z_axis * 10, rl.DARKBLUE)
 
 		rl.EndMode3D()
-		RenderSimulationInfo(fps, substeps, time_scale, camera_azel)
+		// draw 2D stuff here
 		rl.EndDrawing()
 	}
 }
 
 
-quaternion256_to_quaternion128 :: proc(q: quaternion256) -> quaternion128 {
-	qout: quaternion128
-	qout.x = f32(q.x)
-	qout.y = f32(q.y)
-	qout.z = f32(q.z)
-	qout.w = f32(q.w)
-	return qout
+get_delta_time :: proc(current: time.Tick, last: ^time.Tick) -> (dt: f64) {
+	dt = f64(current._nsec - last._nsec) * 1.0e-9
+	last^ = current
+	return dt
 }
 
-// Asteroid :: struct {}
-RenderSimulationInfo :: proc(
-	fps: f64,
-	substeps: int,
-	time_scale: f64,
-	azel: [3]f64,
+update_simulation :: proc(
+	system: ^ast.AstroSystem,
+	system0: ^ast.AstroSystem,
+	dt: f64,
 ) {
-	fontsize: i32 = 10
-	// fps
-	posy: i32 = fontsize
-	fps_str := strings.builder_make()
-	strings.write_string(&fps_str, "FPS: ")
-	strings.write_float(&fps_str, fps, fmt = 'f', prec = 3, bit_size = 64)
-	rl.DrawText(strings.to_cstring(&fps_str), 10, posy, fontsize, rl.WHITE)
+	using system
 
-	// time scale
-	posy = fontsize * 2
-	ts_str := strings.builder_make()
-	strings.write_string(&ts_str, "Time Scale: ")
-	strings.write_float(&ts_str, time_scale, fmt = 'f', prec = 4, bit_size = 64)
-	rl.DrawText(strings.to_cstring(&ts_str), 10, posy, fontsize, rl.WHITE)
-	// substeps
-	posy = fontsize * 3
-	sub_str := strings.builder_make()
-	strings.write_string(&sub_str, "Substeps: ")
-	strings.write_int(&sub_str, substeps, 10)
-	rl.DrawText(strings.to_cstring(&sub_str), 10, posy, fontsize, rl.WHITE)
-	// Camera AzEl
-	posy = fontsize * 4
-	azel_str := strings.builder_make()
-	strings.write_string(&azel_str, "[Range, Az, El]: [")
-	strings.write_float(
-		&azel_str,
-		f64(math.to_degrees(azel.x)),
-		fmt = 'f',
-		prec = 2,
-		bit_size = 64,
-	)
-	strings.write_string(&azel_str, ", ")
-	strings.write_float(
-		&azel_str,
-		f64(math.to_degrees(azel.y)),
-		fmt = 'f',
-		prec = 0,
-		bit_size = 64,
-	)
-	strings.write_string(&azel_str, ", ")
-	strings.write_float(
-		&azel_str,
-		f64(math.to_degrees(azel.z)),
-		fmt = 'f',
-		prec = 0,
-		bit_size = 64,
-	)
-	strings.write_string(&azel_str, "]")
-	rl.DrawText(strings.to_cstring(&azel_str), 10, posy, fontsize, rl.WHITE)
+	dt_max_attitude := 2.
 
-	// controls
-	posy = fontsize * 5
-	controls_str := `Controls:
-	Adjust Time Scale: [UP, DOWN]
-	Adjust Substeps: [LEFT, RIGHT]
-	Reset Time/Steps: [ENTER]
-	Pause: [SPACE]
-	Trails: [T]
-	Camera/Lock: [C, X]`
+	time_scale_prev := time_scale
+	substeps_prev := substeps
 
-
-	rl.DrawText(strings.clone_to_cstring(controls_str), 10, posy, 10, rl.WHITE)
-}
-
-reset_state :: proc(
-	satellite: ^ast.Satellite,
-	pos0, vel0, omega0: [3]f64,
-	ep0: [4]f64,
-	draw_trails: bool,
-	trail_pos: ^[$N][3]f32,
-) {
-	satellite.pos = pos0
-	satellite.vel = vel0
-	satellite.ep = ep0
-	satellite.omega = omega0
-	if draw_trails {
-		for i := 0; i < N; i += 1 {
-			trail_pos[i] = la.array_cast(pos0, f32)
-		}
-		trail_ind := 0
+	// handle adding / removing bodies and satellites
+	if rl.IsKeyPressed(.UP) && (f64(substeps) * time_scale < 10000) {
+		substeps *= 2
+	} else if rl.IsKeyPressed(.DOWN) && substeps > 1 {
+		substeps /= 2
 	}
-}
-
-draw_satellite :: proc() {}
-update_satellite :: proc(sat: ^ast.Satellite, model: ^rl.Model) {}
-
-update_trails :: proc(
-	trails_flag: ^bool,
-	trail_ind: ^int,
-	trail_pos: ^[$N][3]f32,
-	sat_pos: [3]f32,
-) {
-
-	if rl.IsKeyPressed(rl.KeyboardKey.T) {
-		trails_flag^ = !trails_flag^
-		if trails_flag^ {
-			for i := 0; i < N; i += 1 {
-				trail_pos[i] = sat_pos
-			}
-			trail_ind := 0
-		}
-	}
-}
-draw_trail :: proc(
-	trails_flag: ^bool,
-	trail_pos: ^[$N][3]f32,
-	trail_ind: int,
-) {
-	// draw trail
-	if trails_flag^ {
-		for i := 0; i < N - 1; i += 1 {
-			current := (trail_ind + i) % N
-			next := (current + 1) % N
-
-			fade := f32((N - 1 - i) / (N - 1))
-			color := rl.Color{255, 255, 255, u8(255 * fade)} // Tapering alpha
-			color = rl.RAYWHITE
-			rl.DrawLine3D(trail_pos[current], trail_pos[next], color)
-		}
-	}
-}
-
-input_integrator :: proc(paused: ^bool, substeps: ^int, time_scale: ^f64) {
-	if rl.IsKeyPressed(.UP) && (f64(substeps^) * time_scale^ < 100000) {
-		substeps^ *= 2
-	} else if rl.IsKeyPressed(.DOWN) && substeps^ > 1 {
-		substeps^ /= 2
-	}
-	if rl.IsKeyPressed(.RIGHT) && (f64(substeps^) * time_scale^ < 100000) {
-		time_scale^ *= 2
+	if rl.IsKeyPressed(.RIGHT) && (f64(substeps) * time_scale < 10000) {
+		time_scale *= 2
 	} else if rl.IsKeyPressed(.LEFT) {
-		time_scale^ /= 2
-	}
-	if rl.IsKeyPressed(rl.KeyboardKey.ENTER) {
-		substeps^ = 1
-		time_scale^ = 1
+		time_scale /= 2
 	}
 	if rl.IsKeyPressed(rl.KeyboardKey.SPACE) {
-		paused^ = !paused^
+		simulate = !simulate
 	}
+
+	dt_in_range_prev := dt * time_scale_prev <= dt_max_attitude
+	dt_in_range_new := dt * time_scale <= dt_max_attitude
+	time_scale_changed := time_scale_prev != time_scale
+	substeps_changed := substeps_prev != substeps
+	// fmt.println("dt sim: ", dt * time_scale)
+	// fmt.println(dt_in_range_prev, dt_in_range_prev)
+	// TODO: save state for attitude then update accordingly, currently turns all attitude on
+	// NOTE: attitude switches only when time_scale changes for now
+	if (dt_in_range_prev && !dt_in_range_new) &&
+	   (time_scale_changed || substeps_changed) {
+		// turn off attitude
+		for &sat in satellites {
+			sat.update_attitude = false
+		}
+	} else if (!dt_in_range_prev && dt_in_range_new) &&
+	   (time_scale_changed || substeps_changed) {
+		for &sat in satellites {
+			sat.update_attitude = true
+		}
+	}
+
+	if !rl.IsKeyDown(.LEFT_SHIFT) && rl.IsKeyPressed(.R) {
+		// TODO: handle this later
+		substeps = 8
+		time_scale = 8
+	}
+	if rl.IsKeyDown(.LEFT_SHIFT) && rl.IsKeyPressed(.R) {
+		ast.copy_system(system, system0)
+		for &model, i in satellite_models {
+			ast.resize_sat_trail(&satellites[i], &model)
+		}
+	}
+	if rl.IsKeyPressed(.T) {
+		for &model, i in satellite_models {
+			model.draw_trail = !model.draw_trail
+			ast.reset_sat_trail(&satellites[i], &model)
+		}
+	}
+	if rl.IsKeyPressed(.P) {
+		for &model, i in satellite_models {
+			model.draw_pos = !model.draw_pos
+		}
+	}
+	if rl.IsKeyPressed(.O) {
+		for &model, i in satellite_models {
+			model.draw_axes = !model.draw_axes
+		}
+	}
+	if rl.IsKeyPressed(.I) {
+		for &sat in satellites {
+			sat.update_attitude = !sat.update_attitude
+		}
+	}
+
+	N_trail_sat_inc := 50
+
+	if rl.IsKeyPressed(.LEFT_BRACKET) &&
+	   !rl.IsKeyDown(.LEFT_SHIFT) &&
+	   (ast.N_trail_sat - N_trail_sat_inc >= 50) {
+		ast.N_trail_sat -= N_trail_sat_inc
+
+		ast.mod_trail_sat = ast.N_trail_sat / ast.div_trail_sat
+		if ast.mod_trail_sat == 0 {
+			ast.mod_trail_sat = 1
+		}
+		for &model, i in satellite_models {
+			ast.resize_sat_trail(&satellites[i], &model)
+		}
+	}
+	if rl.IsKeyPressed(.RIGHT_BRACKET) &&
+	   !rl.IsKeyDown(.LEFT_SHIFT) &&
+	   (ast.N_trail_sat + N_trail_sat_inc <= ast.N_trail_MAX) {
+		ast.N_trail_sat += N_trail_sat_inc
+
+		ast.mod_trail_sat = ast.N_trail_sat / ast.div_trail_sat
+		for &model, i in satellite_models {
+			ast.resize_sat_trail(&satellites[i], &model)
+		}
+	}
+	if rl.IsKeyDown(.LEFT_SHIFT) && rl.IsKeyPressed(.LEFT_BRACKET) {
+		ast.div_trail_sat /= 2
+		ast.mod_trail_sat = ast.N_trail_sat / ast.div_trail_sat
+		if ast.mod_trail_sat >= ast.N_trail_sat {
+			ast.div_trail_sat *= 2
+			ast.mod_trail_sat = ast.N_trail_sat / ast.div_trail_sat
+		}
+		for &model, i in satellite_models {
+			ast.resize_sat_trail(&satellites[i], &model)
+		}
+		fmt.println(ast.N_trail_sat, ast.mod_trail_sat)
+	}
+	if rl.IsKeyDown(.LEFT_SHIFT) && rl.IsKeyPressed(.RIGHT_BRACKET) {
+		ast.div_trail_sat *= 2
+		ast.mod_trail_sat = ast.N_trail_sat / ast.div_trail_sat
+		if ast.mod_trail_sat == 0 {
+			ast.div_trail_sat /= 2
+			ast.mod_trail_sat = ast.N_trail_sat / ast.div_trail_sat
+		}
+		for &model, i in satellite_models {
+			ast.resize_sat_trail(&satellites[i], &model)
+		}
+		fmt.println(ast.N_trail_sat, ast.mod_trail_sat)
+	}
+
+}
+
+update_camera :: proc(
+	camera: ^rl.Camera,
+	params: ^CameraParams,
+	system: ^ast.AstroSystem,
+	dt: f64,
+) {
+	// cycle through satellites/bodies
+	if !rl.IsKeyDown(.LEFT_SHIFT) && rl.IsKeyPressed(.N) {
+		#partial switch params.frame {
+		case .satellite: params.target_sat_id = (params.target_sat_id + 1) % system.num_satellites
+		case .body: params.target_body_id = (params.target_body_id + 1) % system.num_bodies
+		}
+	} else if rl.IsKeyDown(.LEFT_SHIFT) && rl.IsKeyPressed(.N) {
+		#partial switch params.frame {
+		case .satellite: params.target_sat_id = (params.target_sat_id - 1 + system.num_satellites) % system.num_satellites
+		case .body: params.target_body_id = (params.target_body_id - 1 + system.num_bodies) % system.num_bodies
+		}
+	}
+	params.target_sat = &system.satellites[params.target_sat_id]
+	params.target_body = &system.bodies[params.target_body_id]
+
+	// switch camera type
+	if rl.IsKeyPressed(rl.KeyboardKey.C) && !rl.IsKeyDown(.LEFT_SHIFT) {
+		if params.frame == .origin {
+			// switch to satellite
+			params.azel = am.cart_to_azel([3]f64{1, 1, 1} * u_to_rl)
+			params.frame = .satellite
+		} else if params.frame == .satellite {
+			params.azel = {10000 * u_to_rl, math.PI / 4, math.PI / 4}
+			params.frame = .body
+		} else if params.frame == .body {
+			params.azel = {15000 * u_to_rl, math.PI / 4, math.PI / 4}
+			params.frame = .origin
+		} else  /* default to satellite camera*/{
+			params.azel = am.cart_to_azel([3]f64{1, 1, 1} * u_to_rl)
+			params.frame = .satellite
+		}
+	} else if rl.IsKeyPressed(.C) && rl.IsKeyDown(.LEFT_SHIFT) {
+		params.frame = .locked
+	}
+
+	// camera movement
+	if rl.GetMouseWheelMove() < 0 {
+		params.azel.x *= 1.1
+	} else if rl.GetMouseWheelMove() > 0 {
+		params.azel.x /= 1.1
+	}
+	if rl.IsKeyDown(.A) {
+		params.azel.y -= math.to_radians(f64(90.)) * dt
+	}
+	if rl.IsKeyDown(.D) {
+		params.azel.y += math.to_radians(f64(90.)) * dt
+	}
+	if rl.IsKeyDown(.S) {
+		params.azel.z -= math.to_radians(f64(90.)) * dt
+	}
+	if rl.IsKeyDown(.W) {
+		params.azel.z += math.to_radians(f64(90.)) * dt
+	}
+
+	#partial switch params.frame {
+	case .origin:
+		rlgl.SetClipPlanes(1.0e-1, 1.0e3)
+		camera.position = la.array_cast(
+			am.azel_to_cart(la.array_cast(params.azel, f64)),
+			f32,
+		)
+		camera.target = am.origin_f32
+	case .satellite:
+		sat_pos_f32 := la.array_cast(params.target_sat.pos, f32)
+		camera.position =
+			la.array_cast(am.azel_to_cart(la.array_cast(params.azel, f64)), f32) +
+			sat_pos_f32 * u_to_rl
+		camera.target = sat_pos_f32 * u_to_rl
+		rlgl.SetClipPlanes(5.0e-5, 5e2)
+	case .body:
+		body_pos_f32 := la.array_cast(params.target_body.pos, f32)
+		camera.position =
+			la.array_cast(am.azel_to_cart(la.array_cast(params.azel, f64)), f32) +
+			body_pos_f32 * u_to_rl
+		camera.target = body_pos_f32 * u_to_rl
+		rlgl.SetClipPlanes(5.0e-3, 5e3)
+	case .locked:
+	}
+
+	if rl.IsKeyPressed(.F) {
+		print_fps = !print_fps
+	}
+	if rl.IsKeyPressed(.G) {
+		print_dtsim = !print_dtsim
+	}
+
+
+}
+
+CameraType :: enum {
+	origin = 0,
+	satellite,
+	body,
+	locked,
+}
+
+
+CameraParams :: struct {
+	azel:           [3]f64,
+	target_sat:     ^ast.Satellite,
+	target_sat_id:  int,
+	target_body:    ^ast.CelestialBody,
+	target_body_id: int,
+	frame:          CameraType,
 }
