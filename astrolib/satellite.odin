@@ -97,6 +97,7 @@ update_satellite :: proc(
 update_satellite_model :: proc(sat_model: ^SatelliteModel, sat: Satellite) {
 	using sat_model
 	// set rotation
+	model.transform = (# row_major matrix[4, 4]f32)(la.MATRIX4F32_IDENTITY)
 	if sat.update_attitude {
 		q := am.euler_param_to_quaternion(la.array_cast(sat.ep, f32))
 		N_R_B := rl.QuaternionToMatrix(q)
@@ -163,6 +164,7 @@ gen_satmodel :: proc(
 	m.draw_pos = true
 	mesh := rl.GenMeshCube(model_size[0], model_size[1], model_size[2])
 	m.model = rl.LoadModelFromMesh(mesh)
+	m.model.transform = (# row_major matrix[4, 4]f32)(la.MATRIX4F32_IDENTITY)
 	m.model_size = model_size
 	am.SetTranslation(&m.model.transform, la.array_cast(sat.pos * u_to_rl, f32))
 	m.tint = tint

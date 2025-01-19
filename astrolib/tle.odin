@@ -182,3 +182,7 @@ extract_tle :: proc(
 	add_to_system(system, sat)
 	add_to_system(system, model)
 }
+
+
+
+// tle_date :: proc()

@@ -224,23 +224,24 @@ main :: proc() {
 		earth.id,
 		asystem,
 		start_sat = 0,
-		num_to_read = 1000,
+		num_to_read = 1,
 	)
 	// ast.tle_read_extract(filename, earth.id, asystem)
 
 	filename = "assets/ISS_TLE_HW7.txt"
 	ast.tle_read_extract(filename, earth.id, asystem)
 
-	// fmt.println("Loaded the following satellites:")
-	// for sat in asystem.satellites {
-		// fmt.println(sat.info.name)
-	// }
-
+	
 	asystem0 := new(ast.AstroSystem)
 	ast.copy_system(asystem0, asystem)
-
+	
 	for &model, i in asystem.satellite_models {
 		model.scale = 10.
+	}
+	
+	fmt.println("Loaded the following satellites:")
+	for sat in asystem.satellites {
+		fmt.println(sat.info.name)
 	}
 
 

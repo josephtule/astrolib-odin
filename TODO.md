@@ -27,6 +27,8 @@
   - [x] parse for time only option
   - [ ] simulate satellite back/forward from tle time to system initial time
   - [ ] separate satellite generation for tle parsing
+    - [ ] tle parser returns dynamic array of satellites/models instead
+  - [ ] tle parser that only returns the date
 - [ ] Add collision detection and resolution
   - [ ] collision detection
     - [ ] add spatial partitioning
