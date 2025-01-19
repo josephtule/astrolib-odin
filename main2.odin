@@ -31,6 +31,7 @@ main :: proc() {
 	rl.InitWindow(window_width, window_height, "AstroLib")
 	rl.SetWindowState({.WINDOW_RESIZABLE})
 	// rl.SetTargetFPS(rl.GetMonitorRefreshRate(0))
+	rl.SetTargetFPS(60)
 	defer rl.CloseWindow()
 
 	// generate celestial bodies
@@ -122,7 +123,6 @@ main :: proc() {
 			ep0,
 			omega0,
 			{cube_size, cube_size * 2, cube_size * 3},
-			scale = 100,
 		)
 		sat.gravity_model = .pointmass
 		sat_model.draw_axes = true
@@ -219,7 +219,7 @@ main :: proc() {
 	fmt.println(asystem.num_satellites)
 	// gen satellites from tle
 	filename := "assets/TLE_data.txt"
-	ast.tle_parse(filename, earth, asystem, start_sat = 0, num_to_read = 251)
+	ast.tle_parse(filename, earth, asystem, start_sat = 0, num_to_read = 20)
 	// ast.tle_read_extract(filename, earth.id, asystem)
 
 	filename = "assets/ISS_TLE_HW7.txt"
@@ -258,7 +258,7 @@ main :: proc() {
 	for !rl.WindowShouldClose() {
 		// dt = get_delta_time(time.tick_now(), &last_time)
 		dt = f64(rl.GetFrameTime())
-		// dt = 1. / 60.
+		dt = 1. / 60.
 
 		// update
 		update_simulation(asystem, asystem0, dt)
@@ -392,6 +392,56 @@ update_simulation :: proc(
 		}
 	}
 
+	N_trail_sat_inc := 50
+
+	if rl.IsKeyPressed(.LEFT_BRACKET) &&
+	   !rl.IsKeyDown(.LEFT_SHIFT) &&
+	   (ast.N_trail_sat - N_trail_sat_inc >= 50) {
+		ast.N_trail_sat -= N_trail_sat_inc
+
+		ast.mod_trail_sat = ast.N_trail_sat / ast.div_trail_sat
+		if ast.mod_trail_sat == 0 {
+			ast.mod_trail_sat = 1
+		}
+		for &model, i in satellite_models {
+			ast.resize_sat_trail(&satellites[i], &model)
+		}
+	}
+	if rl.IsKeyPressed(.RIGHT_BRACKET) &&
+	   !rl.IsKeyDown(.LEFT_SHIFT) &&
+	   (ast.N_trail_sat + N_trail_sat_inc <= ast.N_trail_MAX) {
+		ast.N_trail_sat += N_trail_sat_inc
+
+		ast.mod_trail_sat = ast.N_trail_sat / ast.div_trail_sat
+		for &model, i in satellite_models {
+			ast.resize_sat_trail(&satellites[i], &model)
+		}
+	}
+	if rl.IsKeyDown(.LEFT_SHIFT) && rl.IsKeyPressed(.LEFT_BRACKET) {
+		ast.div_trail_sat /= 2
+		ast.mod_trail_sat = ast.N_trail_sat / ast.div_trail_sat
+		if ast.mod_trail_sat >= ast.N_trail_sat {
+			ast.div_trail_sat *= 2
+			ast.mod_trail_sat = ast.N_trail_sat / ast.div_trail_sat
+		}
+		for &model, i in satellite_models {
+			ast.resize_sat_trail(&satellites[i], &model)
+		}
+		fmt.println(ast.N_trail_sat, ast.mod_trail_sat)
+	}
+	if rl.IsKeyDown(.LEFT_SHIFT) && rl.IsKeyPressed(.RIGHT_BRACKET) {
+		ast.div_trail_sat *= 2
+		ast.mod_trail_sat = ast.N_trail_sat / ast.div_trail_sat
+		if ast.mod_trail_sat == 0 {
+			ast.div_trail_sat /= 2
+			ast.mod_trail_sat = ast.N_trail_sat / ast.div_trail_sat
+		}
+		for &model, i in satellite_models {
+			ast.resize_sat_trail(&satellites[i], &model)
+		}
+		fmt.println(ast.N_trail_sat, ast.mod_trail_sat)
+	}
+
 }
 
 update_camera :: proc(
@@ -485,6 +535,8 @@ update_camera :: proc(
 	if rl.IsKeyPressed(.G) {
 		print_dtsim = !print_dtsim
 	}
+
+
 }
 
 CameraType :: enum {

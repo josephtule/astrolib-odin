@@ -16,10 +16,13 @@
   - [ ] separate drawing
 - [ ] Profile and speed up simulation
   - [ ] add multi-threading (separate translational and rotational dynamics?)
+    - [ ] satellite and body translation dynamics are decoupled (satellites only depend on bodies and bodies only update at the very end)
   - [x] different integrators
 - [ ] Add game states (paused, play, restart, etc.)
   - [x] paused
 - [ ] Add skip to time function using simulation time (also add loading percentage)
+- [ ] Orbits and control will be deterministic so precompute trajectories
+  - [ ] precomute then check if system needs to continue computation
 
 ## Physics/Astrodynamics
 
@@ -66,6 +69,9 @@
   - [ ] adjust clipping planes dynamically depending on distance to target
 - [ ] Move trail, axes, and position vector draws to update_satellite_model
 - [ ] Optimize trail update and drawing
+- [ ] Move trail length and update rates into satellite model
+- [ ] Add change trail length
+  - [ ] if trail length updated, dont reset, just append more to the end?
 - [ ] Move to raw opengl for performance?
 
 ## UI/Controls
@@ -81,6 +87,7 @@
   - [x] create info struct for satellites
   - [ ] create info struct for celestial bodies
 - [ ] Add warning and confirmation to turn off attitude if simulation delta time too high
+- [ ] Add left and right shift keys
 
 ## Misc
 

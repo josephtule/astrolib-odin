@@ -210,28 +210,36 @@ gen_sat_and_model :: proc(
 // -----------------------------------------------------------------------------
 // Trails
 // -----------------------------------------------------------------------------
-N_trail := 256
-trail_mod := N_trail / 4
+N_trail_MAX :: 1000
+N_trail_sat: int = 200
+div_trail_sat: int = 4
+mod_trail_sat: int = N_trail_sat / div_trail_sat
 
 create_sat_trail :: proc(sat: ^Satellite, model: ^SatelliteModel) {
-	for i := 0; i < N_trail; i += 1 {
+	for i := 0; i < N_trail_sat; i += 1 {
 		append_elem(&model.trail, la.array_cast(sat.pos, f32) * u_to_rl)
 	}
 	model.trail_ind = 0
 }
+resize_sat_trail :: proc(sat: ^Satellite, model: ^SatelliteModel) {
+	delete(model.trail)
+	model.trail = make([dynamic][3]f32, N_trail_sat)
+	reset_sat_trail(sat, model)
+}
 reset_sat_trail :: proc(sat: ^Satellite, model: ^SatelliteModel) {
-	for i := 0; i < N_trail; i += 1 {
+	for i := 0; i < N_trail_sat; i += 1 {
 		model.trail[i] = la.array_cast(sat.pos, f32) * u_to_rl
 	}
 	model.trail_ind = 0
+	model.trail_inc = 0
 }
 update_sat_trail :: proc(sat: ^Satellite, model: ^SatelliteModel) {
 	model.trail_inc = (model.trail_inc + 1)
-	if model.trail_inc == trail_mod {
+	if model.trail_inc == mod_trail_sat {
 		model.trail_inc = 0
 		model.trail[model.trail_ind] = la.array_cast(sat.pos, f32) * u_to_rl
 		model.trail_ind = (model.trail_ind + 1)
-		if model.trail_ind == N_trail {
+		if model.trail_ind == N_trail_sat {
 			model.trail_ind = 0 // Wrap around without modulo
 		}
 	}
@@ -239,9 +247,9 @@ update_sat_trail :: proc(sat: ^Satellite, model: ^SatelliteModel) {
 draw_sat_trail :: proc(model: SatelliteModel) {
 	using model
 	if draw_trail {
-		for i := 0; i < N_trail - 1; i += 1 {
-			current := (trail_ind + i) % N_trail
-			next := (current + 1) % N_trail
+		for i := 0; i < N_trail_sat - 1; i += 1 {
+			current := (trail_ind + i) % N_trail_sat
+			next := (current + 1) % N_trail_sat
 
 			rl.DrawLine3D(trail[current], trail[next], tint)
 		}

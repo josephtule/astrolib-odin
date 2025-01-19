@@ -308,21 +308,21 @@ update_body :: proc(
 }
 
 create_body_trail :: proc(body: ^CelestialBody, model: ^CelestialBodyModel) {
-	for i := 0; i < N_trail; i += 1 {
+	for i := 0; i < N_trail_sat; i += 1 {
 		model.trail[i] = la.array_cast(body.pos, f32)
 	}
 	model.trail_ind = 0
 }
 update_body_trail :: proc(body: ^CelestialBody, model: ^CelestialBodyModel) {
 	model.trail[model.trail_ind] = la.array_cast(body.pos, f32) * u_to_rl
-	model.trail_ind = (model.trail_ind + 1) % N_trail
+	model.trail_ind = (model.trail_ind + 1) % N_trail_sat
 }
 draw_body_trail :: proc(model: CelestialBodyModel) {
 	using model
 	if draw_trail {
-		for i := 0; i < N_trail - 1; i += 1 {
-			current := (trail_ind + i) % N_trail
-			next := (current + 1) % N_trail
+		for i := 0; i < N_trail_sat - 1; i += 1 {
+			current := (trail_ind + i) % N_trail_sat
+			next := (current + 1) % N_trail_sat
 
 			color := tint
 			rl.DrawLine3D(trail[current], trail[next], color)
