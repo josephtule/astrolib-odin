@@ -26,8 +26,8 @@
 - [x] Add tle reader and parser
   - [x] parse for time only option
   - [ ] simulate satellite back/forward from tle time to system initial time
-  - [ ] separate satellite generation for tle parsing
-    - [ ] tle parser returns dynamic array of satellites/models instead
+  - [x] separate satellite generation for tle parsing
+    - [x] tle parser returns dynamic array of satellites/models instead
   - [ ] tle parser that only returns the date
 - [ ] Add collision detection and resolution
   - [ ] collision detection
@@ -80,6 +80,7 @@
 - [ ] Display info of currently target
   - [x] create info struct for satellites
   - [ ] create info struct for celestial bodies
+- [ ] Add warning and confirmation to turn off attitude if simulation delta time too high
 
 ## Misc
 
