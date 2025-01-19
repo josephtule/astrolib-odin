@@ -1,8 +1,12 @@
 package astrolib
 
 import am "../astromath"
+
+import "core:fmt"
 import "core:math"
 import la "core:math/linalg"
+import "core:strconv"
+import str "core:strings"
 import rl "vendor:raylib"
 
 g_sat_id_base: int : 10000
@@ -19,12 +23,11 @@ Satellite :: struct {
 	mass:            f64,
 	inertia:         matrix[3, 3]f64,
 	radius:          f64, // hardbody radius
-	name:            string,
 	linear_units:    am.UnitsLinear,
 	angular_units:   am.UnitsAngle,
 	gravity_model:   GravityModel,
 	update_attitude: bool,
-	info:            ^SatelliteInfo,
+	info:            SatelliteInfo,
 }
 
 SatelliteInfo :: struct {
@@ -38,6 +41,7 @@ SatelliteModel :: struct {
 	id:            int,
 	model:         rl.Model,
 	model_size:    [3]f32,
+	scale:         f32,
 	local_axes:    [3][3]f32,
 	tint:          rl.Color,
 	target_origin: [3]f32,
@@ -98,6 +102,8 @@ update_satellite_model :: proc(sat_model: ^SatelliteModel, sat: Satellite) {
 		N_R_B := rl.QuaternionToMatrix(q)
 		model.transform = N_R_B
 	}
+	// set scale 
+	am.SetScale(&model.transform, scale)
 	// set translation
 	sat_pos_f32 := la.array_cast(sat.pos, f32) * u_to_rl
 	am.SetTranslation(&model.transform, sat_pos_f32)
@@ -118,6 +124,12 @@ gen_sat :: proc(
 	// defaults to kilometers and radians
 	// default zero mass and radius
 	info: SatelliteInfo
+	name_str: string = "SATID"
+	id_buf: [8]byte
+	id_str: string = strconv.itoa(id_buf[:], id)
+	name, err := str.join([]string{name_str, id_str}, " ")
+	info.name = name
+
 	s = Satellite {
 		pos           = pos,
 		vel           = vel,
@@ -127,7 +139,7 @@ gen_sat :: proc(
 		linear_units  = .KILOMETER,
 		angular_units = .RADIANS,
 		id            = id,
-		info          = &info,
+		info          = info,
 	}
 	if id == g_sat_id {
 		g_sat_id += 1
@@ -137,6 +149,7 @@ gen_sat :: proc(
 gen_satmodel :: proc(
 	sat: ^Satellite,
 	model_size: [3]f32,
+	scale: f32 = 1,
 	tint: rl.Color = rl.RED,
 	primary_color: rl.Color = rl.Color({200, 200, 200, 255}),
 	secondary_color: rl.Color = rl.Color({150, 150, 150, 255}),
@@ -155,7 +168,7 @@ gen_satmodel :: proc(
 	m.tint = tint
 	create_sat_trail(sat, &m)
 	m.draw_trail = true
-
+	m.scale = scale
 
 	// checker pattern
 	image_checker := rl.GenImageChecked(
@@ -177,6 +190,7 @@ gen_sat_and_model :: proc(
 	ep: [4]f64,
 	omega: [3]f64,
 	model_size: [3]f32,
+	scale: f32 = 1,
 	mass: f64 = 100.,
 	tint: rl.Color = rl.RED,
 	primary_color: rl.Color = rl.Color({200, 200, 200, 255}),
@@ -187,7 +201,7 @@ gen_sat_and_model :: proc(
 	m: SatelliteModel,
 ) {
 	s = gen_sat(pos, vel, ep, omega, mass)
-	m = gen_satmodel(&s, model_size)
+	m = gen_satmodel(&s, model_size, scale = scale)
 	return s, m
 }
 

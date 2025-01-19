@@ -158,7 +158,7 @@ extract_tle :: proc(
 	ep: [4]f64 = {0., 0., 0., 1.}
 	omega: [3]f64 = {0., 0., 0.}
 	// TODO: change this later
-	cube_size: f32 = 500 / 1000. * am.u_to_rl
+	cube_size: f32 = 50 / 1000. * am.u_to_rl
 	sat, model := gen_sat_and_model(
 		pos,
 		vel,
@@ -166,8 +166,8 @@ extract_tle :: proc(
 		omega,
 		[3]f32{cube_size, cube_size, cube_size}, // default to cube
 	)
-	sat.name = name
-	sat.info.name = name
+	joined, err := str.join([]string{sat.info.name, " (", name, ")"}, "")
+	sat.info.name = joined
 	sat.info.intl_designator = intl_designator
 	sat.info.tle_index = catalog_number
 

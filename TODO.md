@@ -62,6 +62,9 @@
 - [x] Add different cameras (inertial/origin, satellite/body, fixed)
   - NOTE: currently only locks, cannot pan
   - [ ] adjust clipping planes dynamically depending on distance to target
+- [ ] Move trail, axes, and position vector draws to update_satellite_model
+- [ ] Optimize trail update and drawing
+- [ ] Move to raw opengl for performance?
 
 ## UI/Controls
 

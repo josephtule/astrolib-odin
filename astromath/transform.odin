@@ -1,8 +1,8 @@
 package astromath
 
-import rl "vendor:raylib"
 import "core:math"
 import la "core:math/linalg"
+import rl "vendor:raylib"
 
 MatrixTranslateAdditive :: proc(pos: [3]f32) -> # row_major matrix[4, 4]f32 {
 	mat: # row_major matrix[4, 4]f32
@@ -20,6 +20,18 @@ SetTranslation :: proc(mat: ^# row_major matrix[4, 4]f32, pos: [3]f32) {
 
 GetTranslation :: proc(mat: # row_major matrix[4, 4]f32) -> [3]f32 {
 	return {mat[0, 3], mat[1, 3], mat[2, 3]}
+}
+
+SetScale :: proc(mat: ^# row_major matrix[4, 4]f32, scale: f32) {
+	mat[0, 0] *= scale
+	mat[0, 1] *= scale
+	mat[0, 2] *= scale
+	mat[1, 0] *= scale
+	mat[1, 1] *= scale
+	mat[1, 2] *= scale
+	mat[2, 0] *= scale
+	mat[2, 1] *= scale
+	mat[2, 2] *= scale
 }
 
 SetRotation :: proc(

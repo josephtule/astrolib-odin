@@ -15,9 +15,12 @@ import am "astromath"
 import rl "vendor:raylib"
 import "vendor:raylib/rlgl"
 
-
 u_to_rl :: am.u_to_rl
 rl_to_u :: am.rl_to_u
+
+print_fps: bool
+print_dtsim: bool
+
 
 main :: proc() {
 
@@ -119,6 +122,7 @@ main :: proc() {
 			ep0,
 			omega0,
 			{cube_size, cube_size * 2, cube_size * 3},
+			scale = 100,
 		)
 		sat.gravity_model = .pointmass
 		sat_model.draw_axes = true
@@ -212,26 +216,32 @@ main :: proc() {
 		// integrator = .rk4,
 	)
 
+	fmt.println(asystem.num_satellites)
 	// gen satellites from tle
 	filename := "assets/TLE_data.txt"
 	ast.tle_read_extract(
 		filename,
 		earth.id,
 		asystem,
-		start_sat = 2492,
-		num_to_read = 24,
+		start_sat = 0,
+		num_to_read = 1000,
 	)
 	// ast.tle_read_extract(filename, earth.id, asystem)
 
 	filename = "assets/ISS_TLE_HW7.txt"
 	ast.tle_read_extract(filename, earth.id, asystem)
 
-	fmt.println("Loaded the following satellites:")
-	for sat in asystem.satellites {
-		fmt.println(sat.name)
-	}
+	// fmt.println("Loaded the following satellites:")
+	// for sat in asystem.satellites {
+		// fmt.println(sat.info.name)
+	// }
+
 	asystem0 := new(ast.AstroSystem)
 	ast.copy_system(asystem0, asystem)
+
+	for &model, i in asystem.satellite_models {
+		model.scale = 10.
+	}
 
 
 	// 3D camera
@@ -254,12 +264,20 @@ main :: proc() {
 		// dt = get_delta_time(time.tick_now(), &last_time)
 		dt = f64(rl.GetFrameTime())
 		// dt = 1. / 60.
-		fps = 1. / dt
-		cum_time += dt
-		// fmt.println(fps)
 
 		// update
 		update_simulation(asystem, asystem0, dt)
+		fps = 1. / dt
+		cum_time += dt
+		sim_time += dt * asystem.time_scale
+
+		if print_fps {
+			fmt.println(fps)
+		}
+		if print_dtsim {
+			fmt.println(dt * asystem.time_scale)
+		}
+
 		if asystem.simulate {
 			for k := 0; k < asystem.substeps; k += 1 {
 				sim_time += dt
@@ -307,17 +325,16 @@ update_simulation :: proc(
 
 	dt_max_attitude := 2.
 
-
 	time_scale_prev := time_scale
 	substeps_prev := substeps
 
 	// handle adding / removing bodies and satellites
-	if rl.IsKeyPressed(.UP) && (f64(substeps) * time_scale < 100000) {
+	if rl.IsKeyPressed(.UP) && (f64(substeps) * time_scale < 10000) {
 		substeps *= 2
 	} else if rl.IsKeyPressed(.DOWN) && substeps > 1 {
 		substeps /= 2
 	}
-	if rl.IsKeyPressed(.RIGHT) && (f64(substeps) * time_scale < 100000) {
+	if rl.IsKeyPressed(.RIGHT) && (f64(substeps) * time_scale < 10000) {
 		time_scale *= 2
 	} else if rl.IsKeyPressed(.LEFT) {
 		time_scale /= 2
@@ -331,7 +348,7 @@ update_simulation :: proc(
 	time_scale_changed := time_scale_prev != time_scale
 	substeps_changed := substeps_prev != substeps
 	// fmt.println("dt sim: ", dt * time_scale)
-	fmt.println(dt_in_range_prev, dt_in_range_prev)
+	// fmt.println(dt_in_range_prev, dt_in_range_prev)
 	// TODO: save state for attitude then update accordingly, currently turns all attitude on
 	// NOTE: attitude switches only when time_scale changes for now
 	if (dt_in_range_prev && !dt_in_range_new) &&
@@ -465,6 +482,13 @@ update_camera :: proc(
 		camera.target = body_pos_f32 * u_to_rl
 		rlgl.SetClipPlanes(5.0e-3, 5e3)
 	case .locked:
+	}
+
+	if rl.IsKeyPressed(.F) {
+		print_fps = !print_fps
+	}
+	if rl.IsKeyPressed(.G) {
+		print_dtsim = !print_dtsim
 	}
 }
 
