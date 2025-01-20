@@ -11,8 +11,8 @@ import am "../astromath"
 OrbitType :: enum {
 	LEO,
 	MEO,
-	GEOsync,
-	GEOstat,
+	GEO, // geostationary
+	GSO, // geosynchronous
 	HEO,
 	hyperbolic,
 	high_hyperbolic,
