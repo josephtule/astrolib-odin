@@ -19,6 +19,12 @@ small16 :: 1.0e-16
 
 
 // max iterations
+max_iter_vsmall :: 1000
 max_iter_small :: 10000
 max_iter_medium :: 100000
 max_iter_large :: 1000000
+
+max_iter_1000 :: max_iter_vsmall
+max_iter_10000 :: max_iter_small
+max_iter_100000 :: max_iter_medium
+max_iter_1000000 :: max_iter_large

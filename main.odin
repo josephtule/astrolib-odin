@@ -4,6 +4,7 @@ import "base:intrinsics"
 import "core:fmt"
 import "core:math"
 import la "core:math/linalg"
+import "core:math/rand"
 import "core:mem"
 import "core:strconv"
 import "core:strings"
@@ -21,6 +22,7 @@ rl_to_u :: am.rl_to_u
 print_fps: bool
 print_dtsim: bool
 
+dt_max: f64 : 1. / 30.
 
 main :: proc() {
 
@@ -258,7 +260,7 @@ main :: proc() {
 	for !rl.WindowShouldClose() {
 		// dt = get_delta_time(time.tick_now(), &last_time)
 		dt = f64(rl.GetFrameTime())
-		dt = 1. / 60.
+		dt = dt < dt_max ? dt : dt_max // set dt max
 
 		// update
 		update_simulation(asystem, asystem0, dt)
@@ -442,6 +444,34 @@ update_simulation :: proc(
 		fmt.println(ast.N_trail_sat, ast.mod_trail_sat)
 	}
 
+	if rl.IsKeyPressed(.PERIOD) {
+		earth := bodies[0] // TODO: change this later
+		// add satellite to system here
+
+		pos0, vel0 := ast.gen_rand_coe_orientation(10000, 0.1, earth)
+		ep0: [4]f64 = {0, 0, 0, 1}
+		omega0: [3]f64 = {0.0001, .05, 0.0001}
+
+		cube_size: f32 = 50 / 1000. * u_to_rl
+		sat, sat_model := ast.gen_sat_and_model(
+			pos0,
+			vel0,
+			ep0,
+			omega0,
+			{cube_size, cube_size * 2, cube_size * 3},
+		)
+		sat.gravity_model = .pointmass
+		sat_model.draw_axes = true
+		sat.inertia = matrix[3, 3]f64{
+			100., 0., 0., 
+			0., 200., 0., 
+			0., 0., 300., 
+		}
+		sat.update_attitude = true
+		ast.add_satellite(&satellites, sat)
+		ast.add_satellite_model(&satellite_models, sat_model)
+		fmt.println("Added satellite (ID):", sat.id)
+	}
 }
 
 update_camera :: proc(
