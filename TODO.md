@@ -23,7 +23,15 @@
 - [ ] Add skip to time function using simulation time (also add loading percentage)
 - [ ] Orbits and control will be deterministic so precompute trajectories
   - [ ] precomute then check if system needs to continue computation
+- [ ] Spinning/rotating frame (this one is gonna be hard)
+  - [ ] set two targets (origin and target) for rotating frame (i.e. earth and moon or sun and earth)
+    - [ ] generate rotation matrix for each update using relative position vector in inertial frame
+      - [ ] new origin to target is xhat, yhat 90 degrees clockwise (in direction of orbit), zhat creates right hand frame
+  - [ ] trails
+    - [ ] in trail update, use rotation matrix of CURRENT frame to update NEW trail position
+    - [ ] use relative position for trail, rotate, then add to target body's postion to get inertial coordinates (or is it origin body)
 
+  
 ## Physics/Astrodynamics
 
 - [x] Add tle reader and parser
@@ -38,8 +46,9 @@
   - [ ] collision resolution
     - should the bodies slide/bounce/etc.
     - idk how to do this, so far they have been hitting, sliding, then shooting off
-- [ ] Add rotation to celestial bodies?
-  - [ ] Initial atittude -> set model rotation matrix, update using fixed rotation speed
+- [ ] Add rotation to celestial bodies? (yes)
+  - [ ] Initial atittude -> set model rotation matrix, update using fixed rotation speed (low fidelity)
+  - [ ] initial attitude -> use model precession, nutation, polar motion (high fidelity, probably not needed with time scales for simulation)
   - [ ] Use angle-axis or dcm
 - [ ] Add orbit generating functions
   - [x] classical orbital elements
