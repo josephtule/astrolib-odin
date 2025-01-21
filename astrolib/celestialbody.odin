@@ -7,7 +7,7 @@ import rl "vendor:raylib"
 import am "../astromath"
 
 u_to_rl :: am.u_to_rl
-g_body_id_base : int : 0
+g_body_id_base: int : 0
 g_body_id: int = g_body_id_base
 
 CelestialBody :: struct {
@@ -40,12 +40,10 @@ CelestialBodyModel :: struct {
 	local_axes:    [3][3]f32,
 	target_origin: [3]f32,
 	target_id:     int,
-	trail:         [dynamic][3]f32,
-	trail_ind:     int,
+	trail:         Trail,
 	draw_model:    bool,
 	draw_axes:     bool,
 	draw_pos:      bool,
-	draw_trail:    bool,
 	tint:          rl.Color,
 }
 
@@ -103,7 +101,7 @@ gen_celestialbody_model :: proc(
 
 	c_model.draw_model = true
 	c_model.draw_axes = true
-	c_model.draw_trail = false
+	c_model.trail.draw = false
 	c_model.tint = tint
 
 	for i := 0; i < 3; i += 1 {
@@ -304,28 +302,5 @@ update_body :: proc(
 			params_translate,
 			integrator,
 		)
-	}
-}
-
-create_body_trail :: proc(body: ^CelestialBody, model: ^CelestialBodyModel) {
-	for i := 0; i < N_trail_sat; i += 1 {
-		model.trail[i] = la.array_cast(body.pos, f32)
-	}
-	model.trail_ind = 0
-}
-update_body_trail :: proc(body: ^CelestialBody, model: ^CelestialBodyModel) {
-	model.trail[model.trail_ind] = la.array_cast(body.pos, f32) * u_to_rl
-	model.trail_ind = (model.trail_ind + 1) % N_trail_sat
-}
-draw_body_trail :: proc(model: CelestialBodyModel) {
-	using model
-	if draw_trail {
-		for i := 0; i < N_trail_sat - 1; i += 1 {
-			current := (trail_ind + i) % N_trail_sat
-			next := (current + 1) % N_trail_sat
-
-			color := tint
-			rl.DrawLine3D(trail[current], trail[next], color)
-		}
 	}
 }

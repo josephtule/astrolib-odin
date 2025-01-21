@@ -369,13 +369,13 @@ update_simulation :: proc(
 	if rl.IsKeyDown(.LEFT_SHIFT) && rl.IsKeyPressed(.R) {
 		ast.copy_system(system, system0)
 		for &model, i in satellite_models {
-			ast.resize_sat_trail(&satellites[i], &model)
+			ast.resize_trail(&satellite_models[i].trail, satellites[i].pos)
 		}
 	}
 	if rl.IsKeyPressed(.T) {
 		for &model, i in satellite_models {
-			model.draw_trail = !model.draw_trail
-			ast.reset_sat_trail(&satellites[i], &model)
+			model.trail.draw = !model.trail.draw
+			ast.reset_trail(&satellite_models[i].trail, satellites[i].pos)
 		}
 	}
 	if rl.IsKeyPressed(.P) {
@@ -406,7 +406,7 @@ update_simulation :: proc(
 			ast.mod_trail_sat = 1
 		}
 		for &model, i in satellite_models {
-			ast.resize_sat_trail(&satellites[i], &model)
+			ast.resize_trail(&satellite_models[i].trail, satellites[i].pos)
 		}
 	}
 	if rl.IsKeyPressed(.RIGHT_BRACKET) &&
@@ -416,7 +416,7 @@ update_simulation :: proc(
 
 		ast.mod_trail_sat = ast.N_trail_sat / ast.div_trail_sat
 		for &model, i in satellite_models {
-			ast.resize_sat_trail(&satellites[i], &model)
+			ast.resize_trail(&satellite_models[i].trail, satellites[i].pos)
 		}
 	}
 	if rl.IsKeyDown(.LEFT_SHIFT) && rl.IsKeyPressed(.LEFT_BRACKET) {
@@ -427,7 +427,7 @@ update_simulation :: proc(
 			ast.mod_trail_sat = ast.N_trail_sat / ast.div_trail_sat
 		}
 		for &model, i in satellite_models {
-			ast.resize_sat_trail(&satellites[i], &model)
+			ast.resize_trail(&satellite_models[i].trail, satellites[i].pos)
 		}
 		fmt.println(ast.N_trail_sat, ast.mod_trail_sat)
 	}
@@ -439,7 +439,7 @@ update_simulation :: proc(
 			ast.mod_trail_sat = ast.N_trail_sat / ast.div_trail_sat
 		}
 		for &model, i in satellite_models {
-			ast.resize_sat_trail(&satellites[i], &model)
+			ast.resize_trail(&satellite_models[i].trail, satellites[i].pos)
 		}
 		fmt.println(ast.N_trail_sat, ast.mod_trail_sat)
 	}

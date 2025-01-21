@@ -125,8 +125,8 @@ draw_system :: proc(system: ^AstroSystem, u_to_rl: f32 = u_to_rl) {
 				rl.Color({0, 255, 255, 255}),
 			)
 		}
-		if model.draw_trail {
-			draw_sat_trail(satellite_models[i])
+		if model.trail.draw{
+			draw_trail(satellite_models[i])
 		}
 
 		// line from origin to satellite
@@ -159,7 +159,7 @@ draw_system :: proc(system: ^AstroSystem, u_to_rl: f32 = u_to_rl) {
 
 		rl.DrawModel(body_models[i].model, am.origin_f32, 1, body_models[i].tint)
 
-		if body_models[i].draw_trail {
+		if body_models[i].trail.draw {
 			// update and draw trails
 		}
 	}
