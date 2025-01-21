@@ -5,7 +5,7 @@
 ## Example
 
 <img src="assets/orbit_example.gif" width="512">
-<img src="assets/attitude_example.gif",width="512">
+<img src="assets/attitude_example.gif" width="512">
 
 ## Controls (subject to change)
 - Start Simulation: space
