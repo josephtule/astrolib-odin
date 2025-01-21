@@ -25,7 +25,7 @@ gen_rand_coe_orientation :: proc(
 ) -> (
 	pos, vel: [3]f64,
 ) {
-	inc := rand.float64_uniform(0, 180)
+	inc := rand.float64_uniform(0, 180) 
 	raan := rand.float64_uniform(0, 180)
 	aop := rand.float64_uniform(0, 360)
 	ta := rand.float64_uniform(0, 360)
@@ -107,7 +107,7 @@ gen_rand_coe_earth :: proc(
 		raan := rand.float64_uniform(0, 180)
 		aop := rand.float64_uniform(0, 360)
 		ta := rand.float64_uniform(0, 360)
-	case .GEOstat:
+	case .GEO:
 		sma = 35786
 		ecc = 0
 
@@ -115,7 +115,7 @@ gen_rand_coe_earth :: proc(
 		raan := rand.float64_uniform(0, 180)
 		aop := rand.float64_uniform(0, 360)
 		ta := rand.float64_uniform(0, 360)
-	case .GEOsync:
+	case .GSO:
 		sma = 35786
 		ecc = 0
 
@@ -133,6 +133,7 @@ gen_rand_coe_earth :: proc(
 	case .HEO:
 		sma = earth.semimajor_axis + rand.float64_uniform(35786, 384000)
 		ecc = rand.float64_uniform(0, 0.5)
+
 		inc = rand.float64_uniform(0, 180)
 		raan = rand.float64_uniform(0, 360)
 		aop = rand.float64_uniform(0, 360)
@@ -143,6 +144,7 @@ gen_rand_coe_earth :: proc(
 			earth.semimajor_axis + 100000,
 		)
 		ecc = rand.float64_uniform(1.01, 5.0)
+
 		inc = rand.float64_uniform(0, 180)
 		raan = rand.float64_uniform(0, 360)
 		aop = rand.float64_uniform(0, 360)
@@ -153,6 +155,7 @@ gen_rand_coe_earth :: proc(
 			earth.semimajor_axis + 1000000,
 		)
 		ecc = rand.float64_uniform(3.0, 10.0)
+
 		inc = rand.float64_uniform(0, 180)
 		raan = rand.float64_uniform(0, 360)
 		aop = rand.float64_uniform(0, 360)

@@ -4,21 +4,30 @@
 
 ## Example
 
-<img src="assets/example.gif" width="512">
+<img src="assets/orbit_example.gif" width="512">
+<img src="assets/attitude_example.gif",width="512">
 
 ## Controls (subject to change)
-
+- Start Simulation: space
+- Reset Simulation: shift+r
+- Toggle Attitude Dynamics: i
 - Camera Switching (satellite target, body target, origin): c
-- Camera Lock: Ctrl+c
-- Cycle Target: n/Ctrl+n
+- Cycle Camera Target: n/shift+n
+- Camera Lock: shift+c
+- Cycle Target: n/shift+n
 - Zoom into target: Mousewheel up/down
 - Camera Azimuth/Elevation: w/a/s/d
+- Reset Time Scale/Substeps: r
 - Increment Substeps (physics iterations per frame): up/down
 - Increment Time Scale (delta time scaling): left/right
 - Toggle Trails: t
+- Adjust trail length: [ or ]
 - Toggle Wireframes: tbd
 - Toggle Axes: o
 - Toggle Position Vectors: p
+- Spawn Satellite: . (period)
+- Print FPS to Console: f
+- Print Simulation Delta Time to Console: g
 
 ## How to Build
 

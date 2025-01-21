@@ -30,6 +30,7 @@
   - [ ] trails
     - [ ] in trail update, use rotation matrix of CURRENT frame to update NEW trail position
     - [ ] use relative position for trail, rotate, then add to target body's postion to get inertial coordinates (or is it origin body)
+    - [ ] make trails their own class
 
   
 ## Physics/Astrodynamics
