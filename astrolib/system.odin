@@ -120,17 +120,8 @@ draw_system :: proc(system: ^AstroSystem, u_to_rl: f32 = u_to_rl) {
 	}
 
 	// celestial body models
-	for body, i in bodies {
-		am.SetTranslation(
-			&body_models[i].model.transform,
-			am.cast_f32(body.pos) * u_to_rl,
-		)
-
-		rl.DrawModel(body_models[i].model, am.origin_f32, 1, body_models[i].tint)
-
-		if body_models[i].trail.draw {
-			// update and draw trails
-		}
+	for &model, i in body_models {
+		draw_body(&model, bodies[i])
 	}
 }
 
@@ -219,10 +210,7 @@ add_model_to_system :: proc(system: ^AstroSystem, model: Model) {
 	using system
 	add_model_to_array(&satellite_models, model)
 }
-add_models_to_system :: proc(
-	system: ^AstroSystem,
-	models: []Model,
-) {
+add_models_to_system :: proc(system: ^AstroSystem, models: []Model) {
 	using system
 	for model in models {
 		add_model_to_array(&satellite_models, model)
@@ -233,17 +221,11 @@ add_model_to_array :: proc {
 	add_model_to_array_ptr,
 	add_model_to_array_copy,
 }
-add_model_to_array_ptr :: proc(
-	models: ^[dynamic]Model,
-	model: ^Model,
-) {
+add_model_to_array_ptr :: proc(models: ^[dynamic]Model, model: ^Model) {
 	append_elem(models, model^)
 	free(model)
 }
-add_model_to_array_copy :: proc(
-	models: ^[dynamic]Model,
-	model: Model,
-) {
+add_model_to_array_copy :: proc(models: ^[dynamic]Model, model: Model) {
 	append_elem(models, model)
 }
 
@@ -261,4 +243,3 @@ add_bodies_to_system :: proc(system: ^AstroSystem, bodies: []CelestialBody) {
 	}
 	num_satellites += len(bodies)
 }
-

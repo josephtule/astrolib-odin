@@ -44,11 +44,22 @@ main :: proc() {
 	earth.gravity_model = .pointmass
 	earth.max_degree = 2
 	earth.fixed = true
+	q := la.quaternion_from_euler_angle_x(math.to_radians(f64(23.5)))
+	earth.ep = am.quaternion_to_euler_param(q)
+	earth.update_attitude = true
+	model_size :=
+		[3]f32 {
+			f32(earth.semimajor_axis),
+			f32(earth.semiminor_axis),
+			f32(earth.semiminor_axis),
+		} *
+		u_to_rl
 	earth_model := ast.gen_celestialbody_model(
 		earth,
-		f32(earth.semimajor_axis),
+		model_size = model_size,
 		faces = 128,
 	)
+	earth_model.axes.draw = true
 	ast.add_celestialbody(&celestialbodies, earth)
 	ast.add_model_to_array(&celestialbody_models, earth_model)
 
@@ -59,9 +70,16 @@ main :: proc() {
 	moon := ast.luna_params()
 	moon.semimajor_axis = 500.
 	moon.pos, moon.vel = ast.coe_to_rv(a, ecc, 14, 120., 0, 140., earth.mu)
+	model_size = 
+		[3]f32 {
+			f32(moon.semimajor_axis),
+			f32(moon.semiminor_axis),
+			f32(moon.semiminor_axis),
+		} *
+		u_to_rl
 	moon_model := ast.gen_celestialbody_model(
 		moon,
-		f32(moon.semimajor_axis),
+		model_size,
 		tint = rl.GOLD,
 	)
 	ast.add_celestialbody(&celestialbodies, moon)
@@ -76,7 +94,7 @@ main :: proc() {
 	moon2.pos, moon2.vel = ast.coe_to_rv(a, ecc, 45, 35., 15., 45., earth.mu)
 	moon2_model := ast.gen_celestialbody_model(
 		moon2,
-		f32(moon2.semimajor_axis),
+		model_size = model_size,
 		tint = rl.RAYWHITE,
 	)
 	ast.add_celestialbody(&celestialbodies, moon2)
@@ -92,7 +110,7 @@ main :: proc() {
 	moon3.pos, moon3.vel = ast.coe_to_rv(a, ecc, 0, 45., 60., 180., earth.mu)
 	moon3_model := ast.gen_celestialbody_model(
 		moon3,
-		f32(moon3.semimajor_axis),
+		model_size,
 		tint = rl.GREEN,
 	)
 	ast.add_celestialbody(&celestialbodies, moon3)
@@ -300,9 +318,9 @@ main :: proc() {
 		ast.draw_system(asystem)
 
 		// draw inertial axes
-		rl.DrawLine3D(origin, x_axis * 10, rl.RED)
-		rl.DrawLine3D(origin, y_axis * 10, rl.GREEN)
-		rl.DrawLine3D(origin, z_axis * 10, rl.DARKBLUE)
+		rl.DrawLine3D(origin, x_axis * 25, rl.RED)
+		rl.DrawLine3D(origin, y_axis * 25, rl.GREEN)
+		rl.DrawLine3D(origin, z_axis * 25, rl.DARKBLUE)
 
 		rl.EndMode3D()
 		// draw 2D stuff here
@@ -449,7 +467,7 @@ update_simulation :: proc(
 		fmt.println(ast.N_trail_sat, ast.mod_trail_sat)
 	}
 
-	if rl.IsKeyPressed(.PERIOD) {
+	if !rl.IsKeyDown(.RIGHT_SHIFT) && rl.IsKeyPressed(.PERIOD) {
 		earth := bodies[0] // TODO: change this later
 		// add satellite to system here
 
@@ -476,6 +494,36 @@ update_simulation :: proc(
 		ast.add_satellite(&satellites, sat)
 		ast.add_model_to_array(&satellite_models, sat_model)
 		fmt.println("Added satellite (ID):", sat.id)
+	}
+	if rl.IsKeyDown(.RIGHT_SHIFT) && rl.IsKeyPressed(.PERIOD) {
+		for i := 0; i < 5; i += 1 {
+			earth := bodies[0] // TODO: change this later
+			// add satellite to system here
+
+			pos0, vel0 := ast.gen_rand_coe_orientation(10000, 0.1, earth)
+			ep0: [4]f64 = {0, 0, 0, 1}
+			omega0: [3]f64 = {0.0001, .05, 0.0001}
+
+			cube_size: f32 = 50 / 1000. * u_to_rl
+			sat, sat_model := ast.gen_sat_and_model(
+				pos0,
+				vel0,
+				ep0,
+				omega0,
+				{cube_size, cube_size * 2, cube_size * 3},
+			)
+			sat.gravity_model = .pointmass
+			sat_model.axes.draw = true
+			sat.inertia = matrix[3, 3]f64{
+				100., 0., 0., 
+				0., 200., 0., 
+				0., 0., 300., 
+			}
+			sat.update_attitude = true
+			ast.add_satellite(&satellites, sat)
+			ast.add_model_to_array(&satellite_models, sat_model)
+			fmt.println("Added satellite (ID):", sat.id)
+		}
 	}
 }
 

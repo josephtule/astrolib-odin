@@ -49,8 +49,8 @@
   - [ ] collision resolution
     - should the bodies slide/bounce/etc.
     - idk how to do this, so far they have been hitting, sliding, then shooting off
-- [ ] Add rotation to celestial bodies? (yes)
-  - [ ] Initial atittude -> set model rotation matrix, update using fixed rotation speed (low fidelity)
+- [x] Add rotation to celestial bodies? (yes)
+  - [x] Initial atittude -> set model rotation matrix, update using fixed rotation speed (low fidelity)
   - [ ] initial attitude -> use model precession, nutation, polar motion (high fidelity, probably not needed with time scales for simulation)
   - [ ] Use angle-axis or dcm
 - [ ] Add orbit generating functions
@@ -79,7 +79,7 @@
 - [x] Add different cameras (inertial/origin, satellite/body, fixed)
   - NOTE: currently only locks, cannot pan
   - [ ] adjust clipping planes dynamically depending on distance to target
-- [ ] Move trail, axes, and position vector draws to update_satellite_model
+- [x] Move trail, axes, and position vector draws to update_satellite_model
 - [ ] Optimize trail update and drawing
 - [ ] Move trail length and update rates into satellite model
 - [ ] Add change trail length
@@ -90,11 +90,13 @@
 ## UI/Controls
 
 - [ ] Figure out how to do UI lol
-  - [ ]
+  - [ ] use clay?
+  - [ ] 3D camera as a viewport
 - [ ] Add UI to be able to spawn new bodies (both celestial and satellite)
   - [ ] Adding new body should pause simulation
   - [ ] add support for rotating frames
   - [ ] add picker for example configurations
+- [ ] Drop down list of spawned satellites and bodies, select target for camera
 - [x] Implement multiple buttons for camera movement
 - [ ] Display info of currently target
   - [x] create info struct for satellites

@@ -58,7 +58,7 @@ draw_satellite :: proc(model: ^Model, sat: Satellite) {
 	rl.DrawModel(model.model, am.origin_f32, 1, model.tint)
 
 	if model.axes.draw {
-		draw_axes(sat.update_attitude, &model.axes, model.model, f32(sat.radius))
+		draw_axes(sat.update_attitude, &model.axes, model.model, f32(sat.radius) * 5)
 	}
 	if model.trail.draw {
 		draw_trail(model^)
@@ -192,9 +192,9 @@ gen_satmodel :: proc(
 	// position/velocity vectors
 	m.posvel.draw_pos = true
 	m.posvel.draw_vel = true
-	m.posvel.vel_scale = 1
+	m.posvel.vel_scale = 1.
 	m.posvel.pos_tint = rl.GOLD
-	m.posvel.vel_tint = rl.PURPLE
+	m.posvel.vel_tint = rl.ORANGE
 
 	// checker pattern
 	image_checker := rl.GenImageChecked(

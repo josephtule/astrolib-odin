@@ -21,13 +21,13 @@ draw_axes :: proc(
 ) {
 	if attitude_flag {
 		R := am.GetRotation(model.transform)
-		axes.x = R * (am.xaxis_f32 * size * 10)
-		axes.y = R * (am.yaxis_f32 * size * 10)
-		axes.z = R * (am.zaxis_f32 * size * 10)
+		axes.x = R * (am.xaxis_f32 * size)
+		axes.y = R * (am.yaxis_f32 * size)
+		axes.z = R * (am.zaxis_f32 * size)
 	}
-	sat_pos_f32 := am.GetTranslation(model.transform)
+	pos := am.GetTranslation(model.transform)
 	// cmy colors for axes
-	rl.DrawLine3D(sat_pos_f32, sat_pos_f32 + axes.x, rl.MAGENTA)
-	rl.DrawLine3D(sat_pos_f32, sat_pos_f32 + axes.y, rl.YELLOW)
-	rl.DrawLine3D(sat_pos_f32, sat_pos_f32 + axes.z, rl.Color({0, 255, 255, 255}))
+	rl.DrawLine3D(pos, pos + axes.x, rl.MAGENTA)
+	rl.DrawLine3D(pos, pos + axes.y, rl.YELLOW)
+	rl.DrawLine3D(pos, pos + axes.z, rl.Color({0, 255, 255, 255}))
 }
