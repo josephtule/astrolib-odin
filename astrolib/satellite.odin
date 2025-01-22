@@ -50,7 +50,25 @@ SatelliteModel :: struct {
 	draw_axes:     bool,
 	draw_pos:      bool,
 	trail:         Trail,
+	axes:          Axes,
 }
+
+// -----------------------------------------------------------------------------
+// Draw Functions
+// -----------------------------------------------------------------------------
+draw_satellite :: proc(model: ^SatelliteModel, sat: Satellite) {
+	update_satellite_model(model, sat)
+	sat_pos_f32 := am.cast_f32(sat.pos) * u_to_rl
+	rl.DrawModel(model.model, am.origin_f32, 1, model.tint)
+
+	if model.axes.draw {
+		draw_axes(sat.update_attitude, &model.axes, model.model, f32(sat.radius))
+	}
+	if model.trail.draw {
+		draw_trail(model^)
+	}
+}
+
 
 // -----------------------------------------------------------------------------
 // Update Functions
@@ -203,7 +221,6 @@ gen_sat_and_model :: proc(
 	m = gen_satmodel(&s, model_size, scale = scale)
 	return s, m
 }
-
 
 
 /// -----------------------------------------------------------------------------

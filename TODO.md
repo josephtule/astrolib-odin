@@ -28,8 +28,8 @@
     - [ ] generate rotation matrix for each update using relative position vector in inertial frame
       - [ ] new origin to target is xhat, yhat 90 degrees clockwise (in direction of orbit), zhat creates right hand frame
   - [ ] trails
-    - [ ] in trail update, use rotation matrix of CURRENT frame to update ALL trail position
     - [ ] use relative position for trail, rotate, then add to target body's postion to get inertial coordinates (or is it origin body)
+    - [ ] in trail update, use rotation matrix of CURRENT frame to update ALL trail position
     - [x] make trails their own struct
 
   

@@ -98,6 +98,7 @@ update_system :: proc(system: ^AstroSystem, dt, time: f64) {
 	}
 }
 
+// draw_posvec :: proc(system: AstroSystem, )
 
 draw_system :: proc(system: ^AstroSystem, u_to_rl: f32 = u_to_rl) {
 	using system
