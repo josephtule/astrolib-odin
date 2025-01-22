@@ -33,7 +33,7 @@ main :: proc() {
 	rl.InitWindow(window_width, window_height, "AstroLib")
 	rl.SetWindowState({.WINDOW_RESIZABLE})
 	// rl.SetTargetFPS(rl.GetMonitorRefreshRate(0))
-	rl.SetTargetFPS(60)
+	// rl.SetTargetFPS(60)
 	defer rl.CloseWindow()
 
 	// generate celestial bodies
@@ -70,18 +70,14 @@ main :: proc() {
 	moon := ast.luna_params()
 	moon.semimajor_axis = 500.
 	moon.pos, moon.vel = ast.coe_to_rv(a, ecc, 14, 120., 0, 140., earth.mu)
-	model_size = 
+	model_size =
 		[3]f32 {
 			f32(moon.semimajor_axis),
 			f32(moon.semiminor_axis),
 			f32(moon.semiminor_axis),
 		} *
 		u_to_rl
-	moon_model := ast.gen_celestialbody_model(
-		moon,
-		model_size,
-		tint = rl.GOLD,
-	)
+	moon_model := ast.gen_celestialbody_model(moon, model_size, tint = rl.GOLD)
 	ast.add_celestialbody(&celestialbodies, moon)
 	ast.add_model_to_array(&celestialbody_models, moon_model)
 
@@ -108,11 +104,7 @@ main :: proc() {
 	moon3 := ast.luna_params()
 	moon3.semimajor_axis = 700.
 	moon3.pos, moon3.vel = ast.coe_to_rv(a, ecc, 0, 45., 60., 180., earth.mu)
-	moon3_model := ast.gen_celestialbody_model(
-		moon3,
-		model_size,
-		tint = rl.GREEN,
-	)
+	moon3_model := ast.gen_celestialbody_model(moon3, model_size, tint = rl.GREEN)
 	ast.add_celestialbody(&celestialbodies, moon3)
 	ast.add_model_to_array(&celestialbody_models, moon3_model)
 
@@ -469,9 +461,9 @@ update_simulation :: proc(
 
 	if !rl.IsKeyDown(.RIGHT_SHIFT) && rl.IsKeyPressed(.PERIOD) {
 		earth := bodies[0] // TODO: change this later
-		// add satellite to system here
-
+		// orbittype: int = rand.int_max(4)
 		pos0, vel0 := ast.gen_rand_coe_orientation(10000, 0.1, earth)
+		// pos0, vel0 := ast.gen_rand_coe_earth(earth, ast.OrbitType(orbittype))
 		ep0: [4]f64 = {0, 0, 0, 1}
 		omega0: [3]f64 = {0.0001, .05, 0.0001}
 

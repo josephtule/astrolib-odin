@@ -9,7 +9,7 @@ import "core:os"
 import am "../astromath"
 
 OrbitType :: enum {
-	LEO,
+	LEO = 0,
 	MEO,
 	GEO, // geostationary
 	GSO, // geosynchronous
