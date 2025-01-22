@@ -7,10 +7,17 @@ origin_f64: [3]f64 : {0., 0., 0.}
 xaxis_f64: [3]f64 : {1., 0., 0.}
 yaxis_f64: [3]f64 : {0., 1., 0.}
 zaxis_f64: [3]f64 : {0., 0., 1.}
+
 origin_f32: [3]f32 : {0., 0., 0.}
 xaxis_f32: [3]f32 : {1., 0., 0.}
 yaxis_f32: [3]f32 : {0., 1., 0.}
 zaxis_f32: [3]f32 : {0., 0., 1.}
+
+
+magnitude :: la.length
+mag :: la.length
+magnitude2:: la.length2
+mag2 :: la.length2
 
 
 posvel_to_state :: proc(pos, vel: [3]$T) -> (state: [6]T) {

@@ -48,6 +48,77 @@ CelestialBody :: struct {
 // }
 
 
+update_body :: proc(
+	body: ^CelestialBody,
+	model: ^Model,
+	state_new: ^[6]f64,
+	dt, time, time_scale: f64,
+	integrator: am.IntegratorType,
+	params_translate, params_attitude: rawptr,
+) {
+	if body.update_attitude {
+		// update body attitude
+		// always rotate about z axis (will probably not be implementing precession, nutation, and polar motion)
+		angle := body.omega * dt * time_scale
+		rotz := la.matrix4_from_euler_angle_z(-angle)
+		attitude := la.matrix4_from_quaternion(am.euler_param_to_quaternion(body.ep))
+		q := la.quaternion_normalize0(la.quaternion_from_matrix4(attitude * rotz))
+		body.ep = am.quaternion_to_euler_param(q)
+	}
+
+	if !body.fixed {
+		// update body translation
+		state_current := am.posvel_to_state(body.pos, body.vel)
+		_, state_new^ = am.integrate(
+			gravity_nbody,
+			time,
+			state_current,
+			dt * time_scale,
+			params_translate,
+			integrator,
+		)
+	}
+}
+
+draw_body :: proc(model: ^Model, body: CelestialBody) {
+	update_body_model(model, body)
+
+	rl.DrawModel(model.model, am.origin_f32, 1, model.tint)
+
+	if model.axes.draw {
+		draw_axes(
+			body.update_attitude,
+			&model.axes,
+			model.model,
+			f32(model.model_size[0]) * 2,
+		)
+	}
+	if model.trail.draw {
+		// draw_trail(model^)
+	}
+
+}
+
+update_body_model :: proc(body_model: ^Model, body: CelestialBody) {
+	using body_model
+
+	// set rotation
+	if body.update_attitude {
+		q := am.euler_param_to_quaternion(am.cast_f32(body.ep))
+		model.transform = rl.QuaternionToMatrix(q)
+	} else {
+		model.transform = (# row_major matrix[4, 4]f32)(la.MATRIX4F32_IDENTITY)
+	}
+
+	// set scale 
+	am.SetScale(&model.transform, scale)
+
+	// set translation
+	body_pos_f32 := am.cast_f32(body.pos) * u_to_rl
+	am.SetTranslation(&model.transform, body_pos_f32)
+
+}
+
 gen_celestialbody :: proc(
 	pos, vel: [3]f64,
 	ep: [4]f64,
@@ -119,14 +190,14 @@ gen_celestialbody_model :: proc(
 	model.trail.draw = true
 
 	// local axes
-	// c_model.axes.draw = true
+	model.axes.draw = true
 
 	// // position/velocity vectors
-	// c_model.posvel.draw_pos = true
-	// c_model.posvel.draw_vel = true
-	// c_model.posvel.vel_scale = 1
-	// c_model.posvel.pos_tint = rl.GOLD
-	// c_model.posvel.vel_tint = rl.PURPLE
+	// model.posvel.draw_pos = true
+	// model.posvel.draw_vel = true
+	// model.posvel.vel_scale = 1
+	// model.posvel.pos_tint = rl.GOLD
+	// model.posvel.vel_tint = rl.PURPLE
 
 	image_checker := rl.GenImageChecked(
 		8,
@@ -284,73 +355,4 @@ luna_params :: proc(
 }
 
 
-update_body :: proc(
-	body: ^CelestialBody,
-	model: ^Model,
-	state_new: ^[6]f64,
-	dt, time, time_scale: f64,
-	integrator: am.IntegratorType,
-	params_translate, params_attitude: rawptr,
-) {
-	if body.update_attitude {
-		// update body attitude
-		// always rotate about z axis (will probably not be implementing precession, nutation, and polar motion)
-		angle := body.omega * dt * time_scale
-		rotz := la.matrix4_from_euler_angle_z(-angle)
-		attitude := la.matrix4_from_quaternion(am.euler_param_to_quaternion(body.ep))
-		q := la.quaternion_normalize0(la.quaternion_from_matrix4(attitude * rotz))
-		body.ep = am.quaternion_to_euler_param(q)
-	}
 
-	if !body.fixed {
-		// update body translation
-		state_current := am.posvel_to_state(body.pos, body.vel)
-		_, state_new^ = am.integrate(
-			gravity_nbody,
-			time,
-			state_current,
-			dt * time_scale,
-			params_translate,
-			integrator,
-		)
-	}
-}
-
-draw_body :: proc(model: ^Model, body: CelestialBody) {
-	update_body_model(model, body)
-
-	rl.DrawModel(model.model, am.origin_f32, 1, model.tint)
-
-	if model.axes.draw {
-		draw_axes(
-			body.update_attitude,
-			&model.axes,
-			model.model,
-			f32(model.model_size[0]) * 2,
-		)
-	}
-	if model.trail.draw {
-		// draw_trail(model^)
-	}
-
-}
-
-update_body_model :: proc(body_model: ^Model, body: CelestialBody) {
-	using body_model
-
-	// set rotation
-	if body.update_attitude {
-		q := am.euler_param_to_quaternion(am.cast_f32(body.ep))
-		model.transform = rl.QuaternionToMatrix(q)
-	} else {
-		model.transform = (# row_major matrix[4, 4]f32)(la.MATRIX4F32_IDENTITY)
-	}
-
-	// set scale 
-	am.SetScale(&model.transform, scale)
-
-	// set translation
-	body_pos_f32 := am.cast_f32(body.pos) * u_to_rl
-	am.SetTranslation(&model.transform, body_pos_f32)
-
-}

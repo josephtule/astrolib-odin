@@ -14,7 +14,7 @@ import "core:time"
 import rl "vendor:raylib"
 
 
-main :: proc() {
+main2 :: proc() {
 	// raylib init
 	window_width: i32 = 1024
 	window_height: i32 = 1024
