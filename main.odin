@@ -127,7 +127,7 @@ main :: proc() {
 			{cube_size, cube_size * 2, cube_size * 3},
 		)
 		sat.gravity_model = .pointmass
-		sat_model.draw_axes = true
+		sat_model.axes.draw = true
 		sat.inertia = matrix[3, 3]f64{
 			100., 0., 0., 
 			0., 200., 0., 
@@ -154,13 +154,13 @@ main :: proc() {
 			{cube_size, cube_size * 2, cube_size * 3},
 		)
 		sat.gravity_model = .pointmass
-		sat_model.draw_axes = true
+		sat_model.axes.draw = true
 		sat.inertia = matrix[3, 3]f64{
 			100., 0., 0., 
 			0., 200., 0., 
 			0., 0., 300., 
 		}
-		sat_model.target_id = moon3.id
+		sat_model.posvel.target_id = moon3.id
 		sat.update_attitude = true
 		ast.add_satellite(&satellites, sat)
 		ast.add_satellite_model(&satellite_models, sat_model)
@@ -180,13 +180,13 @@ main :: proc() {
 			{cube_size, cube_size * 2, cube_size * 3},
 		)
 		sat.gravity_model = .pointmass
-		sat_model.draw_axes = true
+		sat_model.axes.draw = true
 		sat.inertia = matrix[3, 3]f64{
 			100., 0., 0., 
 			0., 200., 0., 
 			0., 0., 300., 
 		}
-		sat_model.target_id = moon3.id
+		sat_model.posvel.target_id = moon3.id
 		sat.update_attitude = true
 		ast.add_satellite(&satellites, sat)
 		ast.add_satellite_model(&satellite_models, sat_model)
@@ -385,7 +385,7 @@ update_simulation :: proc(
 	}
 	if rl.IsKeyPressed(.O) {
 		for &model, i in satellite_models {
-			model.draw_axes = !model.draw_axes
+			model.axes.draw = !model.axes.draw
 		}
 	}
 	if rl.IsKeyPressed(.I) {
@@ -461,7 +461,7 @@ update_simulation :: proc(
 			{cube_size, cube_size * 2, cube_size * 3},
 		)
 		sat.gravity_model = .pointmass
-		sat_model.draw_axes = true
+		sat_model.axes.draw = true
 		sat.inertia = matrix[3, 3]f64{
 			100., 0., 0., 
 			0., 200., 0., 

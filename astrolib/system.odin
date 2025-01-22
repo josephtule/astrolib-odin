@@ -104,51 +104,8 @@ draw_system :: proc(system: ^AstroSystem, u_to_rl: f32 = u_to_rl) {
 	using system
 	// satellite models
 	for &model, i in satellite_models {
-		update_satellite_model(&model, satellites[i])
-		sat_pos_f32 := la.array_cast(satellites[i].pos, f32) * u_to_rl
-
-		rl.DrawModel(model.model, am.origin_f32, 1, model.tint)
-
-		if model.draw_axes {
-			if satellites[i].update_attitude {
-				R := am.GetRotation(model.model.transform)
-				model.local_axes[0] = R * (am.xaxis_f32 * f32(satellites[i].radius) * 10)
-				model.local_axes[1] = R * (am.yaxis_f32 * f32(satellites[i].radius) * 10)
-				model.local_axes[2] = R * (am.zaxis_f32 * f32(satellites[i].radius) * 10)
-			}
-
-			// cmy colors for axes
-			rl.DrawLine3D(sat_pos_f32, sat_pos_f32 + model.local_axes[0], rl.MAGENTA)
-			rl.DrawLine3D(sat_pos_f32, sat_pos_f32 + model.local_axes[1], rl.YELLOW)
-			rl.DrawLine3D(
-				sat_pos_f32,
-				sat_pos_f32 + model.local_axes[2],
-				rl.Color({0, 255, 255, 255}),
-			)
-		}
-		if model.trail.draw{
-			draw_trail(satellite_models[i])
-		}
-
-		// line from origin to satellite
-		if model.draw_pos {
-			ind: int
-			if model.target_id >= g_body_id_base {
-				// target is a body
-				ind = system.id[model.target_id]
-				model.target_origin = am.cast_f32(bodies[ind].pos) * u_to_rl
-			} else {
-				// target is satellite
-				ind = system.id[model.target_id]
-				model.target_origin = am.cast_f32(satellites[ind].pos) * u_to_rl
-			}
-			// model.target_origin = am.cast_f32()
-			rl.DrawLine3D(
-				model.target_origin,
-				la.array_cast(satellites[i].pos, f32) * u_to_rl,
-				rl.GOLD,
-			)
-		}
+		draw_satellite(&model, satellites[i])
+		draw_vectors(&model.posvel, system^, satellites[i].pos, satellites[i].vel)
 	}
 
 	// celestial body models

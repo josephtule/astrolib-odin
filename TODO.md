@@ -83,6 +83,7 @@
 - [ ] Add change trail length
   - [ ] if trail length updated, dont reset, just append more to the end?
 - [ ] Move to raw opengl for performance?
+- [ ] add trails, axes, and position vector to celestial bodies
 
 ## UI/Controls
 

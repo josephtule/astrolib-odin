@@ -6,8 +6,8 @@ import rl "vendor:raylib"
 
 import am "../astromath"
 
+
 Axes :: struct {
-	origin:  [3]f32,
 	x, y, z: [3]f32,
 	draw:    bool,
 }

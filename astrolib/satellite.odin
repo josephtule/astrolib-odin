@@ -42,15 +42,12 @@ SatelliteModel :: struct {
 	model:         rl.Model,
 	model_size:    [3]f32,
 	scale:         f32,
-	local_axes:    [3][3]f32,
 	tint:          rl.Color,
-	target_origin: [3]f32,
-	target_id:     int,
 	draw_model:    bool,
-	draw_axes:     bool,
 	draw_pos:      bool,
 	trail:         Trail,
 	axes:          Axes,
+	posvel:        PosVel,
 }
 
 // -----------------------------------------------------------------------------
@@ -67,6 +64,7 @@ draw_satellite :: proc(model: ^SatelliteModel, sat: Satellite) {
 	if model.trail.draw {
 		draw_trail(model^)
 	}
+
 }
 
 
@@ -176,16 +174,27 @@ gen_satmodel :: proc(
 
 	// default to rectangular prism
 	m.draw_model = true
-	m.draw_pos = true
 	mesh := rl.GenMeshCube(model_size[0], model_size[1], model_size[2])
 	m.model = rl.LoadModelFromMesh(mesh)
 	m.model.transform = (# row_major matrix[4, 4]f32)(la.MATRIX4F32_IDENTITY)
 	m.model_size = model_size
 	am.SetTranslation(&m.model.transform, la.array_cast(sat.pos * u_to_rl, f32))
 	m.tint = tint
+
+	// trail
 	create_trail(&m.trail, sat.pos)
 	m.trail.draw = true
 	m.scale = scale
+
+	// local axes
+	m.axes.draw = true
+
+	// position/velocity vectors
+	m.posvel.draw_pos = true
+	m.posvel.draw_vel = true
+	m.posvel.vel_scale = 1
+	m.posvel.pos_tint = rl.GOLD
+	m.posvel.vel_tint = rl.PURPLE
 
 	// checker pattern
 	image_checker := rl.GenImageChecked(
