@@ -59,10 +59,11 @@ update_body :: proc(
 	if body.update_attitude {
 		// update body attitude
 		// always rotate about z axis (will probably not be implementing precession, nutation, and polar motion)
+		// TODO: figure out how to optimize this
 		angle := body.omega * dt * time_scale
 		rotz := la.matrix4_from_euler_angle_z(-angle)
 		attitude := la.matrix4_from_quaternion(am.euler_param_to_quaternion(body.ep))
-		q := la.quaternion_normalize0(la.quaternion_from_matrix4(attitude * rotz))
+		q := la.normalize0(la.quaternion_from_matrix4(attitude * rotz))
 		body.ep = am.quaternion_to_euler_param(q)
 	}
 
@@ -103,12 +104,12 @@ update_body_model :: proc(body_model: ^Model, body: CelestialBody) {
 	using body_model
 
 	// set rotation
-	if body.update_attitude {
+	// if body.update_attitude {
 		q := am.euler_param_to_quaternion(am.cast_f32(body.ep))
 		model.transform = rl.QuaternionToMatrix(q)
-	} else {
-		model.transform = (# row_major matrix[4, 4]f32)(la.MATRIX4F32_IDENTITY)
-	}
+	// } else {
+	// 	model.transform = (# row_major matrix[4, 4]f32)(la.MATRIX4F32_IDENTITY)
+	// }
 
 	// set scale 
 	am.SetScale(&model.transform, scale)

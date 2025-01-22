@@ -16,18 +16,18 @@ g_sat_id: int = g_sat_id_base
 // Structs
 // -----------------------------------------------------------------------------
 Satellite :: struct {
-	id:              int,
-	pos, vel:        [3]f64,
-	ep:              [4]f64,
-	omega:           [3]f64,
-	mass:            f64,
-	inertia:         matrix[3, 3]f64,
-	radius:          f64, // hardbody radius
-	linear_units:    am.UnitsLinear,
-	angular_units:   am.UnitsAngle,
-	gravity_model:   GravityModel,
-	update_attitude: bool,
-	info:            SatelliteInfo,
+	id:                   int,
+	pos, vel:             [3]f64,
+	ep:                   [4]f64,
+	omega:                [3]f64,
+	mass:                 f64,
+	inertia, inertia_inv: matrix[3, 3]f64,
+	radius:               f64, // hardbody radius
+	linear_units:         am.UnitsLinear,
+	angular_units:        am.UnitsAngle,
+	gravity_model:        GravityModel,
+	update_attitude:      bool,
+	info:                 SatelliteInfo,
 }
 
 SatelliteInfo :: struct {
@@ -69,12 +69,13 @@ draw_satellite :: proc(model: ^Model, sat: Satellite) {
 update_satellite_model :: proc(sat_model: ^Model, sat: Satellite) {
 	using sat_model
 	// set rotation
-	model.transform = (# row_major matrix[4, 4]f32)(la.MATRIX4F32_IDENTITY)
-	if sat.update_attitude {
+	// model.transform = (# row_major matrix[4, 4]f32)(la.MATRIX4F32_IDENTITY)
+	// if sat.update_attitude {
 		q := am.euler_param_to_quaternion(am.cast_f32(sat.ep))
 		N_R_B := rl.QuaternionToMatrix(q)
 		model.transform = N_R_B
-	}
+	// }
+
 	// set scale 
 	am.SetScale(&model.transform, scale)
 	// set translation
@@ -104,7 +105,7 @@ update_satellite :: proc(
 			params_attitude,
 			integrator,
 		)
-		sat.ep = la.vector_normalize0(sat.ep)
+		sat.ep = la.normalize0(sat.ep)
 		sat.ep, sat.omega = am.state_to_epomega(attitude_new)
 	}
 
@@ -143,13 +144,15 @@ gen_sat :: proc(
 	id_str: string = strconv.itoa(id_buf[:], id)
 	name, err := str.join([]string{name_str, id_str}, " ")
 	info.name = name
-
+	inertia := la.MATRIX3F64_IDENTITY
+	inertia_inv := la.inverse(inertia)
 	s = Satellite {
 		pos           = pos,
 		vel           = vel,
 		ep            = ep,
 		omega         = omega,
-		inertia       = la.MATRIX3F64_IDENTITY,
+		inertia       = inertia,
+		inertia_inv   = inertia_inv,
 		linear_units  = .KILOMETER,
 		angular_units = .RADIANS,
 		id            = id,
@@ -160,6 +163,7 @@ gen_sat :: proc(
 	}
 	return s
 }
+
 gen_satmodel :: proc(
 	sat: ^Satellite,
 	model_size: [3]f32,
@@ -231,6 +235,10 @@ gen_sat_and_model :: proc(
 	return s, m
 }
 
+set_inertia :: proc(sat: ^Satellite, I: matrix[3, 3]f64) {
+	sat.inertia = I
+	sat.inertia_inv = la.inverse(I)
+}
 
 /// -----------------------------------------------------------------------------
 // Add/Remove Functions

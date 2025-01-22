@@ -26,10 +26,10 @@ gravity_nbody :: proc(t: f64, x: [6]f64, params: rawptr) -> [6]f64 {
 	dxdt: [6]f64
 
 	params := cast(^Params_Gravity_Nbody)(params)
-	r: [3]f64
-	am.set_vector_slice(&r, x, l1 = 3)
-	v: [3]f64
-	am.set_vector_slice_1(&v, x, s1 = 3, l1 = 3)
+	r: [3]f64 = {x[0], x[1], x[2]}
+	// am.set_vector_slice(&r, x, l1 = 3)
+	v: [3]f64 = {x[3], x[4], x[5]}
+	// am.set_vector_slice_1(&v, x, s1 = 3, l1 = 3)
 
 	a: [3]f64
 	for &body, i in params.bodies {
@@ -49,14 +49,15 @@ gravity_nbody :: proc(t: f64, x: [6]f64, params: rawptr) -> [6]f64 {
 			case .zonal: a += accel_zonal(r_rel, body.mu, body.semimajor_axis, body.J, body.max_degree)
 			case .pointmass: a += accel_pointmass(r_rel, body.mu)
 			case .spherical_harmonic:
-				panic("ERROR: ")
+				panic("ERROR: spherical harmonics is not yet implemented")
 			case:
-				panic("ERROR: ")
+				panic("ERROR: invalid gravity model")
 			}
 
 		}
 	}
-	am.set_vector_slice_2(&dxdt, v, a)
+	// am.set_vector_slice_2(&dxdt, v, a)
+	dxdt = {v[0], v[1], v[2], a[0], a[1], a[2]}
 	return dxdt
 }
 
@@ -64,15 +65,16 @@ gravity_pointmass :: proc(t: f64, x: [6]f64, params: rawptr) -> [6]f64 {
 	dxdt: [6]f64
 
 	params := cast(^Params_Gravity_Pointmass)(params)
-	r: [3]f64
-	am.set_vector_slice(&r, x, l1 = 3)
-	v: [3]f64
-	am.set_vector_slice_1(&v, x, s1 = 3, l1 = 3)
+	r: [3]f64 = {x[0], x[1], x[2]}
+	// am.set_vector_slice(&r, x, l1 = 3)
+	v: [3]f64 = {x[3], x[4], x[5]}
+	// am.set_vector_slice_1(&v, x, s1 = 3, l1 = 3)
 
 	r_mag := la.vector_length(r)
 
 	a := accel_pointmass(r, params.mu)
-	am.set_vector_slice_2(&dxdt, v, a)
+	// am.set_vector_slice_2(&dxdt, v, a)
+	dxdt = {v[0], v[1], v[2], a[0], a[1], a[2]}
 
 	return dxdt
 }
@@ -97,14 +99,16 @@ gravity_zonal :: proc(t: f64, x: [6]f64, params: rawptr) -> [6]f64 {
 	dxdt: [6]f64
 
 	params := cast(^Params_Gravity_SphHarmon)(params)
-	r: [3]f64
-	am.set_vector_slice_1(&r, x, l1 = 3)
-	v: [3]f64
-	am.set_vector_slice_1(&v, x, s1 = 3, l1 = 3)
+	r: [3]f64 = {x[0], x[1], x[2]}
+	// am.set_vector_slice(&r, x, l1 = 3)
+	v: [3]f64 = {x[3], x[4], x[5]}
+	// am.set_vector_slice_1(&v, x, s1 = 3, l1 = 3)
 
 	a := accel_pointmass(r, params.mu)
 	a += accel_zonal(r, params.mu, params.R_cb, params.J, params.max_degree)
-	am.set_vector_slice_2(&dxdt, v, a)
+	// am.set_vector_slice_2(&dxdt, v, a)
+	dxdt = {v[0], v[1], v[2], a[0], a[1], a[2]}
+	
 	return dxdt
 }
 accel_zonal :: #force_inline proc(

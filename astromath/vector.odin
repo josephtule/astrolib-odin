@@ -40,10 +40,10 @@ state_to_epomega :: proc(state: [7]$T) -> (ep: [4]T, omega: [3]T) {
 	return ep, omega
 }
 
-is_diagonal :: proc(mat: matrix[$N, N]$T, tol := 1.0e-6) -> bool {
+is_diagonal :: proc(mat: matrix[$N, N]$T, tol := 1.0e-12) -> bool {
 	for i := 0; i < N; i += 1 {
-		for j := 0; j < N; j += 1 {
-			if i != j && math.abs(mat[i, j]) > tol {
+		for j := i + 1; j < N; j += 1 {
+			if math.abs(mat[i, j]) > tol || math.abs(mat[j, i]) > tol {
 				return false
 			}
 		}

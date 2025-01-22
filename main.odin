@@ -142,11 +142,11 @@ main :: proc() {
 		)
 		sat.gravity_model = .pointmass
 		sat_model.axes.draw = true
-		sat.inertia = matrix[3, 3]f64{
+		ast.set_inertia(&sat, matrix[3, 3]f64{
 			100., 0., 0., 
 			0., 200., 0., 
 			0., 0., 300., 
-		}
+		})
 		sat.update_attitude = true
 		ast.add_satellite(&satellites, sat)
 		ast.add_model_to_array(&satellite_models, sat_model)
@@ -169,11 +169,11 @@ main :: proc() {
 		)
 		sat.gravity_model = .pointmass
 		sat_model.axes.draw = true
-		sat.inertia = matrix[3, 3]f64{
+		ast.set_inertia(&sat, matrix[3, 3]f64{
 			100., 0., 0., 
 			0., 200., 0., 
 			0., 0., 300., 
-		}
+		})
 		sat_model.posvel.target_id = moon3.id
 		sat.update_attitude = true
 		ast.add_satellite(&satellites, sat)
@@ -195,11 +195,11 @@ main :: proc() {
 		)
 		sat.gravity_model = .pointmass
 		sat_model.axes.draw = true
-		sat.inertia = matrix[3, 3]f64{
+		ast.set_inertia(&sat, matrix[3, 3]f64{
 			100., 0., 0., 
 			0., 200., 0., 
 			0., 0., 300., 
-		}
+		})
 		sat_model.posvel.target_id = moon3.id
 		sat.update_attitude = true
 		ast.add_satellite(&satellites, sat)
@@ -477,11 +477,11 @@ update_simulation :: proc(
 		)
 		sat.gravity_model = .pointmass
 		sat_model.axes.draw = true
-		sat.inertia = matrix[3, 3]f64{
+		ast.set_inertia(&sat, matrix[3, 3]f64{
 			100., 0., 0., 
 			0., 200., 0., 
 			0., 0., 300., 
-		}
+		})
 		sat.update_attitude = true
 		ast.add_satellite(&satellites, sat)
 		ast.add_model_to_array(&satellite_models, sat_model)
@@ -506,11 +506,11 @@ update_simulation :: proc(
 			)
 			sat.gravity_model = .pointmass
 			sat_model.axes.draw = true
-			sat.inertia = matrix[3, 3]f64{
+			ast.set_inertia(&sat, matrix[3, 3]f64{
 				100., 0., 0., 
 				0., 200., 0., 
 				0., 0., 300., 
-			}
+			})
 			sat.update_attitude = true
 			ast.add_satellite(&satellites, sat)
 			ast.add_model_to_array(&satellite_models, sat_model)

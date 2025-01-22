@@ -55,6 +55,7 @@ update_system :: proc(system: ^AstroSystem, dt, time: f64) {
 		// gen params
 		params_attitude := Params_EulerParam {
 			inertia = sat.inertia,
+			inertia_inv = sat.inertia_inv,
 			torque  = {0, 0, 0}, // NOTE: no control for now
 		}
 		params_translate := Params_Gravity_Nbody {
