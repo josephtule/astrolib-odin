@@ -2,7 +2,7 @@ package astrolib
 
 import "core:fmt"
 import "core:math"
-import "core:math/linalg"
+import la "core:math/linalg"
 import "core:math/rand"
 import "core:os"
 
@@ -13,7 +13,8 @@ OrbitType :: enum {
 	MEO,
 	GEO, // geostationary
 	GSO, // geosynchronous
-	HEO,
+	HEO, // high earth orbit
+	HECCO, // highly eccentric orbits
 	hyperbolic,
 	high_hyperbolic,
 }
@@ -25,14 +26,15 @@ gen_rand_coe_orientation :: proc(
 ) -> (
 	pos, vel: [3]f64,
 ) {
-	inc := rand.float64_uniform(0, 180) 
+	inc := rand.float64_uniform(0, 180)
 	raan := rand.float64_uniform(0, 180)
 	aop := rand.float64_uniform(0, 360)
 	ta := rand.float64_uniform(0, 360)
 
 	pos, vel = coe_to_rv(sma, ecc, inc, raan, aop, ta, cb.mu)
-	pos = pos + cb.pos
-	vel = vel + cb.vel
+	R := la.matrix3_from_quaternion(am.euler_param_to_quaternion(cb.ep)) // rotation to equatorial plane
+	pos = R * pos + cb.pos
+	vel = R * vel + cb.vel
 	return pos, vel
 }
 
@@ -79,8 +81,9 @@ gen_rand_coe :: proc(
 	ta := rand.float64_uniform(0, 360)
 
 	pos, vel = coe_to_rv(sma, ecc, inc, raan, aop, ta, cb.mu)
-	pos = pos + cb.pos
-	vel = vel + cb.vel
+	R := la.matrix3_from_quaternion(am.euler_param_to_quaternion(cb.ep)) // rotation to equatorial plane
+	pos = R * pos + cb.pos
+	vel = R * vel + cb.vel
 	return pos, vel
 }
 
@@ -103,29 +106,30 @@ gen_rand_coe_earth :: proc(
 		sma = earth.semimajor_axis + rand.float64_uniform(100, 2000)
 		ecc = rand.float64_uniform(0, 0.25)
 
-		inc := rand.float64_uniform(0, 180)
-		raan := rand.float64_uniform(0, 180)
-		aop := rand.float64_uniform(0, 360)
-		ta := rand.float64_uniform(0, 360)
+		inc = rand.float64_uniform(0, 180)
+		raan = rand.float64_uniform(0, 180)
+		aop = rand.float64_uniform(0, 360)
+		ta = rand.float64_uniform(0, 360)
 	case .GEO:
 		sma = 35786
 		ecc = 0
 
-		inc = 0
-		raan := rand.float64_uniform(0, 180)
-		aop := rand.float64_uniform(0, 360)
-		ta := rand.float64_uniform(0, 360)
+		inc = rand.float64_uniform(0., 5.)
+		raan = 0
+		aop = 0
+		ta = rand.float64_uniform(0., 360.)
 	case .GSO:
 		sma = 35786
-		ecc = 0
+		ecc = rand.float64_uniform(0., 0.05)
 
-		inc := rand.float64_uniform(0, 180)
-		raan := rand.float64_uniform(0, 180)
-		aop := rand.float64_uniform(0, 360)
-		ta := rand.float64_uniform(0, 360)
+		inc = rand.float64_uniform(0, 180)
+		raan = rand.float64_uniform(0, 180)
+		aop = rand.float64_uniform(0, 360)
+		ta = rand.float64_uniform(0, 360)
 	case .MEO:
 		sma = earth.semimajor_axis + rand.float64_uniform(2000, 35786)
-		ecc = rand.float64_uniform(0, 0.8)
+		ecc = rand.float64_uniform(0, 0.25)
+
 		inc = rand.float64_uniform(0, 180)
 		raan = rand.float64_uniform(0, 360)
 		aop = rand.float64_uniform(0, 360)
@@ -133,6 +137,14 @@ gen_rand_coe_earth :: proc(
 	case .HEO:
 		sma = earth.semimajor_axis + rand.float64_uniform(35786, 384000)
 		ecc = rand.float64_uniform(0, 0.5)
+
+		inc = rand.float64_uniform(0, 180)
+		raan = rand.float64_uniform(0, 360)
+		aop = rand.float64_uniform(0, 360)
+		ta = rand.float64_uniform(0, 360)
+	case .HECCO:
+		sma = earth.semimajor_axis + rand.float64_uniform(35786, 384000)
+		ecc = rand.float64_uniform(0.5, 0.85)
 
 		inc = rand.float64_uniform(0, 180)
 		raan = rand.float64_uniform(0, 360)
@@ -163,7 +175,8 @@ gen_rand_coe_earth :: proc(
 	}
 
 	pos, vel = coe_to_rv(sma, ecc, inc, raan, aop, ta, earth.mu)
-	pos = pos + earth.pos
-	vel = vel + earth.vel
+	R := la.matrix3_from_quaternion(am.euler_param_to_quaternion(earth.ep)) // rotation to equatorial plane
+	pos = R * pos + earth.pos
+	vel = R * vel + earth.vel
 	return pos, vel
 }

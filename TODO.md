@@ -68,7 +68,7 @@
 - [ ] Add Julian date and simulation current time (sim time = 0 at initial JD)
   - [x] jd in system
   - [ ] simulation current time
-- [ ] !!!!!!!!!!!**orbital elements should be adjusted to equatorial plane**
+- [x] orbital elements should be adjusted to equatorial plane
 
 ## Visual
 
