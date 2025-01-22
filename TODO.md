@@ -2,18 +2,11 @@
 
 ## Core
 
-- [x] Implement adding multiple satellites
-- [x] Implement adding multiple celestial bodies
 - [ ] Need to figure out how to do floating origin for rendering (and simulations)
       (move origin point to currently viewed object (ie. earth or the any satellite)) to reduce jittering in motion
-- [x] Create add/remove sat/body to system not just array
 - [ ] Add celestial body constuctor
   - [ ] compute mass/mu depending on input
   - [ ] compute radii (semimajor, semiminor, mean) based on input
-- [x] Add flag to turn on/off attitude/rotational dynamics
-- [ ] Separate body/sat update and drawing from system
-  - [x] separate updates
-  - [ ] separate drawing
 - [ ] Profile and speed up simulation
   - [ ] add multi-threading (separate translational and rotational dynamics?)
     - [ ] satellite and body translation dynamics are decoupled (satellites only depend on bodies and bodies only update at the very end)
@@ -31,8 +24,17 @@
     - [ ] use relative position for trail, rotate, then add to target body's postion to get inertial coordinates (or is it origin body)
     - [ ] in trail update, use rotation matrix of CURRENT frame to update ALL trail position
     - [x] make trails their own struct
+- [ ] Separate the physics parameters (mass, inertia, pos, vel) to separate PhysicsObject struct and tie bodies and satellites (maybe maybe not idk yet)
+- [x] Combine satellite and body models
+- [ ] Separate translational and rotational physics (separate update frequencies)
+- [x] Create add/remove sat/body to system not just array
+- [x] Implement adding multiple satellites
+- [x] Implement adding multiple celestial bodies
+- [x] Add flag to turn on/off attitude/rotational dynamics
+- [x] Separate body/sat update and drawing from system
+  - [x] separate updates
+  - [x] separate drawing
 
-  
 ## Physics/Astrodynamics
 
 - [x] Add tle reader and parser
@@ -56,7 +58,7 @@
   - [ ] n-body
 - [ ] Add different controllers
 - [ ] Add example scenarios
-- [ ] Add orbit data monitors
+- [ ] Add orbit data monitors (show energy, coes, etc)
 - [x] Add n-body dynamics
   - [x] n-body for satellites
   - [x] n-body for celestial bodies

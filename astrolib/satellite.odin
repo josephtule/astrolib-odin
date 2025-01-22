@@ -37,23 +37,22 @@ SatelliteInfo :: struct {
 	catalog_number:  int,
 }
 
-SatelliteModel :: struct {
-	id:            int,
-	model:         rl.Model,
-	model_size:    [3]f32,
-	scale:         f32,
-	tint:          rl.Color,
-	draw_model:    bool,
-	draw_pos:      bool,
-	trail:         Trail,
-	axes:          Axes,
-	posvel:        PosVel,
-}
+// Model :: struct {
+// 	id:            int,
+// 	model:         rl.Model,
+// 	model_size:    [3]f32,
+// 	scale:         f32,
+// 	tint:          rl.Color,
+// 	draw_model:    bool,
+// 	trail:         Trail,
+// 	axes:          Axes,
+// 	posvel:        PosVel,
+// }
 
 // -----------------------------------------------------------------------------
 // Draw Functions
 // -----------------------------------------------------------------------------
-draw_satellite :: proc(model: ^SatelliteModel, sat: Satellite) {
+draw_satellite :: proc(model: ^Model, sat: Satellite) {
 	update_satellite_model(model, sat)
 	sat_pos_f32 := am.cast_f32(sat.pos) * u_to_rl
 	rl.DrawModel(model.model, am.origin_f32, 1, model.tint)
@@ -67,13 +66,29 @@ draw_satellite :: proc(model: ^SatelliteModel, sat: Satellite) {
 
 }
 
+update_satellite_model :: proc(sat_model: ^Model, sat: Satellite) {
+	using sat_model
+	// set rotation
+	model.transform = (# row_major matrix[4, 4]f32)(la.MATRIX4F32_IDENTITY)
+	if sat.update_attitude {
+		q := am.euler_param_to_quaternion(am.cast_f32(sat.ep))
+		N_R_B := rl.QuaternionToMatrix(q)
+		model.transform = N_R_B
+	}
+	// set scale 
+	am.SetScale(&model.transform, scale)
+	// set translation
+	sat_pos_f32 := am.cast_f32(sat.pos) * u_to_rl
+	am.SetTranslation(&model.transform, sat_pos_f32)
+}
+
 
 // -----------------------------------------------------------------------------
 // Update Functions
 // -----------------------------------------------------------------------------
 update_satellite :: proc(
 	sat: ^Satellite,
-	model: ^SatelliteModel,
+	model: ^Model,
 	dt, time, time_scale: f64,
 	integrator: am.IntegratorType,
 	params_translate, params_attitude: rawptr,
@@ -104,24 +119,9 @@ update_satellite :: proc(
 		integrator,
 	)
 	sat.pos, sat.vel = am.state_to_posvel(state_new)
-	update_trail(sat, model)
+	update_trail(sat.pos, model)
 }
 
-update_satellite_model :: proc(sat_model: ^SatelliteModel, sat: Satellite) {
-	using sat_model
-	// set rotation
-	model.transform = (# row_major matrix[4, 4]f32)(la.MATRIX4F32_IDENTITY)
-	if sat.update_attitude {
-		q := am.euler_param_to_quaternion(la.array_cast(sat.ep, f32))
-		N_R_B := rl.QuaternionToMatrix(q)
-		model.transform = N_R_B
-	}
-	// set scale 
-	am.SetScale(&model.transform, scale)
-	// set translation
-	sat_pos_f32 := la.array_cast(sat.pos, f32) * u_to_rl
-	am.SetTranslation(&model.transform, sat_pos_f32)
-}
 
 // -----------------------------------------------------------------------------
 // Generate Satellite Functions
@@ -168,7 +168,7 @@ gen_satmodel :: proc(
 	primary_color: rl.Color = rl.Color({200, 200, 200, 255}),
 	secondary_color: rl.Color = rl.Color({150, 150, 150, 255}),
 ) -> (
-	m: SatelliteModel,
+	m: Model,
 ) {
 	sat.radius = f64(min(model_size[0], min(model_size[1], model_size[2])))
 
@@ -178,7 +178,7 @@ gen_satmodel :: proc(
 	m.model = rl.LoadModelFromMesh(mesh)
 	m.model.transform = (# row_major matrix[4, 4]f32)(la.MATRIX4F32_IDENTITY)
 	m.model_size = model_size
-	am.SetTranslation(&m.model.transform, la.array_cast(sat.pos * u_to_rl, f32))
+	am.SetTranslation(&m.model.transform, am.cast_f32(sat.pos * u_to_rl))
 	m.tint = tint
 
 	// trail
@@ -224,7 +224,7 @@ gen_sat_and_model :: proc(
 	id: int = g_sat_id,
 ) -> (
 	s: Satellite,
-	m: SatelliteModel,
+	m: Model,
 ) {
 	s = gen_sat(pos, vel, ep, omega, mass)
 	m = gen_satmodel(&s, model_size, scale = scale)
@@ -249,22 +249,4 @@ add_satellite_copy :: proc(sats: ^[dynamic]Satellite, sat: Satellite) {
 }
 add_satellite_soa :: proc(sats: ^#soa[dynamic]Satellite, sat: Satellite) {
 	append_soa(sats, sat)
-}
-
-add_satellite_model :: proc {
-	add_satellite_model_ptr,
-	add_satellite_model_copy,
-}
-add_satellite_model_ptr :: proc(
-	sat_models: ^[dynamic]SatelliteModel,
-	model: ^SatelliteModel,
-) {
-	append_elem(sat_models, model^)
-	free(model)
-}
-add_satellite_model_copy :: proc(
-	sat_models: ^[dynamic]SatelliteModel,
-	model: SatelliteModel,
-) {
-	append_elem(sat_models, model)
 }

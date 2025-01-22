@@ -96,10 +96,10 @@ main2 :: proc() {
 
 	// set up satellite storage
 	sats: [dynamic]ast.Satellite
-	sat_models: [dynamic]ast.SatelliteModel
+	sat_models: [dynamic]ast.Model
 
 	s2 := new(ast.Satellite)
-	ms2 := new(ast.SatelliteModel)
+	ms2 := new(ast.Model)
 	s2^, ms2^ = ast.gen_sat_and_model(pos0, -vel0, ep0, omega0, cube_size)
 	ast.add_satellite(&sats, s2)
 

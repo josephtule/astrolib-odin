@@ -38,18 +38,19 @@ main :: proc() {
 
 	// generate celestial bodies
 	celestialbodies: [dynamic]ast.CelestialBody
-	celestialbody_models: [dynamic]ast.CelestialBodyModel
+	celestialbody_models: [dynamic]ast.Model
 
 	earth := ast.wgs84()
 	earth.gravity_model = .pointmass
 	earth.max_degree = 2
 	earth.fixed = true
 	earth_model := ast.gen_celestialbody_model(
+		earth,
 		f32(earth.semimajor_axis),
 		faces = 128,
 	)
 	ast.add_celestialbody(&celestialbodies, earth)
-	ast.add_celestialbody_model(&celestialbody_models, earth_model)
+	ast.add_model_to_array(&celestialbody_models, earth_model)
 
 	rp := 22500.
 	ra := 34000.
@@ -59,11 +60,12 @@ main :: proc() {
 	moon.semimajor_axis = 500.
 	moon.pos, moon.vel = ast.coe_to_rv(a, ecc, 14, 120., 0, 140., earth.mu)
 	moon_model := ast.gen_celestialbody_model(
+		moon,
 		f32(moon.semimajor_axis),
 		tint = rl.GOLD,
 	)
 	ast.add_celestialbody(&celestialbodies, moon)
-	ast.add_celestialbody_model(&celestialbody_models, moon_model)
+	ast.add_model_to_array(&celestialbody_models, moon_model)
 
 	rp = 10000.
 	ra = 15000.
@@ -73,11 +75,12 @@ main :: proc() {
 	moon2.semimajor_axis = 400.
 	moon2.pos, moon2.vel = ast.coe_to_rv(a, ecc, 45, 35., 15., 45., earth.mu)
 	moon2_model := ast.gen_celestialbody_model(
+		moon2,
 		f32(moon2.semimajor_axis),
 		tint = rl.RAYWHITE,
 	)
 	ast.add_celestialbody(&celestialbodies, moon2)
-	ast.add_celestialbody_model(&celestialbody_models, moon2_model)
+	ast.add_model_to_array(&celestialbody_models, moon2_model)
 
 
 	rp = 30000.
@@ -88,16 +91,17 @@ main :: proc() {
 	moon3.semimajor_axis = 700.
 	moon3.pos, moon3.vel = ast.coe_to_rv(a, ecc, 0, 45., 60., 180., earth.mu)
 	moon3_model := ast.gen_celestialbody_model(
+		moon3,
 		f32(moon3.semimajor_axis),
 		tint = rl.GREEN,
 	)
 	ast.add_celestialbody(&celestialbodies, moon3)
-	ast.add_celestialbody_model(&celestialbody_models, moon3_model)
+	ast.add_model_to_array(&celestialbody_models, moon3_model)
 
 	// generate orbits/satellites
 	num_sats := 2
 	satellites: [dynamic]ast.Satellite
-	satellite_models: [dynamic]ast.SatelliteModel
+	satellite_models: [dynamic]ast.Model
 	for i := 0; i < num_sats; i += 1 {
 		ta := math.lerp(0., 90., f64(i) / f64(num_sats))
 		pos0, vel0 := ast.coe_to_rv(
@@ -135,7 +139,7 @@ main :: proc() {
 		}
 		sat.update_attitude = true
 		ast.add_satellite(&satellites, sat)
-		ast.add_satellite_model(&satellite_models, sat_model)
+		ast.add_model_to_array(&satellite_models, sat_model)
 	}
 
 	// gen satellite orbiting green body
@@ -163,7 +167,7 @@ main :: proc() {
 		sat_model.posvel.target_id = moon3.id
 		sat.update_attitude = true
 		ast.add_satellite(&satellites, sat)
-		ast.add_satellite_model(&satellite_models, sat_model)
+		ast.add_model_to_array(&satellite_models, sat_model)
 	}
 	{
 		pos0, vel0 := ast.coe_to_rv(1000, 0.01, 15., 227.89, 53.38, 75., moon3.mu)
@@ -189,7 +193,7 @@ main :: proc() {
 		sat_model.posvel.target_id = moon3.id
 		sat.update_attitude = true
 		ast.add_satellite(&satellites, sat)
-		ast.add_satellite_model(&satellite_models, sat_model)
+		ast.add_model_to_array(&satellite_models, sat_model)
 	}
 
 	// misc --------------------------------------------------------------------
@@ -228,9 +232,6 @@ main :: proc() {
 	ast.tle_parse(filename, asystem.bodies[asystem.id[earth.id]], asystem)
 
 
-	asystem0 := new(ast.AstroSystem)
-	ast.copy_system(asystem0, asystem)
-
 	for &model, i in asystem.satellite_models {
 		model.scale = 5
 	}
@@ -240,11 +241,14 @@ main :: proc() {
 		fmt.println(sat.info.name)
 	}
 
+	// create system copy for resetting
+	asystem0 := new(ast.AstroSystem)
+	ast.copy_system(asystem0, asystem)
 
 	// 3D camera
 	target_sat := num_sats / 8
 	camera: rl.Camera3D
-	camera.target = la.array_cast(origin, f32) * u_to_rl
+	camera.target = am.cast_f32(origin) * u_to_rl
 	camera.position = am.azel_to_cart(
 		[3]f32{15000 * u_to_rl, math.PI / 4, math.PI / 4},
 	)
@@ -252,7 +256,7 @@ main :: proc() {
 	camera.fovy = 90
 	camera.projection = .PERSPECTIVE
 	camera_params := CameraParams {
-		azel       = am.cart_to_azel(la.array_cast(camera.position, f64)),
+		azel       = am.cart_to_azel(am.cast_f64(camera.position)),
 		target_sat = &asystem.satellites[target_sat],
 		frame      = .origin,
 	}
@@ -380,7 +384,8 @@ update_simulation :: proc(
 	}
 	if rl.IsKeyPressed(.P) {
 		for &model, i in satellite_models {
-			model.draw_pos = !model.draw_pos
+			model.posvel.draw_pos = !model.posvel.draw_pos
+			model.posvel.draw_vel = !model.posvel.draw_vel
 		}
 	}
 	if rl.IsKeyPressed(.O) {
@@ -469,7 +474,7 @@ update_simulation :: proc(
 		}
 		sat.update_attitude = true
 		ast.add_satellite(&satellites, sat)
-		ast.add_satellite_model(&satellite_models, sat_model)
+		ast.add_model_to_array(&satellite_models, sat_model)
 		fmt.println("Added satellite (ID):", sat.id)
 	}
 }
@@ -537,22 +542,19 @@ update_camera :: proc(
 	#partial switch params.frame {
 	case .origin:
 		rlgl.SetClipPlanes(1.0e-1, 1.0e3)
-		camera.position = la.array_cast(
-			am.azel_to_cart(la.array_cast(params.azel, f64)),
-			f32,
-		)
+		camera.position = am.cast_f32(am.azel_to_cart(am.cast_f64(params.azel)))
 		camera.target = am.origin_f32
 	case .satellite:
-		sat_pos_f32 := la.array_cast(params.target_sat.pos, f32)
+		sat_pos_f32 := am.cast_f32(params.target_sat.pos)
 		camera.position =
-			la.array_cast(am.azel_to_cart(la.array_cast(params.azel, f64)), f32) +
+			am.cast_f32(am.azel_to_cart(am.cast_f64(params.azel))) +
 			sat_pos_f32 * u_to_rl
 		camera.target = sat_pos_f32 * u_to_rl
 		rlgl.SetClipPlanes(5.0e-5, 5e2)
 	case .body:
-		body_pos_f32 := la.array_cast(params.target_body.pos, f32)
+		body_pos_f32 := am.cast_f32(params.target_body.pos)
 		camera.position =
-			la.array_cast(am.azel_to_cart(la.array_cast(params.azel, f64)), f32) +
+			am.cast_f32(am.azel_to_cart(am.cast_f64(params.azel))) +
 			body_pos_f32 * u_to_rl
 		camera.target = body_pos_f32 * u_to_rl
 		rlgl.SetClipPlanes(5.0e-3, 5e3)

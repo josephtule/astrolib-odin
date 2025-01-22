@@ -26,9 +26,9 @@ main :: proc() {
 
 	a: ast.AstroSystem
 	ss: [dynamic]ast.Satellite
-	sm: [dynamic]ast.SatelliteModel
+	sm: [dynamic]ast.Model
 	bb: [dynamic]ast.CelestialBody
-	bm: [dynamic]ast.CelestialBodyModel
+	bm: [dynamic]ast.Model
 	filename := "assets/TLE_data_small.txt"
 	earth := ast.wgs84()
 	a = ast.create_system(ss, sm, bb, bm)

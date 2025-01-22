@@ -47,19 +47,19 @@ reset_trail :: proc(
 	trail.index = 0
 	trail.increment = 0
 }
-update_trail :: proc(sat: ^Satellite, model: ^SatelliteModel) {
+update_trail :: proc(new_pos: [3]f64, model: ^Model) {
 	using model.trail
 	increment = (increment + 1)
 	if increment == mod_trail_sat {
 		increment = 0
-		pos[index] = la.array_cast(sat.pos, f32) * u_to_rl
+		pos[index] = am.cast_f32(new_pos) * u_to_rl
 		index = (index + 1)
 		if index == N_trail_sat {
 			index = 0 // Wrap around without modulo
 		}
 	}
 }
-draw_trail :: proc(model: SatelliteModel) {
+draw_trail :: proc(model: Model) {
 	using model.trail
 	if draw {
 		for i := 0; i < N_trail_sat - 1; i += 1 {

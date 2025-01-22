@@ -30,22 +30,13 @@ CelestialBody :: struct {
 	base_unit:       am.UnitsLinear,
 	name:            string,
 	fixed:           bool,
-	update_atittude: bool,
+	update_attitude: bool,
 }
 
-CelestialBodyModel :: struct {
-	id:            int,
-	model:         rl.Model,
-	radius:        f32,
-	local_axes:    [3][3]f32,
-	target_origin: [3]f32,
-	target_id:     int,
-	trail:         Trail,
-	draw_model:    bool,
-	draw_axes:     bool,
-	draw_pos:      bool,
-	tint:          rl.Color,
-}
+// CelestialBodyParameters :: struct {
+
+// }
+
 
 gen_celestialbody :: proc(
 	pos, vel: [3]f64,
@@ -56,8 +47,9 @@ gen_celestialbody :: proc(
 	mean_radius: f64 = 0,
 	gravity_model: GravityModel = .pointmass,
 	units: am.UnitsLinear = .KILOMETER,
+) -> (
+	body: CelestialBody,
 ) {
-	body: CelestialBody
 
 	// state
 	body.pos = pos
@@ -86,27 +78,41 @@ gen_celestialbody :: proc(
 	if mean_radius == 0. {
 		body.mean_radius = (2 * body.semimajor_axis + body.semiminor_axis) / 3.
 	}
+
+	return body
 }
 
 
 gen_celestialbody_model :: proc(
-	radius: f32,
+	body: CelestialBody,
+	model_size: [3]f32,
 	faces: i32 = 64,
+	scale: f32 = 1,
 	tint: rl.Color = rl.BLUE,
 	primary_color: rl.Color = rl.Color({200, 200, 200, 255}),
 	secondary_color: rl.Color = rl.Color({150, 150, 150, 255}),
-	u_to_rl: f32 = u_to_rl,
-) -> CelestialBodyModel {
-	c_model: CelestialBodyModel
+) -> Model {
+	c_model: Model
 
 	c_model.draw_model = true
-	c_model.draw_axes = true
 	c_model.trail.draw = false
 	c_model.tint = tint
+	c_model.scale = scale
 
-	for i := 0; i < 3; i += 1 {
-		c_model.local_axes[i][i] = 1.
-	}
+	// trail
+	create_trail(&c_model.trail, body.pos)
+	c_model.trail.draw = true
+
+	// local axes
+	// c_model.axes.draw = true
+
+	// // position/velocity vectors
+	// c_model.posvel.draw_pos = true
+	// c_model.posvel.draw_vel = true
+	// c_model.posvel.vel_scale = 1
+	// c_model.posvel.pos_tint = rl.GOLD
+	// c_model.posvel.vel_tint = rl.PURPLE
+
 
 	image_checker := rl.GenImageChecked(
 		8,
@@ -119,8 +125,10 @@ gen_celestialbody_model :: proc(
 	texture := rl.LoadTextureFromImage(image_checker)
 	rl.UnloadImage(image_checker)
 
+	// TODO: figure out how to create ellipsoid with model_size = [a,b,c]
+	// a = semimajor axis, b = semiminor axis, c = secondary semiminor axis (usually b = c)
 	c_model.model = rl.LoadModelFromMesh(
-		rl.GenMeshSphere(radius * u_to_rl, faces, faces),
+		rl.GenMeshSphere(model_size[0] * u_to_rl, faces, faces),
 	)
 	c_model.model.materials[0].maps[rl.MaterialMapIndex.ALBEDO].texture = texture
 
@@ -146,23 +154,6 @@ add_celestialbody_copy :: proc(
 	append_elem(bodies, body)
 }
 
-add_celestialbody_model :: proc {
-	add_celestialbody_model_ptr,
-	add_celestialbody_model_copy,
-}
-add_celestialbody_model_ptr :: proc(
-	bodies: ^[dynamic]CelestialBodyModel,
-	body: ^CelestialBodyModel,
-) {
-	append_elem(bodies, body^)
-	free(body)
-}
-add_celestialbody_model_copy :: proc(
-	bodies: ^[dynamic]CelestialBodyModel,
-	body: CelestialBodyModel,
-) {
-	append_elem(bodies, body)
-}
 
 wgs84 :: proc(
 	units: am.UnitsLinear = .KILOMETER,
@@ -281,13 +272,13 @@ luna_params :: proc(
 
 update_body :: proc(
 	body: ^CelestialBody,
-	model: ^CelestialBodyModel,
+	model: ^Model,
 	state_new: ^[6]f64,
 	dt, time, time_scale: f64,
 	integrator: am.IntegratorType,
 	params_translate, params_attitude: rawptr,
 ) {
-	if body.update_atittude {
+	if body.update_attitude {
 		// update body attitude
 	}
 	if !body.fixed {
@@ -303,4 +294,43 @@ update_body :: proc(
 			integrator,
 		)
 	}
+}
+
+draw_body :: proc(model: ^Model, body: CelestialBody) {
+	// update_body_model(model, body)
+	body_pos_f32 := am.cast_f32(body.pos) * u_to_rl
+	rl.DrawModel(model.model, am.origin_f32, 1, model.tint)
+
+	if model.axes.draw {
+		// draw_axes(
+		// 	body.update_attitude,
+		// 	&model.axes,
+		// 	model.model,
+		// 	f32(model.model_size[0]),
+		// )
+	}
+	if model.trail.draw {
+		// draw_trail(model^)
+	}
+
+}
+
+update_body_model :: proc(body_model: ^Model, body: CelestialBody) {
+	using body_model
+
+	// set rotation
+	model.transform = (# row_major matrix[4, 4]f32)(la.MATRIX4F32_IDENTITY)
+	// if body.update_attitude {
+	// q := am.euler_param_to_quaternion(am.cast_f32(sat.ep))
+	// N_R_B := rl.QuaternionToMatrix(q)
+	// model.transform = N_R_B
+	// }
+
+	// set scale 
+	am.SetScale(&model.transform, scale)
+
+	// set translation
+	body_pos_f32 := am.cast_f32(body.pos) * u_to_rl
+	am.SetTranslation(&model.transform, body_pos_f32)
+
 }

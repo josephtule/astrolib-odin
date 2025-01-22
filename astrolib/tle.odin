@@ -51,7 +51,7 @@ tle_parse_to_sat :: proc(
 	gen_model: bool = true,
 ) -> (
 	sats: [dynamic]Satellite,
-	models: [dynamic]SatelliteModel,
+	models: [dynamic]Model,
 ) {
 	num_read := 0
 	lines: []string = tle_read(file)
@@ -144,7 +144,7 @@ extract_tle :: proc(
 	gen_model: bool = false,
 ) -> (
 	sat: Satellite,
-	model: SatelliteModel,
+	model: Model,
 	date: Date,
 ) {
 	// parse line 0
