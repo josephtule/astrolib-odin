@@ -122,16 +122,17 @@ ea_to_dcm :: proc(
 ) -> matrix[3, 3]T {
 	angles := angles
 	if units_in == .DEGREES {
-		for &angle in angles {
-			angle = math.to_radians(angle)
-		}
+		angles *= deg_to_rad * angles
 	}
 
-	R := la.identity_matrix(matrix[3, 3]T)
-
-	for i := 2; i >= 0; i -= 1 {
-		R = R * rot(angles[i], sequence[i])
-	}
+	// R := la.identity_matrix(matrix[3, 3]T)
+	// for i := 2; i >= 0; i -= 1 {
+	// 	R = R * rot(angles[i], sequence[i])
+	// }
+	R :=
+		rot(angles[2], sequence[2]) *
+		rot(angles[1], sequence[1]) *
+		rot(angles[0], sequence[0])
 
 	return R
 }

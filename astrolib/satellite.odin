@@ -9,6 +9,7 @@ import "core:strconv"
 import str "core:strings"
 import rl "vendor:raylib"
 
+
 g_sat_id_base: int : 10000
 g_sat_id: int = g_sat_id_base
 
@@ -78,6 +79,7 @@ update_satellite_model :: proc(sat_model: ^Model, sat: Satellite) {
 
 	// set scale 
 	am.SetScale(&model.transform, scale)
+	
 	// set translation
 	sat_pos_f32 := am.cast_f32(sat.pos) * u_to_rl
 	am.SetTranslation(&model.transform, sat_pos_f32)

@@ -16,17 +16,20 @@ zaxis_f32: [3]f32 : {0., 0., 1.}
 
 magnitude :: la.length
 mag :: la.length
-magnitude2:: la.length2
+magnitude2 :: la.length2
 mag2 :: la.length2
 
 
 posvel_to_state :: proc(pos, vel: [3]$T) -> (state: [6]T) {
-	set_vector_slice(&state, pos, vel)
+	// set_vector_slice(&state, pos, vel)
+	state = {pos[0], pos[1], pos[2], vel[0], vel[1], vel[2]}
 	return state
 }
 state_to_posvel :: proc(state: [6]$T) -> (pos, vel: [3]T) {
-	set_vector_slice_1(&pos, state, l1 = 3, s1 = 0)
-	set_vector_slice_1(&vel, state, l1 = 3, s1 = 3)
+	// set_vector_slice_1(&pos, state, l1 = 3, s1 = 0)
+	// set_vector_slice_1(&vel, state, l1 = 3, s1 = 3)
+	pos = {state[0], state[1], state[2]}
+	vel = {state[3], state[4], state[5]}
 	return pos, vel
 }
 
@@ -175,4 +178,21 @@ cast_f32 :: proc(v: $T/[$N]$E) -> [N]f32 {
 cast_f64 :: proc(v: $T/[$N]$E) -> [N]f64 {
 	out := la.array_cast(v, f64)
 	return out
+}
+
+diag :: proc {
+	diag_to_vec,
+	diag_to_mat,
+}
+
+diag_to_vec :: proc(mat: matrix[$N, N]$T) -> (vec: [N]T) {
+	for i := 0; i < N; i += 1 {
+		vec[i] = mat[i, i]
+	}
+}
+
+diag_to_mat :: proc(vec: [$N]$T) -> (mat: matrix[N, N]T) {
+	for i := 0; i < N; i += 1 {
+		mat[i, i] = vec[i]
+	}
 }
