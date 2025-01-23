@@ -20,12 +20,12 @@ magnitude2 :: la.length2
 mag2 :: la.length2
 
 
-posvel_to_state :: proc(pos, vel: [3]$T) -> (state: [6]T) {
+posvel_to_state :: #force_inline proc(pos, vel: [3]$T) -> (state: [6]T) {
 	// set_vector_slice(&state, pos, vel)
 	state = {pos[0], pos[1], pos[2], vel[0], vel[1], vel[2]}
 	return state
 }
-state_to_posvel :: proc(state: [6]$T) -> (pos, vel: [3]T) {
+state_to_posvel :: #force_inline proc(state: [6]$T) -> (pos, vel: [3]T) {
 	// set_vector_slice_1(&pos, state, l1 = 3, s1 = 0)
 	// set_vector_slice_1(&vel, state, l1 = 3, s1 = 3)
 	pos = {state[0], state[1], state[2]}
@@ -33,19 +33,34 @@ state_to_posvel :: proc(state: [6]$T) -> (pos, vel: [3]T) {
 	return pos, vel
 }
 
-epomega_to_state :: proc(ep: [4]$T, omega: [3]T) -> (state: [7]T) {
+epomega_to_state :: #force_inline proc(
+	ep: [4]$T,
+	omega: [3]T,
+) -> (
+	state: [7]T,
+) {
 	set_vector_slice(&state, ep, omega)
 	return state
 }
-state_to_epomega :: proc(state: [7]$T) -> (ep: [4]T, omega: [3]T) {
+state_to_epomega :: #force_inline proc(
+	state: [7]$T,
+) -> (
+	ep: [4]T,
+	omega: [3]T,
+) {
 	set_vector_slice_1(&ep, state, s1 = 0, l1 = 4)
 	set_vector_slice_1(&omega, state, s1 = 4, l1 = 3)
 	return ep, omega
 }
 
-is_diagonal :: proc(mat: matrix[$N, N]$T, tol := 1.0e-12) -> bool {
-	for i := 0; i < N; i += 1 {
-		for j := i + 1; j < N; j += 1 {
+is_diagonal :: #force_inline proc(
+	mat: matrix[$N, N]$T,
+	tol := 1.0e-12,
+) -> bool {
+	// for i := 0; i < N; i += 1 {
+	#unroll for i in 0 ..< N {
+		// for j := i + 1; j < N; j += 1 {
+		#unroll for j in i + 1 ..< N {
 			if math.abs(mat[i, j]) > tol || math.abs(mat[j, i]) > tol {
 				return false
 			}
@@ -61,7 +76,7 @@ set_vector_slice :: proc {
 	set_vector_slice_4,
 }
 
-set_vector_slice_1 :: proc(
+set_vector_slice_1 :: #force_inline proc(
 	vout: ^[$N]$T,
 	v1: [$M]T,
 	#any_int offset: int = 0, // starting offset
@@ -76,7 +91,7 @@ set_vector_slice_1 :: proc(
 	}
 }
 
-set_vector_slice_2 :: proc(
+set_vector_slice_2 :: #force_inline proc(
 	vout: ^[$N]$T,
 	v1: [$M1]T,
 	v2: [$M2]T,
@@ -100,7 +115,7 @@ set_vector_slice_2 :: proc(
 }
 
 
-set_vector_slice_3 :: proc(
+set_vector_slice_3 :: #force_inline proc(
 	vout: ^[$N]$T,
 	v1: [$M1]T,
 	v2: [$M2]T,
@@ -131,7 +146,7 @@ set_vector_slice_3 :: proc(
 	}
 }
 
-set_vector_slice_4 :: proc(
+set_vector_slice_4 :: #force_inline proc(
 	vout: ^[$N]$T,
 	v1: [$M1]T,
 	v2: [$M2]T,
@@ -170,14 +185,12 @@ set_vector_slice_4 :: proc(
 	}
 }
 
-cast_f32 :: proc(v: $T/[$N]$E) -> [N]f32 {
-	out := la.array_cast(v, f32)
-	return out
+cast_f32 :: #force_inline proc(v: $T/[$N]$E) -> [N]f32 {
+	return la.array_cast(v, f32)
 }
 
-cast_f64 :: proc(v: $T/[$N]$E) -> [N]f64 {
-	out := la.array_cast(v, f64)
-	return out
+cast_f64 :: #force_inline proc(v: $T/[$N]$E) -> [N]f64 {
+	return la.array_cast(v, f64)
 }
 
 diag :: proc {

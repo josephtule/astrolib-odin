@@ -7,12 +7,12 @@ deg_to_rad :: math.PI / 180.
 rad_to_deg :: 180. / math.PI
 
 
-ecc_from_flat :: proc(flat: $T) -> T {
+ecc_from_flat :: #force_inline proc(flat: $T) -> T {
 	ecc := math.sqrt(2 * flat - flat * flat)
 	return ecc
 }
 
-dms_to_deg :: proc(
+dms_to_deg :: #force_inline proc(
 	deg: $T,
 	min: T,
 	sec: T,

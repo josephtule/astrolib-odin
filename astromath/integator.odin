@@ -42,7 +42,7 @@ integrate :: proc(
 	return time, state
 }
 
-rk1_step :: proc(
+rk1_step :: #force_inline proc(
 	f: proc(t: $T, x: [$N]T, params: rawptr) -> [N]T,
 	t: T,
 	x: [N]T,
@@ -58,7 +58,7 @@ rk1_step :: proc(
 	return t_new, x_new
 }
 
-rk2_step :: proc(
+rk2_step :: #force_inline proc(
 	f: proc(t: $T, x: [$N]T, params: rawptr) -> [N]T,
 	t: T,
 	x: [N]T,
@@ -75,7 +75,7 @@ rk2_step :: proc(
 	return t_new, x_new
 }
 
-rk3_step :: proc(
+rk3_step :: #force_inline proc(
 	f: proc(t: $T, x: [$N]T, params: rawptr) -> [N]T,
 	t: T,
 	x: [N]T,
@@ -93,7 +93,7 @@ rk3_step :: proc(
 	return t_new, x_new
 }
 
-rk4_step :: proc(
+rk4_step :: #force_inline proc(
 	f: proc(t: $T, x: [$N]T, params: rawptr) -> [N]T,
 	t: T,
 	x: [N]T,
@@ -112,7 +112,7 @@ rk4_step :: proc(
 	return t_new, x_new
 }
 
-rk5_step :: proc(
+rk5_step :: #force_inline proc(
 	f: proc(t: $T, x: [$N]T, params: rawptr) -> [N]T,
 	t: T,
 	x: [N]T,
@@ -150,7 +150,7 @@ rk5_step :: proc(
 	return t_new, x_new
 }
 
-rk6_step :: proc(
+rk6_step :: #force_inline proc(
 	f: proc(t: $T, x: [$N]T, params: rawptr) -> [N]T,
 	t: T,
 	x: [N]T,
@@ -209,7 +209,7 @@ rk6_step :: proc(
 	return t_new, x_new
 }
 
-heun_step :: proc(
+heun_step :: #force_inline proc(
 	f: proc(t: $T, x: [$N]T, params: rawptr) -> [N]T,
 	t: T,
 	x: [N]T,
@@ -226,7 +226,7 @@ heun_step :: proc(
 	return t_new, x_new
 }
 
-ralston_step :: proc(
+ralston_step :: #force_inline proc(
 	f: proc(t: $T, x: [$N]T, params: rawptr) -> [N]T,
 	t: T,
 	x: [N]T,

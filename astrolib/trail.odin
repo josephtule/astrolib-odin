@@ -25,6 +25,7 @@ create_trail :: proc(
 	pos: [3]$T,
 ) where intrinsics.type_is_float(T) {
 	for i := 0; i < N_trail_sat; i += 1 {
+		// for i in 0..<N_trail_sat {
 		append_elem(&trail.pos, am.cast_f32(pos) * u_to_rl)
 	}
 	trail.index = 0

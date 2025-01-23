@@ -40,7 +40,12 @@ euler_param_dynamics :: proc(
 	return dxdt
 }
 
-euler_param_kinematics :: proc(ep: [4]f64, omega: [3]f64) -> (depdt: [4]f64) {
+euler_param_kinematics :: #force_inline proc(
+	ep: [4]f64,
+	omega: [3]f64,
+) -> (
+	depdt: [4]f64,
+) {
 	// // odinfmt: disable
 	// E_mat := matrix[4,4]f64{0., omega.z, -omega.y, omega.x,
 	//                         -omega.z, 0., omega.x, omega.y,
@@ -60,7 +65,7 @@ euler_param_kinematics :: proc(ep: [4]f64, omega: [3]f64) -> (depdt: [4]f64) {
 	return depdt
 }
 
-angular_velocty_dynamics :: proc(
+angular_velocty_dynamics :: #force_inline proc(
 	omega, torque: [3]f64,
 	I, I_inv: matrix[3, 3]f64,
 ) -> (
@@ -68,17 +73,17 @@ angular_velocty_dynamics :: proc(
 ) {
 	// NOTE: assuming inertia matrix is diagonal for now
 	// if am.is_diagonal(I) {
-		dwdt = {
-			(I[1, 1] - I[2, 2]) / I[0, 0] * omega.y * omega.z,
-			(I[2, 2] - I[0, 0]) / I[1, 1] * omega.x * omega.z,
-			(I[0, 0] - I[1, 1]) / I[2, 2] * omega.x * omega.y,
-		}
-		dwdt += {
-			torque.x * I_inv[0, 0],
-			torque.y * I_inv[1, 1],
-			torque.z * I_inv[2, 2],
-		}
-		return dwdt
+	dwdt = {
+		(I[1, 1] - I[2, 2]) / I[0, 0] * omega.y * omega.z,
+		(I[2, 2] - I[0, 0]) / I[1, 1] * omega.x * omega.z,
+		(I[0, 0] - I[1, 1]) / I[2, 2] * omega.x * omega.y,
+	}
+	dwdt += {
+		torque.x * I_inv[0, 0],
+		torque.y * I_inv[1, 1],
+		torque.z * I_inv[2, 2],
+	}
+	return dwdt
 	// } else {
 	// 	h := [3]f64 {
 	// 		I[0, 0] * omega.x + I[0, 1] * omega.y + I[0, 2] * omega.z,

@@ -10,11 +10,13 @@ import "core:strconv"
 import "core:strings"
 import "core:time"
 import "core:unicode/utf8"
+import "core:sys/info"
 
 import ast "astrolib"
 import am "astromath"
 import rl "vendor:raylib"
 import "vendor:raylib/rlgl"
+
 
 u_to_rl :: am.u_to_rl
 rl_to_u :: am.rl_to_u
@@ -25,7 +27,6 @@ print_dtsim: bool
 dt_max: f64 : 1. / 30.
 
 main :: proc() {
-
 	// raylib init
 	window_width: i32 = 1024 / 2
 	window_height: i32 = 1024 / 2

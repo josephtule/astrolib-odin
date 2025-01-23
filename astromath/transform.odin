@@ -4,7 +4,7 @@ import "core:math"
 import la "core:math/linalg"
 import rl "vendor:raylib"
 
-MatrixTranslateAdditive :: proc(pos: [3]f32) -> # row_major matrix[4, 4]f32 {
+Matrix4Translate ::#force_inline proc(pos: [3]f32) -> # row_major matrix[4, 4]f32 {
 	mat: # row_major matrix[4, 4]f32
 	mat[0, 3] = pos.x
 	mat[1, 3] = pos.y
@@ -12,17 +12,17 @@ MatrixTranslateAdditive :: proc(pos: [3]f32) -> # row_major matrix[4, 4]f32 {
 	return mat
 }
 
-SetTranslation :: proc(mat: ^# row_major matrix[4, 4]f32, pos: [3]f32) {
+SetTranslation ::#force_inline proc(mat: ^# row_major matrix[4, 4]f32, pos: [3]f32) {
 	mat[0, 3] = pos.x
 	mat[1, 3] = pos.y
 	mat[2, 3] = pos.z
 }
 
-GetTranslation :: proc(mat: # row_major matrix[4, 4]f32) -> [3]f32 {
+GetTranslation ::#force_inline proc(mat: # row_major matrix[4, 4]f32) -> [3]f32 {
 	return {mat[0, 3], mat[1, 3], mat[2, 3]}
 }
 
-SetScale :: proc(mat: ^# row_major matrix[4, 4]f32, scale: f32) {
+SetScale ::#force_inline proc(mat: ^# row_major matrix[4, 4]f32, scale: f32) {
 	mat[0, 0] *= scale
 	mat[0, 1] *= scale
 	mat[0, 2] *= scale
@@ -34,7 +34,7 @@ SetScale :: proc(mat: ^# row_major matrix[4, 4]f32, scale: f32) {
 	mat[2, 2] *= scale
 }
 
-SetRotation :: proc(
+SetRotation ::#force_inline proc(
 	mat: ^# row_major matrix[4, 4]f32,
 	rot: # row_major matrix[3, 3]f32,
 ) {
@@ -52,7 +52,7 @@ SetRotation :: proc(
 
 mat4row :: # row_major matrix[4, 4]f32
 mat3row :: # row_major matrix[3, 3]f32
-GetRotation :: proc(
+GetRotation ::#force_inline proc(
 	mat: # row_major matrix[4, 4]f32,
 ) -> # row_major matrix[3, 3]f32 {
 	// submatrix casting
@@ -66,14 +66,14 @@ euler_param_to_quaternion :: proc {
 	euler_param_to_quaternion128,
 	euler_param_to_quaternion256,
 }
-euler_param_to_quaternion256 :: proc(ep: [4]f64) -> (q: quaternion256) {
+euler_param_to_quaternion256 ::#force_inline proc(ep: [4]f64) -> (q: quaternion256) {
 	q.x = ep.x
 	q.y = ep.y
 	q.z = ep.z
 	q.w = ep.w
 	return q
 }
-euler_param_to_quaternion128 :: proc(ep: [4]f32) -> (q: quaternion128) {
+euler_param_to_quaternion128 ::#force_inline proc(ep: [4]f32) -> (q: quaternion128) {
 	q.x = ep.x
 	q.y = ep.y
 	q.z = ep.z
@@ -81,7 +81,7 @@ euler_param_to_quaternion128 :: proc(ep: [4]f32) -> (q: quaternion128) {
 	return q
 }
 
-quaternion_to_euler_param :: proc(q: quaternion256) -> (ep: [4]f64) {
+quaternion_to_euler_param ::#force_inline proc(q: quaternion256) -> (ep: [4]f64) {
 	ep.x = q.x
 	ep.y = q.y
 	ep.z = q.z
@@ -93,7 +93,7 @@ quaternion_to_euler_param :: proc(q: quaternion256) -> (ep: [4]f64) {
 
 // }
 
-rot :: proc(
+rot ::#force_inline proc(
 	angle: $T,
 	axis: int,
 	units_in: UnitsAngle = .RADIANS,
@@ -115,7 +115,7 @@ rot :: proc(
 	return R
 }
 
-ea_to_dcm :: proc(
+ea_to_dcm ::#force_inline proc(
 	angles: [3]$T,
 	sequence: [3]int,
 	units_in: UnitsAngle = .RADIANS,

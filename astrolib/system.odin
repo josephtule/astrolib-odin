@@ -186,20 +186,20 @@ copy_system :: proc(system_dst, system_src: ^AstroSystem) {
 
 
 add_to_system :: proc {
-	add_satellite_to_system,
-	add_satellites_to_system,
+	add_sat_to_system,
+	add_sats_to_system,
 	add_model_to_system,
 	add_models_to_system,
 	add_body_to_system,
 	add_bodies_to_system,
 }
-add_satellite_to_system :: proc(system: ^AstroSystem, sat: Satellite) {
+add_sat_to_system :: proc(system: ^AstroSystem, sat: Satellite) {
 	using system
 	add_satellite(&satellites, sat)
 	id[sat.id] = num_satellites
 	num_satellites += 1
 }
-add_satellites_to_system :: proc(system: ^AstroSystem, sats: []Satellite) {
+add_sats_to_system :: proc(system: ^AstroSystem, sats: []Satellite) {
 	using system
 	for sat, i in sats {
 		add_satellite(&satellites, sat)
@@ -207,6 +207,22 @@ add_satellites_to_system :: proc(system: ^AstroSystem, sats: []Satellite) {
 	}
 	num_satellites += len(sats)
 }
+
+add_body_to_system :: proc(system: ^AstroSystem, body: CelestialBody) {
+	using system
+	add_celestialbody(&bodies, body)
+	id[body.id] = num_bodies
+	num_bodies += 1
+}
+add_bodies_to_system :: proc(system: ^AstroSystem, bodies: []CelestialBody) {
+	using system
+	for body, i in bodies {
+		add_celestialbody(&bodies, body)
+		id[body.id] = num_bodies + i
+	}
+	num_satellites += len(bodies)
+}
+
 add_model_to_system :: proc(system: ^AstroSystem, model: Model) {
 	using system
 	add_model_to_array(&satellite_models, model)
@@ -230,17 +246,3 @@ add_model_to_array_copy :: proc(models: ^[dynamic]Model, model: Model) {
 	append_elem(models, model)
 }
 
-add_body_to_system :: proc(system: ^AstroSystem, body: CelestialBody) {
-	using system
-	add_celestialbody(&bodies, body)
-	id[body.id] = num_bodies
-	num_bodies += 1
-}
-add_bodies_to_system :: proc(system: ^AstroSystem, bodies: []CelestialBody) {
-	using system
-	for body, i in bodies {
-		add_celestialbody(&bodies, body)
-		id[body.id] = num_bodies + i
-	}
-	num_satellites += len(bodies)
-}

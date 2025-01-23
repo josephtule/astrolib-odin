@@ -61,7 +61,7 @@ gravity_nbody :: proc(t: f64, x: [6]f64, params: rawptr) -> [6]f64 {
 	return dxdt
 }
 
-gravity_pointmass :: proc(t: f64, x: [6]f64, params: rawptr) -> [6]f64 {
+gravity_pointmass ::#force_inline proc(t: f64, x: [6]f64, params: rawptr) -> [6]f64 {
 	dxdt: [6]f64
 
 	params := cast(^Params_Gravity_Pointmass)(params)
@@ -95,7 +95,11 @@ Params_Gravity_SphHarmon :: struct {
 	S:           ^[dynamic]f64,
 }
 
-gravity_zonal :: proc(t: f64, x: [6]f64, params: rawptr) -> [6]f64 {
+gravity_zonal :: #force_inline proc(
+	t: f64,
+	x: [6]f64,
+	params: rawptr,
+) -> [6]f64 {
 	dxdt: [6]f64
 
 	params := cast(^Params_Gravity_SphHarmon)(params)
@@ -108,7 +112,7 @@ gravity_zonal :: proc(t: f64, x: [6]f64, params: rawptr) -> [6]f64 {
 	a += accel_zonal(r, params.mu, params.R_cb, params.J, params.max_degree)
 	// am.set_vector_slice_2(&dxdt, v, a)
 	dxdt = {v[0], v[1], v[2], a[0], a[1], a[2]}
-	
+
 	return dxdt
 }
 accel_zonal :: #force_inline proc(

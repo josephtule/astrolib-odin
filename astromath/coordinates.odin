@@ -3,7 +3,7 @@ package astromath
 import "core:math"
 import la "core:math/linalg"
 
-azzen_to_cart :: proc(azzen: [3]$T) -> (r: [3]T) {
+azzen_to_cart :: #force_inline proc(azzen: [3]$T) -> (r: [3]T) {
 	// spherical coordinates in the form of (range (rho), azimuth (theta), zenith (phi))
 	rho := azzen.x
 	theta := azzen.y
@@ -16,7 +16,7 @@ azzen_to_cart :: proc(azzen: [3]$T) -> (r: [3]T) {
 	return r
 }
 
-azel_to_cart :: proc(azel: [3]$T) -> (r: [3]T) {
+azel_to_cart :: #force_inline proc(azel: [3]$T) -> (r: [3]T) {
 	// spherical coordinates in the form of (range (rho), azimuth (theta), elevation (phi))
 	// angle units in radians
 	rho := azel.x
@@ -30,7 +30,7 @@ azel_to_cart :: proc(azel: [3]$T) -> (r: [3]T) {
 	return
 }
 
-cart_to_azzen :: proc(r: [3]$T) -> (azzen: [3]T) {
+cart_to_azzen :: #force_inline proc(r: [3]$T) -> (azzen: [3]T) {
 	// last coordinate measured from the z-axis
 	azzen.x = la.vector_length(r)
 	azzen.y = math.atan2(r[1], r[0])
@@ -38,7 +38,7 @@ cart_to_azzen :: proc(r: [3]$T) -> (azzen: [3]T) {
 	return
 }
 
-cart_to_azel :: proc(r: [3]$T) -> (azel: [3]T) {
+cart_to_azel :: #force_inline proc(r: [3]$T) -> (azel: [3]T) {
 	// last coordinate measured from the x-y plane
 	azel.x = la.vector_length(r)
 	azel.y = math.atan2(r[1], r[0])
