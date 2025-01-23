@@ -16,7 +16,7 @@ IntegratorType :: enum {
 	// velocity_verlet, // TODO: add?
 }
 
-integrate :: proc(
+integrate :: #force_inline proc(
 	f: proc(t: $T, x: [$N]T, params: rawptr) -> [N]T,
 	t: T,
 	x: [N]T,

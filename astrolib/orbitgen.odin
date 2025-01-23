@@ -21,7 +21,7 @@ OrbitType :: enum {
 
 coe_to_rv :: proc(
 	a, ecc, inc, raan, aop, ta: f64,
-	mu: f64,
+	cb: CelestialBody,
 	tol: f64 = 1.0e-12,
 	units_in: am.UnitsAngle = .DEGREES,
 ) -> (
@@ -66,25 +66,41 @@ coe_to_rv :: proc(
 	sa := math.sin(anom)
 
 	r_pqw: [3]f64 = {p * ca / (1 + ecc * ca), p * sa / (1 + ecc * ca), 0.}
-	v_pqw: [3]f64 = {-math.sqrt(mu / p) * sa, math.sqrt(mu / p) * (ecc + ca), 0.}
+	v_pqw: [3]f64 = {
+		-math.sqrt(cb.mu / p) * sa,
+		math.sqrt(cb.mu / p) * (ecc + ca),
+		0.,
+	}
 
+	// rotate into equatorial frame
 	R := am.ea_to_dcm([3]f64{-aop, -inc, -raan}, {3, 1, 3})
+	pos = R * r_pqw
+	vel = R * v_pqw
 
-	r_inertial := R * r_pqw
-	v_inertial := R * v_pqw
-
-	return r_inertial, v_inertial
+	// rotate into inertial frame
+	R = la.matrix3_from_quaternion(am.euler_param_to_quaternion(cb.ep)) // rotation to equatorial plane
+	pos = R * pos + cb.pos
+	vel = R * vel + cb.vel
+	return pos, vel
 }
 
 
 rv_to_coe :: proc(
-	pos, vel: [3]f64,
-	mu: f64,
+	pos, vel: [3]f64, // inertial input
+	cb: CelestialBody,
 	units_out: am.UnitsAngle = .DEGREES,
 	tol: f64 = 1.0e-12,
 ) -> (
 	sma, ecc, inc, raan, aop, ta: f64,
 ) {
+	// FIXME: not sure if this is right
+	// rotate into equatorial frame
+	R := la.transpose(
+		la.matrix3_from_quaternion(am.euler_param_to_quaternion(cb.ep)),
+	)
+	pos := R * (pos - cb.pos)
+	vel := R * (vel - cb.vel)
+
 	r_mag := am.mag(pos)
 	v_mag := am.mag(vel)
 
@@ -102,7 +118,8 @@ rv_to_coe :: proc(
 	}
 
 	v_r := la.dot(pos, vel) / r_mag
-	e := 1. / mu * ((v_mag * v_mag - mu / r_mag) * pos - la.dot(pos, vel) * vel)
+	e :=
+		1. / cb.mu * ((v_mag * v_mag - cb.mu / r_mag) * pos - la.dot(pos, vel) * vel)
 	e_mag := am.mag(e)
 	ecc = e_mag
 
@@ -116,8 +133,8 @@ rv_to_coe :: proc(
 		ta = 2 * math.PI - ta
 	}
 
-	E := v_mag * v_mag / 2 - mu / r_mag
-	sma = -mu / 2 / E
+	E := v_mag * v_mag / 2 - cb.mu / r_mag
+	sma = -cb.mu / 2 / E
 
 	if math.abs(raan - 2 * math.PI) < tol {
 		raan = 0
@@ -132,6 +149,7 @@ rv_to_coe :: proc(
 		aop = am.rad_to_deg * aop
 		ta = am.rad_to_deg * ta
 	}
+
 
 	return sma, ecc, inc, raan, aop, ta
 }
@@ -148,10 +166,7 @@ gen_rand_coe_orientation :: proc(
 	aop := rand.float64_uniform(0, 360)
 	ta := rand.float64_uniform(0, 360)
 
-	pos, vel = coe_to_rv(sma, ecc, inc, raan, aop, ta, cb.mu)
-	R := la.matrix3_from_quaternion(am.euler_param_to_quaternion(cb.ep)) // rotation to equatorial plane
-	pos = R * pos + cb.pos
-	vel = R * vel + cb.vel
+	pos, vel = coe_to_rv(sma, ecc, inc, raan, aop, ta, cb)
 	return pos, vel
 }
 
@@ -197,10 +212,7 @@ gen_rand_coe :: proc(
 	aop := rand.float64_uniform(0, 360)
 	ta := rand.float64_uniform(0, 360)
 
-	pos, vel = coe_to_rv(sma, ecc, inc, raan, aop, ta, cb.mu)
-	R := la.matrix3_from_quaternion(am.euler_param_to_quaternion(cb.ep)) // rotation to equatorial plane
-	pos = R * pos + cb.pos
-	vel = R * vel + cb.vel
+	pos, vel = coe_to_rv(sma, ecc, inc, raan, aop, ta, cb)
 	return pos, vel
 }
 
@@ -291,9 +303,6 @@ gen_rand_coe_earth :: proc(
 		ta = rand.float64_uniform(0, 360)
 	}
 
-	pos, vel = coe_to_rv(sma, ecc, inc, raan, aop, ta, earth.mu)
-	R := la.matrix3_from_quaternion(am.euler_param_to_quaternion(earth.ep)) // rotation to equatorial plane
-	pos = R * pos + earth.pos
-	vel = R * vel + earth.vel
+	pos, vel = coe_to_rv(sma, ecc, inc, raan, aop, ta, earth)
 	return pos, vel
 }

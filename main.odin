@@ -8,9 +8,9 @@ import "core:math/rand"
 import "core:mem"
 import "core:strconv"
 import "core:strings"
+import "core:sys/info"
 import "core:time"
 import "core:unicode/utf8"
-import "core:sys/info"
 
 import ast "astrolib"
 import am "astromath"
@@ -70,7 +70,7 @@ main :: proc() {
 	ecc := (ra - rp) / (ra + rp)
 	moon := ast.luna_params()
 	moon.semimajor_axis = 500.
-	moon.pos, moon.vel = ast.coe_to_rv(a, ecc, 14, 120., 0, 140., earth.mu)
+	moon.pos, moon.vel = ast.coe_to_rv(a, ecc, 14, 120., 0, 140., earth)
 	model_size =
 		[3]f32 {
 			f32(moon.semimajor_axis),
@@ -88,7 +88,7 @@ main :: proc() {
 	ecc = (ra - rp) / (ra + rp)
 	moon2 := ast.luna_params()
 	moon2.semimajor_axis = 400.
-	moon2.pos, moon2.vel = ast.coe_to_rv(a, ecc, 45, 35., 15., 45., earth.mu)
+	moon2.pos, moon2.vel = ast.coe_to_rv(a, ecc, 45, 35., 15., 45., earth)
 	moon2_model := ast.gen_celestialbody_model(
 		moon2,
 		model_size = model_size,
@@ -104,7 +104,7 @@ main :: proc() {
 	ecc = (ra - rp) / (ra + rp)
 	moon3 := ast.luna_params()
 	moon3.semimajor_axis = 700.
-	moon3.pos, moon3.vel = ast.coe_to_rv(a, ecc, 0, 45., 60., 180., earth.mu)
+	moon3.pos, moon3.vel = ast.coe_to_rv(a, ecc, 0, 45., 60., 180., earth)
 	moon3_model := ast.gen_celestialbody_model(moon3, model_size, tint = rl.GREEN)
 	ast.add_celestialbody(&celestialbodies, moon3)
 	ast.add_model_to_array(&celestialbody_models, moon3_model)
@@ -122,7 +122,7 @@ main :: proc() {
 			227.89,
 			53.38,
 			ta,
-			earth.mu,
+			earth,
 		)
 
 		alt: f64 = 25702 //+ f64(i) * 100
@@ -155,9 +155,7 @@ main :: proc() {
 
 	// gen satellite orbiting green body
 	{
-		pos0, vel0 := ast.coe_to_rv(1000, 0.01, 15., 227.89, 53.38, 10., moon3.mu)
-		pos0 = pos0 + moon3.pos
-		vel0 = vel0 + moon3.vel
+		pos0, vel0 := ast.coe_to_rv(1000, 0.01, 15., 227.89, 53.38, 10., moon3)
 		ep0: [4]f64 = {0, 0, 0, 1}
 		omega0: [3]f64 = {0.0001, .05, 0.0001}
 		cube_size: f32 = 50 / 1000. * u_to_rl
@@ -181,9 +179,7 @@ main :: proc() {
 		ast.add_model_to_array(&satellite_models, sat_model)
 	}
 	{
-		pos0, vel0 := ast.coe_to_rv(1000, 0.01, 15., 227.89, 53.38, 75., moon3.mu)
-		pos0 = pos0 + moon3.pos
-		vel0 = vel0 + moon3.vel
+		pos0, vel0 := ast.coe_to_rv(1000, 0.01, 15., 227.89, 53.38, 75., moon3)
 		ep0: [4]f64 = {0, 0, 0, 1}
 		omega0: [3]f64 = {0.0001, .05, 0.0001}
 		cube_size: f32 = 50 / 1000. * u_to_rl

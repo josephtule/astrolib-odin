@@ -197,9 +197,7 @@ extract_tle :: proc(
 	)
 
 
-	pos, vel := coe_to_rv(semimajor_axis, ecc, inc, raan, aop, true_anom, cb.mu)
-	pos = pos + cb.pos
-	vel = vel + cb.vel
+	pos, vel := coe_to_rv(semimajor_axis, ecc, inc, raan, aop, true_anom, cb)
 	ep: [4]f64 = {0., 0., 0., 1.}
 	omega: [3]f64 = {0., 0., 0.}
 	// TODO: change this later

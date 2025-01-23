@@ -24,7 +24,7 @@ dms_to_deg :: #force_inline proc(
 	return degs
 }
 
-acos_complex :: proc(x: f64) -> complex128 {
+acos_complex :: #force_inline proc(x: f64) -> complex128 {
 	if math.abs(x) <= 1 {
 		return complex(math.acos(x), 0)
 	} else {
