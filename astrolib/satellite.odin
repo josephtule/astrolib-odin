@@ -64,7 +64,6 @@ draw_satellite :: proc(model: ^Model, sat: Satellite) {
 	if model.trail.draw {
 		draw_trail(model^)
 	}
-
 }
 
 update_satellite_model :: proc(sat_model: ^Model, sat: Satellite) {
@@ -99,7 +98,7 @@ update_satellite :: proc(
 	// attitude dynamics
 	if sat.update_attitude {
 		attitude_current := am.epomega_to_state(sat.ep, sat.omega)
-		_, attitude_new := am.integrate(
+		_, attitude_new := am.integrate_step(
 			euler_param_dynamics,
 			time,
 			attitude_current,
@@ -113,7 +112,7 @@ update_satellite :: proc(
 
 	// translational dynamics
 	state_current := am.posvel_to_state(sat.pos, sat.vel)
-	_, state_new := am.integrate(
+	_, state_new := am.integrate_step(
 		gravity_nbody,
 		time,
 		state_current,

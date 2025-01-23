@@ -33,6 +33,7 @@ main :: proc() {
 	// rl.SetConfigFlags({.WINDOW_TRANSPARENT, .MSAA_4X_HINT})
 	rl.InitWindow(window_width, window_height, "AstroLib")
 	rl.SetWindowState({.WINDOW_RESIZABLE})
+	rl.SetTraceLogLevel(.NONE)
 	// rl.SetTargetFPS(rl.GetMonitorRefreshRate(0))
 	// rl.SetTargetFPS(60)
 	defer rl.CloseWindow()
@@ -125,7 +126,7 @@ main :: proc() {
 			earth,
 		)
 
-		alt: f64 = 25702 //+ f64(i) * 100
+		alt: f64 = 15000 //+ f64(i) * 100
 		pos0 = (alt + earth.semimajor_axis) * [3]f64{1., 0., 0.}
 		v_mag0 := math.sqrt(earth.mu / la.vector_length(pos0))
 		angle0: f64 = la.to_radians(0. + f64(i) / f64(num_sats) * 360.)
@@ -229,7 +230,6 @@ main :: proc() {
 		// integrator = .rk4,
 	)
 
-	fmt.println(asystem.num_satellites)
 	// gen satellites from tle
 	filename := "assets/TLE_data.txt"
 	ast.tle_parse(filename, earth, asystem, start_sat = 0, num_to_read = 20)

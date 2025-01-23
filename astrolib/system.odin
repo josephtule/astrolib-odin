@@ -54,9 +54,9 @@ update_system :: proc(system: ^AstroSystem, dt, time: f64) {
 	for &sat, i in satellites {
 		// gen params
 		params_attitude := Params_EulerParam {
-			inertia = sat.inertia,
+			inertia     = sat.inertia,
 			inertia_inv = sat.inertia_inv,
-			torque  = {0, 0, 0}, // NOTE: no control for now
+			torque      = {0, 0, 0}, // NOTE: no control for now
 		}
 		params_translate := Params_Gravity_Nbody {
 			bodies        = &system.bodies,
@@ -126,7 +126,36 @@ draw_system :: proc(system: ^AstroSystem, u_to_rl: f32 = u_to_rl) {
 	}
 }
 
-create_system :: proc(
+create_system :: proc {
+	create_system_full,
+	create_system_empty,
+}
+
+create_system_empty :: proc(
+	JD0: f64 = 2451545.0, // defaults// default to J2000 TT
+	integrator: am.IntegratorType = .rk4,
+	time_scale: f64 = 8,
+	substeps: int = 8,
+) -> AstroSystem {
+	system: AstroSystem
+
+	system.satellites = make([dynamic]Satellite)
+	system.satellite_models = make([dynamic]Model)
+	system.num_satellites = len(system.satellites)
+
+	system.bodies = make([dynamic]CelestialBody)
+	system.body_models = make([dynamic]Model)
+	system.num_bodies = len(system.bodies)
+
+	system.JD0 = JD0
+	system.integrator = integrator
+	system.time_scale = time_scale
+	system.substeps = substeps
+
+	return system
+}
+
+create_system_full :: proc(
 	sats: [dynamic]Satellite,
 	sat_models: [dynamic]Model,
 	bodies: [dynamic]CelestialBody,
@@ -138,7 +167,7 @@ create_system :: proc(
 	substeps: int = 8,
 ) -> AstroSystem {
 	system: AstroSystem
-	system0: AstroSystem
+	// system0: AstroSystem
 
 	system.satellites = slice.clone_to_dynamic(sats[:])
 	system.satellite_models = slice.clone_to_dynamic(sat_models[:])
@@ -148,6 +177,7 @@ create_system :: proc(
 	system.body_models = slice.clone_to_dynamic(body_models[:])
 	system.num_bodies = len(system.bodies)
 
+	system.JD0 = JD0
 	system.integrator = integrator
 	system.time_scale = time_scale
 	system.substeps = substeps
@@ -245,4 +275,3 @@ add_model_to_array_ptr :: proc(models: ^[dynamic]Model, model: ^Model) {
 add_model_to_array_copy :: proc(models: ^[dynamic]Model, model: Model) {
 	append_elem(models, model)
 }
-

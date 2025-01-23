@@ -1,6 +1,5 @@
 package astromath
 
-import am "../astromath"
 import "core:math"
 import la "core:math/linalg"
 
@@ -16,7 +15,27 @@ IntegratorType :: enum {
 	// velocity_verlet, // TODO: add?
 }
 
-integrate :: #force_inline proc(
+
+compute_dt :: proc(
+	total_time: f64,
+	steps_max: int = 1000,
+	dt_max: f64 = 100.,
+	dt_min: f64 = 1.0e-6,
+) -> (
+	dt: f64,
+) {
+	// TODO: update this logic later
+	dt = total_time / f64(steps_max)
+	if math.abs(dt) > dt_max {
+		dt = dt_max
+	} else if math.abs(dt) < dt_min {
+		dt = dt_min
+	}
+
+	return dt
+}
+
+integrate_step :: #force_inline proc(
 	f: proc(t: $T, x: [$N]T, params: rawptr) -> [N]T,
 	t: T,
 	x: [N]T,

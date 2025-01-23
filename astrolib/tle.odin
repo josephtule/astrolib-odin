@@ -124,8 +124,47 @@ tle_parse_to_sys :: proc(
 			// propagate to target time
 			JD := date_to_jd(date)
 			if JD != system.JD0 {
-				// if time does not align, propagate
-				// TODO: finish this part
+				// 	// if time does not align, propagate
+				max_days: f64 = 5
+				if math.abs(JD - system.JD0) > max_days && true {
+					// TODO: remove true to propagate
+					fmt.println(
+						"WARNING: satellite (",
+						sat.info.name,
+						") is more than",
+						max_days,
+						"days from target date, date will be overriden",
+					)
+					// 	} else {
+					// 		// FIXME: currently not working
+					// 		// (only single body pointmass for now add j2-j4 later, no drag/srp/3rd body effects)
+					// 		params_pointmass := Params_Gravity_Pointmass {
+					// 			mu = cb.mu,
+					// 		}
+					// 		time: f64 = 0.
+					// 		total_time: f64 = (JD - system.JD0) * 86400.
+					// 		dt: f64 = total_time / 10000.
+					// 		if math.abs(dt) > 100. {
+					// 			// set max dt
+					// 			dt = math.sign(dt) * 100.
+					// 		} else if math.abs(dt) < 1.0e-6 {
+					// 			// set min dt
+					// 			dt = math.sign(dt) * 1.0e-6
+					// 		}
+					// 		for time < total_time {
+					// 			state_current := am.posvel_to_state(sat.pos, sat.vel)
+					// 			time, state_new := am.integrate_step(
+					// 				gravity_pointmass,
+					// 				time,
+					// 				state_current,
+					// 				dt,
+					// 				&params_pointmass,
+					// 				.rk4,
+					// 			)
+					// 			sat.pos, sat.vel = am.state_to_posvel(state_new)
+					// 		}
+				}
+
 			}
 
 			// copy satellite into system

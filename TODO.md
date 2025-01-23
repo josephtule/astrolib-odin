@@ -25,6 +25,7 @@
     - [ ] in trail update, use rotation matrix of CURRENT frame to update ALL trail position
     - [x] make trails their own struct
 - [ ] Separate the physics parameters (mass, inertia, pos, vel) to separate PhysicsObject struct and tie bodies and satellites (maybe maybe not idk yet)
+- [ ] Resetting system should reset global ID?
 - [x] Combine satellite and body models
 - [ ] Separate translational and rotational physics (separate update frequencies)
 - [x] Create add/remove sat/body to system not just array

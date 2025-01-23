@@ -29,7 +29,7 @@
     },
     {
       "label": "Build_sandbox",
-      "dependsOn": ["mkdir", "build"]
+      "dependsOn": ["mkdir", "build_sandbox"]
     },
 
     // windows builds ----------------------------------------------------------

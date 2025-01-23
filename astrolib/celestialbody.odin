@@ -71,7 +71,7 @@ update_body :: proc(
 	if !body.fixed {
 		// update body translation
 		state_current := am.posvel_to_state(body.pos, body.vel)
-		_, state_new^ = am.integrate(
+		_, state_new^ = am.integrate_step(
 			gravity_nbody,
 			time,
 			state_current,
@@ -188,8 +188,8 @@ gen_celestialbody_model :: proc(
 	model.model_size = model_size
 
 	// trail
-	create_trail(&model.trail, body.pos)
-	model.trail.draw = true
+	// create_trail(&model.trail, body.pos)
+	// model.trail.draw = true
 
 	// local axes
 	model.axes.draw = true
