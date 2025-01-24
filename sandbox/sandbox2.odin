@@ -29,8 +29,9 @@ main :: proc() {
 
 	// create the earth
 	earth := ast.wgs84()
-	earth.gravity_model = .pointmass
-	earth.max_degree = 2
+	earth.gravity_model = .zonal
+	earth.max_degree = 4
+	earth.max_order = 4
 	earth.fixed = true
 	q := la.quaternion_from_euler_angle_x(math.to_radians(f64(23.5)))
 	earth.ep = am.quaternion_to_euler_param(q)
@@ -61,61 +62,44 @@ main :: proc() {
 	ast.tle_parse(filename, system.bodies[system.id[earth.id]], system)
 
 	time: f64 = 0.
-
 	total_time: f64 = (10) * 86400.
-	dt: f64 = total_time / 10000.
-
-	if math.abs(dt) > 100. {
-		// set max dt
-		dt = math.sign(dt) * 100.
-	} else if math.abs(dt) < 1.0e-6 {
-		// set min dt
-		dt = math.sign(dt) * 1.0e-6
-	}
-
-	params_pointmass := ast.Params_Gravity_Pointmass {
-		mu = earth.mu,
-	}
+	dt := am.compute_dt_inrange(total_time, 2500, dt_max = 100)
+	n_steps := math.abs(int(math.ceil(total_time / dt)))
+	fmt.println("dt:", dt)
 
 	sat := &system.satellites[0]
-	state_new: [6]f64
+	sat.gravity_model = .zonal
+
+	lowest_model: ast.GravityModel = min(sat.gravity_model, earth.gravity_model)
+	
+	params := &ast.Params_Gravity_Onebody {
+		body = earth,
+		self_mass = sat.mass,
+		self_radius = sat.radius,
+		gravity_model = sat.gravity_model,
+	}
+
+	state: [6]f64
 	tstart := tt.now()
-	i := 0
-	N_itr: int = 5.e4
+	N_itr: int : 10000
+
 	for itr := 0; itr < N_itr; itr += 1 {
-		rando1 := rand.float64_uniform(1, 10)
-		rando2 := rand.float64_uniform(10, 100)
-		rando3 := rand.float64_normal(0, 10)
-		state_current := am.posvel_to_state(sat.pos, sat.vel)
-		state_current[0] += rando1
-		state_current[1] += rando2
+		state = am.posvel_to_state(sat.pos, sat.vel)
+		// rando1 := rand.float64_uniform(0, 10)
+		// rando2 := rand.float64_uniform(0, 10)
+		// rando3 := rand.float64_normal(0, 10)
+		// state[0] += rando1
+		// state[1] += rando2
+		// state[2] += rando3
 		_, _ = am.integrate_single_fixed(
-			ast.gravity_pointmass,
+			ast.gravity_onebody,
 			0,
 			total_time,
-			state_current,
+			state,
 			dt,
-			params = &params_pointmass,
-		)
-
-		// for time < total_time {
-		// 	rando1 := rand.float64_uniform(1, 10)
-		// 	rando2 := rand.float64_uniform(10, 100)
-		// 	rando3 := rand.float64_normal(0, 10)
-		// 	state_current := am.posvel_to_state(sat.pos, sat.vel)
-		// 	state_current[0] += rando1
-		// 	state_current[1] += rando2
-		// 	time, state_new = am.integrate_step(
-		// 		ast.gravity_pointmass,
-		// 		time,
-		// 		state_current,
-		// 		dt,
-		// 		&params_pointmass,
-		// 		.rk4,
-		// 	)
-		// 	sat.pos, sat.vel = am.state_to_posvel(state_new)
-		// 	i += 1
-		// }
+			params,
+			integrator = .ralston,
+		) // TODO: add adaptive later
 	}
 	telapsed := tt.duration_milliseconds(tt.diff(tstart, tt.now()))
 	fmt.println(
@@ -126,11 +110,11 @@ main :: proc() {
 		telapsed / f64(N_itr),
 		"ms\n",
 		"Number of iterations: ",
-		i,
+		n_steps,
 		"\nNumber of runs: ",
 		N_itr,
 		"\nTotal computations: ",
-		N_itr * i,
+		N_itr * n_steps,
 		sep = "",
 	)
 
@@ -141,6 +125,10 @@ main :: proc() {
 		dt_min = 1,
 	)
 	steps := math.abs(int(math.ceil(total_time / dtt)))
-	fmt.println(dtt, steps)
-}
 
+	// fmt.println(dtt, steps)
+	// for state in states {
+	// 	pos, vel := am.state_to_posvel(state)
+	// 	fmt.println(am.mag(pos))
+	// }
+}

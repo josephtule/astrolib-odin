@@ -45,7 +45,7 @@ Model :: struct {
 	posvel:     PosVel,
 }
 
-update_system :: proc(system: ^AstroSystem, dt, time: f64) {
+update_system :: #force_inline proc(system: ^AstroSystem, dt, time: f64) {
 	using system
 	N_sats := len(satellites)
 	N_bodies := len(bodies)
@@ -112,7 +112,10 @@ update_system :: proc(system: ^AstroSystem, dt, time: f64) {
 
 // draw_posvec :: proc(system: AstroSystem, )
 
-draw_system :: proc(system: ^AstroSystem, u_to_rl: f32 = u_to_rl) {
+draw_system :: #force_inline proc(
+	system: ^AstroSystem,
+	u_to_rl: f32 = u_to_rl,
+) {
 	using system
 	// satellite models
 	for &model, i in satellite_models {

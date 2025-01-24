@@ -15,12 +15,12 @@ PosVel :: struct {
 	draw_vel:             bool,
 }
 
-update_posvel :: proc(pv: ^PosVel, pos, vel: [3]f64) {
+update_posvel :: #force_inline proc(pv: ^PosVel, pos, vel: [3]f64) {
 	pv.pos = am.cast_f32(pos) * u_to_rl
 	pv.vel = am.cast_f32(vel) * u_to_rl * pv.vel_scale
 }
 
-set_pos_origin :: proc(pv: ^PosVel, system: AstroSystem) {
+set_pos_origin :: #force_inline proc(pv: ^PosVel, system: AstroSystem) {
 	// line from origin to satellite
 	if pv.draw_pos {
 		target_ind := system.id[pv.target_id]
@@ -34,7 +34,11 @@ set_pos_origin :: proc(pv: ^PosVel, system: AstroSystem) {
 	}
 }
 
-draw_vectors :: proc(pv: ^PosVel, system: AstroSystem, pos, vel: [3]f64) {
+draw_vectors :: #force_inline proc(
+	pv: ^PosVel,
+	system: AstroSystem,
+	pos, vel: [3]f64,
+) {
 	update_posvel(pv, pos, vel)
 	set_pos_origin(pv, system)
 	if pv.draw_pos {

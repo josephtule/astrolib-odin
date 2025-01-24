@@ -49,7 +49,7 @@ CelestialBody :: struct {
 // }
 
 
-update_body :: proc(
+update_body ::#force_inline proc(
 	body: ^CelestialBody,
 	model: ^Model,
 	state_new: ^[6]f64,
@@ -82,7 +82,7 @@ update_body :: proc(
 	}
 }
 
-draw_body :: proc(model: ^Model, body: CelestialBody) {
+draw_body :: #force_inline proc(model: ^Model, body: CelestialBody) {
 	update_body_model(model, body)
 
 	rl.DrawModel(model.model, am.origin_f32, 1, model.tint)
@@ -101,13 +101,16 @@ draw_body :: proc(model: ^Model, body: CelestialBody) {
 
 }
 
-update_body_model :: proc(body_model: ^Model, body: CelestialBody) {
+update_body_model :: #force_inline proc(
+	body_model: ^Model,
+	body: CelestialBody,
+) {
 	using body_model
 
 	// set rotation
 	// if body.update_attitude {
-		q := am.euler_param_to_quaternion(am.cast_f32(body.ep))
-		model.transform = rl.QuaternionToMatrix(q)
+	q := am.euler_param_to_quaternion(am.cast_f32(body.ep))
+	model.transform = rl.QuaternionToMatrix(q)
 	// } else {
 	// 	model.transform = (# row_major matrix[4, 4]f32)(la.MATRIX4F32_IDENTITY)
 	// }
@@ -355,6 +358,3 @@ luna_params :: proc(
 	g_body_id += 1
 	return moon
 }
-
-
-

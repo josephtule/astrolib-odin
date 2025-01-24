@@ -27,7 +27,7 @@ integrate_history :: proc {
 // integrate_history_adapative,
 }
 
-integrate_history_fixed :: proc(
+integrate_history_fixed :: #force_inline proc(
 	f: proc(t: f64, x: [$N]f64, params: rawptr) -> [N]f64,
 	t0, tf: f64,
 	x: [N]f64,
@@ -60,7 +60,7 @@ integrate_history_fixed :: proc(
 	return time_hist, state_hist
 }
 
-integrate_single_fixed :: proc(
+integrate_single_fixed :: #force_inline proc(
 	f: proc(t: f64, x: [$N]f64, params: rawptr) -> [N]f64,
 	t0, tf: f64,
 	x: [N]f64,
@@ -82,7 +82,6 @@ integrate_single_fixed :: proc(
 	for _ in 0 ..< N_steps {
 		time, state = integrate_step(f, time, state, dt, params, integrator)
 	}
-
 	return time, state
 }
 
@@ -188,8 +187,8 @@ integrate_step :: #force_inline proc(
 	state: [N]T
 	switch integrator {
 	case .rk1: time, state = rk1_step(f, t, x, dt, params)
-	case .rk3: time, state = rk3_step(f, t, x, dt, params)
 	case .rk2: time, state = rk2_step(f, t, x, dt, params)
+	case .rk3: time, state = rk3_step(f, t, x, dt, params)
 	case .rk4: time, state = rk4_step(f, t, x, dt, params)
 	case .rk5: time, state = rk5_step(f, t, x, dt, params)
 	case .rk6: time, state = rk6_step(f, t, x, dt, params)

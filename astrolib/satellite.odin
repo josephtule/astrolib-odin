@@ -53,7 +53,7 @@ SatelliteInfo :: struct {
 // -----------------------------------------------------------------------------
 // Draw Functions
 // -----------------------------------------------------------------------------
-draw_satellite :: proc(model: ^Model, sat: Satellite) {
+draw_satellite :: #force_inline proc(model: ^Model, sat: Satellite) {
 	update_satellite_model(model, sat)
 	sat_pos_f32 := am.cast_f32(sat.pos) * u_to_rl
 	rl.DrawModel(model.model, am.origin_f32, 1, model.tint)
@@ -66,19 +66,22 @@ draw_satellite :: proc(model: ^Model, sat: Satellite) {
 	}
 }
 
-update_satellite_model :: proc(sat_model: ^Model, sat: Satellite) {
+update_satellite_model :: #force_inline proc(
+	sat_model: ^Model,
+	sat: Satellite,
+) {
 	using sat_model
 	// set rotation
 	// model.transform = (# row_major matrix[4, 4]f32)(la.MATRIX4F32_IDENTITY)
 	// if sat.update_attitude {
-		q := am.euler_param_to_quaternion(am.cast_f32(sat.ep))
-		N_R_B := rl.QuaternionToMatrix(q)
-		model.transform = N_R_B
+	q := am.euler_param_to_quaternion(am.cast_f32(sat.ep))
+	N_R_B := rl.QuaternionToMatrix(q)
+	model.transform = N_R_B
 	// }
 
 	// set scale 
 	am.SetScale(&model.transform, scale)
-	
+
 	// set translation
 	sat_pos_f32 := am.cast_f32(sat.pos) * u_to_rl
 	am.SetTranslation(&model.transform, sat_pos_f32)
@@ -88,7 +91,7 @@ update_satellite_model :: proc(sat_model: ^Model, sat: Satellite) {
 // -----------------------------------------------------------------------------
 // Update Functions
 // -----------------------------------------------------------------------------
-update_satellite :: proc(
+update_satellite :: #force_inline proc(
 	sat: ^Satellite,
 	model: ^Model,
 	dt, time, time_scale: f64,

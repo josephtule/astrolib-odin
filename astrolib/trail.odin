@@ -20,7 +20,7 @@ N_trail_sat: int = 200
 div_trail_sat: int = 4
 mod_trail_sat: int = N_trail_sat / div_trail_sat
 
-create_trail :: proc(
+create_trail :: #force_inline proc(
 	trail: ^Trail,
 	pos: [3]$T,
 ) where intrinsics.type_is_float(T) {
@@ -30,7 +30,7 @@ create_trail :: proc(
 	}
 	trail.index = 0
 }
-resize_trail :: proc(
+resize_trail :: #force_inline proc(
 	trail: ^Trail,
 	pos: [3]$T,
 ) where intrinsics.type_is_float(T) {
@@ -38,7 +38,7 @@ resize_trail :: proc(
 	trail.pos = make([dynamic][3]f32, N_trail_sat)
 	reset_trail(trail, pos)
 }
-reset_trail :: proc(
+reset_trail :: #force_inline proc(
 	trail: ^Trail,
 	pos: [3]$T,
 ) where intrinsics.type_is_float(T) {
@@ -48,7 +48,7 @@ reset_trail :: proc(
 	trail.index = 0
 	trail.increment = 0
 }
-update_trail :: proc(new_pos: [3]f64, model: ^Model) {
+update_trail :: #force_inline proc(new_pos: [3]f64, model: ^Model) {
 	using model.trail
 	increment = (increment + 1)
 	if increment == mod_trail_sat {
@@ -60,7 +60,7 @@ update_trail :: proc(new_pos: [3]f64, model: ^Model) {
 		}
 	}
 }
-draw_trail :: proc(model: Model) {
+draw_trail :: #force_inline proc(model: Model) {
 	using model.trail
 	if draw {
 		for i := 0; i < N_trail_sat - 1; i += 1 {

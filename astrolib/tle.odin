@@ -23,7 +23,39 @@ tle_parse :: proc {
 }
 
 
-tle_read :: proc(file: string) -> []string {
+tle_propagate :: #force_inline proc(
+	JD: f64,
+	sat: ^Satellite,
+	cb: CelestialBody,
+	system: ^AstroSystem,
+) {
+	lowest_model: GravityModel = min(sat.gravity_model, cb.gravity_model)
+	params := &Params_Gravity_Onebody {
+		body = cb,
+		self_mass = sat.mass,
+		self_radius = sat.radius,
+		gravity_model = sat.gravity_model,
+	}
+
+	// time and dt
+	time: f64 = 0.
+	t_total: f64 = (JD - system.JD0) * 86400.
+	dt := am.compute_dt_inrange(t_total, 5000, dt_max = 150)
+
+	// integrate
+	state := am.posvel_to_state(sat.pos, sat.vel)
+	_, state = am.integrate_single_fixed(
+		gravity_onebody,
+		JD,
+		system.JD0,
+		state,
+		dt,
+		params,
+	) // TODO: add adaptive later
+	sat.pos, sat.vel = am.state_to_posvel(state)
+}
+
+tle_read :: #force_inline proc(file: string) -> []string {
 	// open/read file
 	f, err := os.open(file)
 	if err != os.ERROR_NONE {
@@ -42,7 +74,7 @@ tle_read :: proc(file: string) -> []string {
 	return lines
 }
 
-tle_parse_to_sat :: proc(
+tle_parse_to_sat :: #force_inline proc(
 	file: string,
 	cb: CelestialBody,
 	millenium: Millenium = .two_thousand,
@@ -87,7 +119,7 @@ tle_parse_to_sat :: proc(
 	return sats, models
 }
 
-tle_parse_to_sys :: proc(
+tle_parse_to_sys :: #force_inline proc(
 	file: string,
 	cb: CelestialBody,
 	system: ^AstroSystem,
@@ -127,7 +159,7 @@ tle_parse_to_sys :: proc(
 			JD := date_to_jd(date)
 			if JD != system.JD0 {
 				// 	// if time does not align, propagate
-				max_days: f64 = 5
+				max_days: f64 = 7
 				if math.abs(JD - system.JD0) > max_days && true {
 					// TODO: remove true to propagate
 					fmt.println(
@@ -138,33 +170,7 @@ tle_parse_to_sys :: proc(
 						"days from target date, date will be overriden",
 					)
 				} else {
-					lowest_model: GravityModel = min(sat.gravity_model, cb.gravity_model)
-					bodies: [dynamic]CelestialBody
-					append(&bodies, cb)
-					params := &Params_Gravity_Nbody {
-						bodies = &bodies,
-						self_mass = sat.mass,
-						self_radius = sat.radius,
-						gravity_model = sat.gravity_model,
-						idx = -1,
-					}
-
-					// time and dt
-					time: f64 = 0.
-					t_total: f64 = (JD - system.JD0) * 86400.
-					dt := am.compute_dt_inrange(t_total, 10000)
-
-					// integrate
-					state := am.posvel_to_state(sat.pos, sat.vel)
-					_, state = am.integrate_single_fixed(
-						gravity_nbody,
-						JD,
-						system.JD0,
-						state,
-						dt,
-						params,
-					) // TODO: add adaptive later
-					sat.pos, sat.vel = am.state_to_posvel(state)
+					tle_propagate(JD, &sat, cb, system)
 				}
 			}
 
@@ -177,7 +183,7 @@ tle_parse_to_sys :: proc(
 }
 
 
-extract_tle :: proc(
+extract_tle :: #force_inline proc(
 	lines: []string,
 	cb: CelestialBody,
 	millenium: Millenium = .two_thousand,
@@ -258,7 +264,7 @@ extract_tle :: proc(
 }
 
 
-tle_date :: proc(
+tle_date :: #force_inline proc(
 	file: string,
 	millenium: Millenium = .two_thousand,
 	num_to_read: int = -1,

@@ -15,7 +15,7 @@ Params_EulerParam :: struct {
 	torque:               [3]f64, // in body frame
 }
 Params_BodyAttitude :: struct {}
-euler_param_dynamics :: proc(
+euler_param_dynamics :: #force_inline proc(
 	t: f64,
 	x: [7]f64,
 	params: rawptr,

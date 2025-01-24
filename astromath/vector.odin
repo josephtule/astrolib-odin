@@ -15,8 +15,8 @@ zaxis_f32: [3]f32 : {0., 0., 1.}
 
 
 magnitude :: la.length
-mag :: la.length
 magnitude2 :: la.length2
+mag :: la.length
 mag2 :: la.length2
 
 

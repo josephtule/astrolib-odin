@@ -13,7 +13,7 @@ Axes :: struct {
 }
 
 
-draw_axes :: proc(
+draw_axes :: #force_inline proc(
 	attitude_flag: bool,
 	axes: ^Axes,
 	model: rl.Model,
