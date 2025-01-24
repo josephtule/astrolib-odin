@@ -19,7 +19,7 @@ Params_Gravity_Nbody :: struct {
 	self_radius:   f64,
 	self_mass:     f64,
 	gravity_model: GravityModel,
-	idx:           int,
+	idx:           int, // 0 for satellites
 }
 
 gravity_nbody :: proc(t: f64, x: [6]f64, params: rawptr) -> [6]f64 {

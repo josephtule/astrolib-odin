@@ -121,6 +121,8 @@ tle_parse_to_sys :: proc(
 		}
 		if num_read >= start_sat {
 			sat, model, date := extract_tle(lines_temp, cb, millenium, gen_model)
+			sat.gravity_model = .zonal
+
 			// propagate to target time
 			JD := date_to_jd(date)
 			if JD != system.JD0 {
@@ -135,36 +137,35 @@ tle_parse_to_sys :: proc(
 						max_days,
 						"days from target date, date will be overriden",
 					)
-					// 	} else {
-					// 		// FIXME: currently not working
-					// 		// (only single body pointmass for now add j2-j4 later, no drag/srp/3rd body effects)
-					// 		params_pointmass := Params_Gravity_Pointmass {
-					// 			mu = cb.mu,
-					// 		}
-					// 		time: f64 = 0.
-					// 		total_time: f64 = (JD - system.JD0) * 86400.
-					// 		dt: f64 = total_time / 10000.
-					// 		if math.abs(dt) > 100. {
-					// 			// set max dt
-					// 			dt = math.sign(dt) * 100.
-					// 		} else if math.abs(dt) < 1.0e-6 {
-					// 			// set min dt
-					// 			dt = math.sign(dt) * 1.0e-6
-					// 		}
-					// 		for time < total_time {
-					// 			state_current := am.posvel_to_state(sat.pos, sat.vel)
-					// 			time, state_new := am.integrate_step(
-					// 				gravity_pointmass,
-					// 				time,
-					// 				state_current,
-					// 				dt,
-					// 				&params_pointmass,
-					// 				.rk4,
-					// 			)
-					// 			sat.pos, sat.vel = am.state_to_posvel(state_new)
-					// 		}
-				}
+				} else {
+					lowest_model: GravityModel = min(sat.gravity_model, cb.gravity_model)
+					bodies: [dynamic]CelestialBody
+					append(&bodies, cb)
+					params := &Params_Gravity_Nbody {
+						bodies = &bodies,
+						self_mass = sat.mass,
+						self_radius = sat.radius,
+						gravity_model = sat.gravity_model,
+						idx = -1,
+					}
 
+					// time and dt
+					time: f64 = 0.
+					t_total: f64 = (JD - system.JD0) * 86400.
+					dt := am.compute_dt_inrange(t_total, 10000)
+
+					// integrate
+					state := am.posvel_to_state(sat.pos, sat.vel)
+					_, state = am.integrate_single_fixed(
+						gravity_nbody,
+						JD,
+						system.JD0,
+						state,
+						dt,
+						params,
+					) // TODO: add adaptive later
+					sat.pos, sat.vel = am.state_to_posvel(state)
+				}
 			}
 
 			// copy satellite into system
