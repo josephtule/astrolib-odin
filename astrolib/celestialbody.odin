@@ -88,12 +88,7 @@ draw_body :: #force_inline proc(model: ^Model, body: CelestialBody) {
 	rl.DrawModel(model.model, am.origin_f32, 1, model.tint)
 
 	if model.axes.draw {
-		draw_axes(
-			body.update_attitude,
-			&model.axes,
-			model.model,
-			f32(model.model_size[0]) * 2,
-		)
+		draw_axes(body.update_attitude, &model.axes, model.model)
 	}
 	if model.trail.draw {
 		// draw_trail(model^)
@@ -196,6 +191,10 @@ gen_celestialbody_model :: #force_inline proc(
 
 	// local axes
 	model.axes.draw = true
+	model.axes.size = 2 * f32(body.semimajor_axis) * u_to_rl
+	model.axes.x = am.xaxis_f32 
+	model.axes.y = am.yaxis_f32 
+	model.axes.z = am.zaxis_f32 
 
 	// // position/velocity vectors
 	// model.posvel.draw_pos = true

@@ -47,7 +47,7 @@ draw_satellite :: #force_inline proc(model: ^Model, sat: Satellite) {
 	rl.DrawModel(model.model, am.origin_f32, 1, model.tint)
 
 	if model.axes.draw {
-		draw_axes(sat.update_attitude, &model.axes, model.model, f32(sat.radius) * 5)
+		draw_axes(sat.update_attitude, &model.axes, model.model)
 	}
 	if model.trail.draw {
 		draw_trail(model^)
@@ -166,7 +166,8 @@ gen_satmodel :: #force_inline proc(
 ) -> (
 	m: Model,
 ) {
-	sat.radius = f64(min(model_size[0], min(model_size[1], model_size[2])))
+	sat.radius =
+		f64(max(model_size[0], min(model_size[1], model_size[2]))) / u_to_rl
 
 	// default to rectangular prism
 	m.draw_model = true
@@ -184,6 +185,10 @@ gen_satmodel :: #force_inline proc(
 
 	// local axes
 	m.axes.draw = true
+	m.axes.size = 5 * f32(sat.radius) * u_to_rl
+	m.axes.x = am.xaxis_f32 * m.axes.size
+	m.axes.y = am.yaxis_f32 * m.axes.size
+	m.axes.z = am.zaxis_f32 * m.axes.size
 
 	// position/velocity vectors
 	m.posvel.draw_pos = true

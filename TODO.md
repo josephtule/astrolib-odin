@@ -110,5 +110,5 @@
 
 ## Misc
 
-- [ ] z-axis jittery in close satellites
+- [ ] z-axis jittery in close satellites (i think this might have to do with camera updates)
 - [x] Organize TODO
