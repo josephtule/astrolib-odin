@@ -485,7 +485,7 @@ update_simulation :: proc(
 		fmt.println("Added satellite (ID):", sat.id)
 	}
 	if rl.IsKeyDown(.RIGHT_SHIFT) && rl.IsKeyPressed(.PERIOD) {
-		for i := 0; i < 5; i += 1 {
+		for i := 0; i < 25; i += 1 {
 			earth := bodies[0] // TODO: change this later
 			// add satellite to system here
 

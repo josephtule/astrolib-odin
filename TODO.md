@@ -44,7 +44,8 @@
   - [ ] simulate satellite back/forward from tle time to system initial time
   - [x] separate satellite generation for tle parsing
     - [x] tle parser returns dynamic array of satellites/models instead
-  - [ ] tle parser that only returns the date
+  - [x] tle parser that only returns the date
+  - [ ] tle parser that only returns pos/vel
 - [ ] Add collision detection and resolution
   - [ ] collision detection
     - [ ] add spatial partitioning
@@ -109,4 +110,5 @@
 
 ## Misc
 
+- [ ] z-axis jittery in close satellites
 - [x] Organize TODO
