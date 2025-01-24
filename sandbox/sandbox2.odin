@@ -1,5 +1,6 @@
 package sandbox
 
+import "base:intrinsics"
 import "core:fmt"
 import "core:math"
 import la "core:math/linalg"
@@ -80,23 +81,41 @@ main :: proc() {
 	state_new: [6]f64
 	tstart := tt.now()
 	i := 0
-	N_itr := 10000
+	N_itr: int = 5.e4
 	for itr := 0; itr < N_itr; itr += 1 {
-		for time < total_time {
-			state_current := am.posvel_to_state(sat.pos, sat.vel)
-			state_current[0] += rand.float64_uniform(1, 10)
-			state_current[1] += rand.float64_uniform(10, 100)
-			time, state_new = am.integrate_step(
-				ast.gravity_pointmass,
-				time,
-				state_current,
-				dt,
-				&params_pointmass,
-				.rk4,
-			)
-			sat.pos, sat.vel = am.state_to_posvel(state_new)
-			i += 1
-		}
+		rando1 := rand.float64_uniform(1, 10)
+		rando2 := rand.float64_uniform(10, 100)
+		rando3 := rand.float64_normal(0, 10)
+		state_current := am.posvel_to_state(sat.pos, sat.vel)
+		state_current[0] += rando1
+		state_current[1] += rando2
+		_, _ = am.integrate_single_fixed(
+			ast.gravity_pointmass,
+			0,
+			total_time,
+			state_current,
+			dt,
+			params = &params_pointmass,
+		)
+
+		// for time < total_time {
+		// 	rando1 := rand.float64_uniform(1, 10)
+		// 	rando2 := rand.float64_uniform(10, 100)
+		// 	rando3 := rand.float64_normal(0, 10)
+		// 	state_current := am.posvel_to_state(sat.pos, sat.vel)
+		// 	state_current[0] += rando1
+		// 	state_current[1] += rando2
+		// 	time, state_new = am.integrate_step(
+		// 		ast.gravity_pointmass,
+		// 		time,
+		// 		state_current,
+		// 		dt,
+		// 		&params_pointmass,
+		// 		.rk4,
+		// 	)
+		// 	sat.pos, sat.vel = am.state_to_posvel(state_new)
+		// 	i += 1
+		// }
 	}
 	telapsed := tt.duration_milliseconds(tt.diff(tstart, tt.now()))
 	fmt.println(
@@ -108,6 +127,20 @@ main :: proc() {
 		"ms\n",
 		"Number of iterations: ",
 		i,
+		"\nNumber of runs: ",
+		N_itr,
+		"\nTotal computations: ",
+		N_itr * i,
 		sep = "",
 	)
+
+	dtt := am.compute_dt_iterative(
+		-total_time,
+		N_max = 10,
+		dt_max = 10,
+		dt_min = 1,
+	)
+	steps := math.abs(int(math.ceil(total_time / dtt)))
+	fmt.println(dtt, steps)
 }
+

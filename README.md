@@ -37,3 +37,7 @@
 4. Build and run with
    1. Mac/Linux: `<path_to_odin_binary> run . -out:build/out -o:speed`
    2. Windows: `<path_to_odin_binary> run . -out:build/out.exe -o:speed`
+
+## Sources
+TLE Data: [celestrak](https://celestrak.org/NORAD/elements/) or [space-track](https://www.space-track.org/auth/login)
+Algorithms: Vallado

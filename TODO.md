@@ -28,6 +28,7 @@
 - [ ] Resetting system should reset global ID?
 - [x] Combine satellite and body models
 - [ ] Separate translational and rotational physics (separate update frequencies)
+- [ ] Implement adaptive step size integrator (for non-simulations)
 - [x] Create add/remove sat/body to system not just array
 - [x] Implement adding multiple satellites
 - [x] Implement adding multiple celestial bodies

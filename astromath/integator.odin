@@ -1,5 +1,6 @@
 package astromath
 
+import "core:fmt"
 import "core:math"
 import la "core:math/linalg"
 
@@ -16,24 +17,161 @@ IntegratorType :: enum {
 }
 
 
-compute_dt :: proc(
-	total_time: f64,
-	steps_max: int = 1000,
-	dt_max: f64 = 100.,
-	dt_min: f64 = 1.0e-6,
-) -> (
+integrate_single :: proc {
+	integrate_single_fixed,
+// integrate_single_adaptive,
+}
+
+integrate_history :: proc {
+	integrate_history_fixed,
+// integrate_history_adapative,
+}
+
+integrate_history_fixed :: proc(
+	f: proc(t: f64, x: [$N]f64, params: rawptr) -> [N]f64,
+	t0, tf: f64,
+	x: [N]f64,
 	dt: f64,
+	params: rawptr,
+	integrator: IntegratorType = .rk4,
+) -> (
+	[dynamic]f64,
+	[dynamic][N]f64,
 ) {
-	// TODO: update this logic later
-	dt = total_time / f64(steps_max)
-	if math.abs(dt) > dt_max {
-		dt = dt_max
-	} else if math.abs(dt) < dt_min {
+
+	t_total := tf - t0
+	sign := math.sign(t_total)
+	N_steps := math.abs(int(math.ceil(t_total / dt)))
+	dt := sign * math.abs(dt)
+
+	time_hist = make([dynamic]f64)
+	state_hist = make([dynamic][N]f64)
+
+	time := t0
+	state := x
+	append(&time_hist, time)
+	append(&state_hist, state)
+	for _ in 0 ..< N_steps {
+		time, state = integrate_step(f, time, state, dt, params, integrator)
+		append(&time_hist, time)
+		append(&state_hist, state)
+	}
+
+	return time_hist, state_hist
+}
+
+integrate_single_fixed :: proc(
+	f: proc(t: f64, x: [$N]f64, params: rawptr) -> [N]f64,
+	t0, tf: f64,
+	x: [N]f64,
+	dt: f64,
+	params: rawptr,
+	integrator: IntegratorType = .rk4,
+) -> (
+	f64,
+	[N]f64,
+) {
+	t_total := tf - t0
+	sign := math.sign(t_total)
+	N_steps := math.abs(int(math.ceil(t_total / dt)))
+	dt := sign * math.abs(dt)
+
+	time := t0
+	state := x
+
+	for _ in 0 ..< N_steps {
+		time, state = integrate_step(f, time, state, dt, params, integrator)
+	}
+
+	return time, state
+}
+
+
+compute_dt :: proc {
+	compute_dt_maxsteps,
+	compute_dt_inrange,
+	compute_dt_iterative,
+}
+
+compute_dt_inrange :: proc(
+	t_total: f64,
+	N_max: int,
+	dt_min: f64 = 1.0e-6,
+	dt_max: f64 = 1.0e+2,
+) -> f64 {
+	dir := math.sign(t_total)
+	t_total := math.abs(t_total)
+	if math.abs(t_total) == 0.0 {
+		return 0.0
+	}
+
+	dt := t_total / f64(N_max)
+	dt = math.clamp(dt, dt_min, dt_max)
+
+	return dir * dt
+}
+
+
+compute_dt_maxsteps :: proc(
+	t_total: f64,
+	N_max: int,
+	dt_min: f64 = 1.0e-6,
+) -> f64 {
+	dir := math.sign(t_total)
+	t_total := math.abs(t_total)
+	if math.abs(t_total) == 0.0 {
+		return 0.0
+	}
+
+	dt := t_total / f64(N_max)
+	N_steps := int(math.ceil(t_total / dt_min))
+	if N_steps < N_max {
 		dt = dt_min
 	}
 
-	return dt
+	return dir * dt
 }
+
+compute_dt_iterative :: proc(
+	t_total: f64,
+	N_max: int,
+	dt_min: f64 = 1.0e-6,
+	dt_max: f64 = 1.0e+2,
+	max_iter: int = 50,
+	tol: f64 = 1e-12,
+) -> f64 {
+
+	// FIXME: doesn't really work right now
+	dir := math.sign(t_total)
+	t_total := math.abs(t_total)
+	if math.abs(t_total) == 0.0 {
+		return 0.0
+	}
+	steps_max := int(math.ceil(t_total / dt_max))
+	if steps_max <= N_max {
+		return dir * dt_max
+	}
+	steps_min := int(math.ceil(t_total / dt_min))
+	if steps_min > N_max {
+		return dir * dt_max
+	}
+	low := dt_min
+	high := dt_max
+	for _ in 0 ..< max_iter {
+		mid := 0.5 * (low + high)
+		steps_mid := int(math.ceil(t_total / mid))
+		if steps_mid <= N_max {
+			low = mid
+		} else {
+			high = mid
+		}
+		if math.abs(high - low) < tol {
+			break
+		}
+	}
+	return dir * low
+}
+
 
 integrate_step :: #force_inline proc(
 	f: proc(t: $T, x: [$N]T, params: rawptr) -> [N]T,
