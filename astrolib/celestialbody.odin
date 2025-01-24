@@ -49,7 +49,7 @@ CelestialBody :: struct {
 // }
 
 
-update_body ::#force_inline proc(
+update_body :: #force_inline proc(
 	body: ^CelestialBody,
 	model: ^Model,
 	state_new: ^[6]f64,
@@ -124,7 +124,7 @@ update_body_model :: #force_inline proc(
 
 }
 
-gen_celestialbody :: proc(
+gen_celestialbody :: #force_inline proc(
 	pos, vel: [3]f64,
 	ep: [4]f64,
 	mass: f64,
@@ -173,7 +173,7 @@ gen_celestialbody :: proc(
 }
 
 
-gen_celestialbody_model :: proc(
+gen_celestialbody_model :: #force_inline proc(
 	body: CelestialBody,
 	model_size: [3]f32,
 	faces: i32 = 64,
@@ -230,14 +230,14 @@ add_celestialbody :: proc {
 	add_celestialbody_ptr,
 	add_celestialbody_copy,
 }
-add_celestialbody_ptr :: proc(
+add_celestialbody_ptr :: #force_inline proc(
 	bodies: ^[dynamic]CelestialBody,
 	body: ^CelestialBody,
 ) {
 	append_elem(bodies, body^)
 	free(body)
 }
-add_celestialbody_copy :: proc(
+add_celestialbody_copy :: #force_inline proc(
 	bodies: ^[dynamic]CelestialBody,
 	body: CelestialBody,
 ) {
@@ -245,7 +245,7 @@ add_celestialbody_copy :: proc(
 }
 
 
-wgs84 :: proc(
+wgs84 :: #force_inline proc(
 	units: am.UnitsLinear = .KILOMETER,
 	max_degree: int = 0,
 	max_order: int = 0,
@@ -312,7 +312,7 @@ wgs84 :: proc(
 	return earth
 }
 
-luna_params :: proc(
+luna_params :: #force_inline proc(
 	units: am.UnitsLinear = .KILOMETER,
 	max_degree: int = 0,
 	max_order: int = 0,

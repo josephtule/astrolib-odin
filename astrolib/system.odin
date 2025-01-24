@@ -134,7 +134,7 @@ create_system :: proc {
 	create_system_empty,
 }
 
-create_system_empty :: proc(
+create_system_empty :: #force_inline proc(
 	JD0: f64 = 2451545.0, // defaults// default to J2000 TT
 	integrator: am.IntegratorType = .rk4,
 	time_scale: f64 = 8,
@@ -158,7 +158,7 @@ create_system_empty :: proc(
 	return system
 }
 
-create_system_full :: proc(
+create_system_full :: #force_inline proc(
 	sats: [dynamic]Satellite,
 	sat_models: [dynamic]Model,
 	bodies: [dynamic]CelestialBody,
@@ -198,8 +198,7 @@ create_system_full :: proc(
 }
 
 
-copy_system :: proc(system_dst, system_src: ^AstroSystem) {
-
+copy_system :: #force_inline proc(system_dst, system_src: ^AstroSystem) {
 	system_dst.satellites = slice.clone_to_dynamic(system_src.satellites[:])
 	system_dst.satellite_models = slice.clone_to_dynamic(
 		system_src.satellite_models[:],
@@ -226,13 +225,16 @@ add_to_system :: proc {
 	add_body_to_system,
 	add_bodies_to_system,
 }
-add_sat_to_system :: proc(system: ^AstroSystem, sat: Satellite) {
+add_sat_to_system :: #force_inline proc(system: ^AstroSystem, sat: Satellite) {
 	using system
 	add_satellite(&satellites, sat)
 	id[sat.id] = num_satellites
 	num_satellites += 1
 }
-add_sats_to_system :: proc(system: ^AstroSystem, sats: []Satellite) {
+add_sats_to_system :: #force_inline proc(
+	system: ^AstroSystem,
+	sats: []Satellite,
+) {
 	using system
 	for sat, i in sats {
 		add_satellite(&satellites, sat)
@@ -241,13 +243,19 @@ add_sats_to_system :: proc(system: ^AstroSystem, sats: []Satellite) {
 	num_satellites += len(sats)
 }
 
-add_body_to_system :: proc(system: ^AstroSystem, body: CelestialBody) {
+add_body_to_system :: #force_inline proc(
+	system: ^AstroSystem,
+	body: CelestialBody,
+) {
 	using system
 	add_celestialbody(&bodies, body)
 	id[body.id] = num_bodies
 	num_bodies += 1
 }
-add_bodies_to_system :: proc(system: ^AstroSystem, bodies: []CelestialBody) {
+add_bodies_to_system :: #force_inline proc(
+	system: ^AstroSystem,
+	bodies: []CelestialBody,
+) {
 	using system
 	for body, i in bodies {
 		add_celestialbody(&bodies, body)
@@ -256,11 +264,14 @@ add_bodies_to_system :: proc(system: ^AstroSystem, bodies: []CelestialBody) {
 	num_satellites += len(bodies)
 }
 
-add_model_to_system :: proc(system: ^AstroSystem, model: Model) {
+add_model_to_system :: #force_inline proc(system: ^AstroSystem, model: Model) {
 	using system
 	add_model_to_array(&satellite_models, model)
 }
-add_models_to_system :: proc(system: ^AstroSystem, models: []Model) {
+add_models_to_system :: #force_inline proc(
+	system: ^AstroSystem,
+	models: []Model,
+) {
 	using system
 	for model in models {
 		add_model_to_array(&satellite_models, model)
@@ -271,10 +282,16 @@ add_model_to_array :: proc {
 	add_model_to_array_ptr,
 	add_model_to_array_copy,
 }
-add_model_to_array_ptr :: proc(models: ^[dynamic]Model, model: ^Model) {
+add_model_to_array_ptr :: #force_inline proc(
+	models: ^[dynamic]Model,
+	model: ^Model,
+) {
 	append_elem(models, model^)
 	free(model)
 }
-add_model_to_array_copy :: proc(models: ^[dynamic]Model, model: Model) {
+add_model_to_array_copy :: #force_inline proc(
+	models: ^[dynamic]Model,
+	model: Model,
+) {
 	append_elem(models, model)
 }

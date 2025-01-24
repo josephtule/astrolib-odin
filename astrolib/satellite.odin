@@ -38,18 +38,6 @@ SatelliteInfo :: struct {
 	catalog_number:  int,
 }
 
-// Model :: struct {
-// 	id:            int,
-// 	model:         rl.Model,
-// 	model_size:    [3]f32,
-// 	scale:         f32,
-// 	tint:          rl.Color,
-// 	draw_model:    bool,
-// 	trail:         Trail,
-// 	axes:          Axes,
-// 	posvel:        PosVel,
-// }
-
 // -----------------------------------------------------------------------------
 // Draw Functions
 // -----------------------------------------------------------------------------
@@ -131,7 +119,7 @@ update_satellite :: #force_inline proc(
 // -----------------------------------------------------------------------------
 // Generate Satellite Functions
 // -----------------------------------------------------------------------------
-gen_sat :: proc(
+gen_sat :: #force_inline proc(
 	pos, vel: [3]f64,
 	ep: [4]f64,
 	omega: [3]f64,
@@ -168,7 +156,7 @@ gen_sat :: proc(
 	return s
 }
 
-gen_satmodel :: proc(
+gen_satmodel :: #force_inline proc(
 	sat: ^Satellite,
 	model_size: [3]f32,
 	scale: f32 = 1,
@@ -219,7 +207,8 @@ gen_satmodel :: proc(
 	m.id = sat.id
 	return m
 }
-gen_sat_and_model :: proc(
+
+gen_sat_and_model :: #force_inline proc(
 	pos, vel: [3]f64,
 	ep: [4]f64,
 	omega: [3]f64,
@@ -239,7 +228,7 @@ gen_sat_and_model :: proc(
 	return s, m
 }
 
-set_inertia :: proc(sat: ^Satellite, I: matrix[3, 3]f64) {
+set_inertia :: #force_inline proc(sat: ^Satellite, I: matrix[3, 3]f64) {
 	sat.inertia = I
 	sat.inertia_inv = la.inverse(I)
 }
@@ -252,13 +241,22 @@ add_satellite :: proc {
 	add_satellite_copy,
 	add_satellite_soa,
 }
-add_satellite_ptr :: proc(sats: ^[dynamic]Satellite, sat: ^Satellite) {
+add_satellite_ptr :: #force_inline proc(
+	sats: ^[dynamic]Satellite,
+	sat: ^Satellite,
+) {
 	append_elem(sats, sat^)
 	free(sat)
 }
-add_satellite_copy :: proc(sats: ^[dynamic]Satellite, sat: Satellite) {
+add_satellite_copy :: #force_inline proc(
+	sats: ^[dynamic]Satellite,
+	sat: Satellite,
+) {
 	append_elem(sats, sat)
 }
-add_satellite_soa :: proc(sats: ^#soa[dynamic]Satellite, sat: Satellite) {
+add_satellite_soa :: #force_inline proc(
+	sats: ^#soa[dynamic]Satellite,
+	sat: Satellite,
+) {
 	append_soa(sats, sat)
 }

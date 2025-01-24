@@ -14,14 +14,14 @@ orbital_energy :: proc {
 	orbital_energy_angecc,
 }
 
-orbital_energy_posvel :: proc(pos, vel: [3]f64, mu: f64) -> f64 {
+orbital_energy_posvel :: #force_inline proc(pos, vel: [3]f64, mu: f64) -> f64 {
 	return 0.5 * am.mag2(vel) - mu / am.mag(pos)
 }
 
-orbital_energy_sma :: proc(a, mu: f64) -> f64 {
+orbital_energy_sma :: #force_inline proc(a, mu: f64) -> f64 {
 	return -mu / (2. * a)
 }
 
-orbital_energy_angecc :: proc(h: [3]f64, ecc, mu: f64) -> f64 {
+orbital_energy_angecc :: #force_inline proc(h: [3]f64, ecc, mu: f64) -> f64 {
 	return -0.5 * (mu * mu / am.mag2(h) * (1 - ecc * ecc))
 }

@@ -81,7 +81,7 @@ main :: proc() {
 
 	state: [6]f64
 	tstart := tt.now()
-	N_itr: int : 10000
+	N_itr: int : 1000
 
 	for itr := 0; itr < N_itr; itr += 1 {
 		state = am.posvel_to_state(sat.pos, sat.vel)

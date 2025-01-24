@@ -15,6 +15,7 @@ G_km :: 6.6743e-20
 small6 :: 1.0e-6
 small9 :: 1.0e-9
 small12 :: 1.0e-12
+small14 :: 1.0e-14
 small16 :: 1.0e-16
 
 

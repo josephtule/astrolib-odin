@@ -20,12 +20,20 @@ mag :: la.length
 mag2 :: la.length2
 
 
-posvel_to_state :: #force_inline proc(pos, vel: [3]$T) -> (state: [6]T) {
+posvel_to_state :: #force_inline proc "contextless" (
+	pos, vel: [3]$T,
+) -> (
+	state: [6]T,
+) #no_bounds_check {
 	// set_vector_slice(&state, pos, vel)
 	state = {pos[0], pos[1], pos[2], vel[0], vel[1], vel[2]}
 	return state
 }
-state_to_posvel :: #force_inline proc(state: [6]$T) -> (pos, vel: [3]T) {
+state_to_posvel :: #force_inline proc "contextless" (
+	state: [6]$T,
+) -> (
+	pos, vel: [3]T,
+) #no_bounds_check {
 	// set_vector_slice_1(&pos, state, l1 = 3, s1 = 0)
 	// set_vector_slice_1(&vel, state, l1 = 3, s1 = 3)
 	pos = {state[0], state[1], state[2]}
@@ -33,30 +41,33 @@ state_to_posvel :: #force_inline proc(state: [6]$T) -> (pos, vel: [3]T) {
 	return pos, vel
 }
 
-epomega_to_state :: #force_inline proc(
+epomega_to_state :: #force_inline proc "contextless" (
 	ep: [4]$T,
 	omega: [3]T,
 ) -> (
 	state: [7]T,
-) {
-	set_vector_slice(&state, ep, omega)
+) #no_bounds_check {
+	// set_vector_slice(&state, ep, omega)
+	state = {ep.x, ep.y, ep.z, ep.w, omega.x, omega.y, omega.z}
 	return state
 }
-state_to_epomega :: #force_inline proc(
+state_to_epomega :: #force_inline proc "contextless" (
 	state: [7]$T,
 ) -> (
 	ep: [4]T,
 	omega: [3]T,
-) {
-	set_vector_slice_1(&ep, state, s1 = 0, l1 = 4)
-	set_vector_slice_1(&omega, state, s1 = 4, l1 = 3)
+) #no_bounds_check {
+	// set_vector_slice_1(&ep, state, s1 = 0, l1 = 4)
+	// set_vector_slice_1(&omega, state, s1 = 4, l1 = 3)
+	ep = {state[0], state[1], state[2], state[3]}
+	omega = {state[4], state[5], state[6]}
 	return ep, omega
 }
 
-is_diagonal :: #force_inline proc(
+is_diagonal :: #force_inline proc "contextless" (
 	mat: matrix[$N, N]$T,
 	tol := 1.0e-12,
-) -> bool {
+) -> bool #no_bounds_check {
 	// for i := 0; i < N; i += 1 {
 	#unroll for i in 0 ..< N {
 		// for j := i + 1; j < N; j += 1 {

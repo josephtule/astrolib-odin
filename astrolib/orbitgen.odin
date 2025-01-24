@@ -19,7 +19,7 @@ OrbitType :: enum {
 }
 
 
-coe_to_rv :: proc(
+coe_to_rv :: #force_inline proc(
 	a, ecc, inc, raan, aop, ta: f64,
 	cb: CelestialBody,
 	tol: f64 = 1.0e-12,
@@ -73,7 +73,8 @@ coe_to_rv :: proc(
 	}
 
 	// rotate into equatorial frame
-	R := am.ea_to_dcm([3]f64{-aop, -inc, -raan}, {3, 1, 3})
+	seq := [3]am.RotAxis{.z,.x,.z}
+	R := am.ea_to_dcm([3]f64{-aop, -inc, -raan}, seq)
 	pos = R * r_pqw
 	vel = R * v_pqw
 
@@ -85,7 +86,7 @@ coe_to_rv :: proc(
 }
 
 
-rv_to_coe :: proc(
+rv_to_coe :: #force_inline proc(
 	pos, vel: [3]f64, // inertial input
 	cb: CelestialBody,
 	units_out: am.UnitsAngle = .DEGREES,
@@ -154,7 +155,7 @@ rv_to_coe :: proc(
 	return sma, ecc, inc, raan, aop, ta
 }
 
-gen_rand_coe_orientation :: proc(
+gen_rand_coe_orientation :: #force_inline proc(
 	sma: f64,
 	ecc: f64,
 	cb: CelestialBody,
@@ -170,7 +171,7 @@ gen_rand_coe_orientation :: proc(
 	return pos, vel
 }
 
-gen_rand_coe :: proc(
+gen_rand_coe :: #force_inline proc(
 	cb: CelestialBody,
 	sma_max: f64 = -1,
 	ecc_max: f64 = -1,
@@ -216,7 +217,7 @@ gen_rand_coe :: proc(
 	return pos, vel
 }
 
-gen_rand_coe_earth :: proc(
+gen_rand_coe_earth :: #force_inline proc(
 	earth: CelestialBody,
 	orbit_type: OrbitType,
 ) -> (

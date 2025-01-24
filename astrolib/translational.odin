@@ -11,9 +11,7 @@ GravityModel :: enum {
 	spherical_harmonic = 2,
 }
 
-Params_Gravity_Pointmass :: struct {
-	mu: f64,
-}
+
 Params_Gravity_Nbody :: struct {
 	bodies:        ^[dynamic]CelestialBody,
 	self_radius:   f64,
@@ -21,7 +19,6 @@ Params_Gravity_Nbody :: struct {
 	gravity_model: GravityModel,
 	idx:           int, // 0 for satellites
 }
-
 gravity_nbody :: #force_inline proc(
 	t: f64,
 	x: [6]f64,
@@ -66,7 +63,7 @@ gravity_nbody :: #force_inline proc(
 }
 
 Params_Gravity_Onebody :: struct {
-	body:        CelestialBody,
+	body:          CelestialBody,
 	self_radius:   f64,
 	self_mass:     f64,
 	gravity_model: GravityModel,
@@ -111,6 +108,9 @@ gravity_onebody :: #force_inline proc(
 	return dxdt
 }
 
+Params_Gravity_Pointmass :: struct {
+	mu: f64,
+}
 gravity_pointmass :: #force_inline proc(
 	t: f64,
 	x: [6]f64,

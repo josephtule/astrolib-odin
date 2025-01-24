@@ -51,6 +51,7 @@ tle_propagate :: #force_inline proc(
 		state,
 		dt,
 		params,
+		integrator = .ralston,
 	) // TODO: add adaptive later
 	sat.pos, sat.vel = am.state_to_posvel(state)
 }
