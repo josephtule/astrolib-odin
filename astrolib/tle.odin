@@ -7,8 +7,6 @@ import "core:os"
 import "core:strconv"
 import str "core:strings"
 
-import am "../astromath"
-
 
 Millenium :: enum (int) {
 	one_thousand = 1000,
@@ -40,11 +38,11 @@ tle_propagate :: #force_inline proc(
 	// time and dt
 	time: f64 = 0.
 	t_total: f64 = (JD - system.JD0) * 86400.
-	dt := am.compute_dt_inrange(t_total, 5000, dt_max = 150)
+	dt := compute_dt_inrange(t_total, 5000, dt_max = 150)
 
 	// integrate
-	state := am.posvel_to_state(sat.pos, sat.vel)
-	_, state = am.integrate_single_fixed(
+	state := posvel_to_state(sat.pos, sat.vel)
+	_, state = integrate_single_fixed(
 		gravity_onebody,
 		JD,
 		system.JD0,
@@ -53,7 +51,7 @@ tle_propagate :: #force_inline proc(
 		params,
 		integrator = .ralston,
 	) // TODO: add adaptive later
-	sat.pos, sat.vel = am.state_to_posvel(state)
+	sat.pos, sat.vel = state_to_posvel(state)
 }
 
 tle_read :: #force_inline proc(file: string) -> []string {
@@ -248,7 +246,7 @@ extract_tle :: #force_inline proc(
 	ep: [4]f64 = {0., 0., 0., 1.}
 	omega: [3]f64 = {0., 0., 0.}
 	// TODO: change this later
-	cube_size: f32 = 50 / 1000. * am.u_to_rl
+	cube_size: f32 = 50 / 1000. * u_to_rl
 	sat, model = gen_sat_and_model(
 		pos,
 		vel,

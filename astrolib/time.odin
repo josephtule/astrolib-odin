@@ -1,12 +1,10 @@
 package astrolib
 
-
 import "core:fmt"
 import "core:math"
 import la "core:math/linalg"
 import "core:time/datetime"
 
-import am "../astromath"
 
 TimeScale :: enum {
 	TT,
@@ -27,8 +25,8 @@ time_converter :: proc(
 	time_in: f64,
 	scale_in: TimeScale,
 	scale_out: TimeScale,
-	units_in: am.UnitsTime = .SECOND,
-	units_out: am.UnitsTime = .SECOND,
+	units_in: UnitsTime = .SECOND,
+	units_out: UnitsTime = .SECOND,
 ) -> (
 	time_out: f64,
 ) {
@@ -190,7 +188,7 @@ is_leap_year :: proc(year: int) -> bool {
 
 meananom_to_eccenanom :: proc(
 	mean_anom, ecc: f64,
-	tol: f64 = am.small9,
+	tol: f64 = small9,
 ) -> (
 	eccen_anom: f64,
 ) {
@@ -203,9 +201,9 @@ meananom_to_eccenanom :: proc(
 	err := 1.
 	iter := 1
 	eccen_anom = mean_anom // initial guess
-	for err > tol && iter < am.max_iter_small {
+	for err > tol && iter < max_iter_small {
 		fprime := df(eccen_anom, mean_anom, ecc)
-		if fprime == am.small16 {
+		if fprime == small16 {
 			panic("ERROR: cannot solve for eccentric anomaly")
 		}
 		eccenanom_new := eccen_anom - f(eccen_anom, mean_anom, ecc) / fprime

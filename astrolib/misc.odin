@@ -1,4 +1,4 @@
-package astromath
+package astrolib
 
 import "core:math"
 

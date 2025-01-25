@@ -1,8 +1,5 @@
 package astrolib
 
-import ast "../astrolib"
-import am "../astromath"
-
 import "core:fmt"
 import "core:math"
 import la "core:math/linalg"
@@ -26,7 +23,7 @@ AstroSystem :: struct {
 	num_bodies:       int,
 	// body_odeparams:      [dynamic]rawptr,
 	// integrator
-	integrator:       am.IntegratorType,
+	integrator:       IntegratorType,
 	time_scale:       f64,
 	substeps:         int,
 	simulate:         bool,
@@ -105,7 +102,7 @@ update_system :: #force_inline proc(system: ^AstroSystem, dt, time: f64) {
 	for i := 0; i < N_bodies; i += 1 {
 		// assign new states after computing
 		if !bodies[i].fixed {
-			bodies[i].pos, bodies[i].vel = am.state_to_posvel(state_new_body[i])
+			bodies[i].pos, bodies[i].vel = state_to_posvel(state_new_body[i])
 		}
 	}
 }
@@ -136,7 +133,7 @@ create_system :: proc {
 
 create_system_empty :: #force_inline proc(
 	JD0: f64 = 2451545.0, // defaults// default to J2000 TT
-	integrator: am.IntegratorType = .rk4,
+	integrator: IntegratorType = .rk4,
 	time_scale: f64 = 8,
 	substeps: int = 8,
 ) -> AstroSystem {
@@ -165,7 +162,7 @@ create_system_full :: #force_inline proc(
 	body_models: [dynamic]Model,
 	// defaults
 	JD0: f64 = 2451545.0, // default to J2000 TT
-	integrator: am.IntegratorType = .rk4,
+	integrator: IntegratorType = .rk4,
 	time_scale: f64 = 8,
 	substeps: int = 8,
 ) -> AstroSystem {

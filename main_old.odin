@@ -14,10 +14,9 @@ import rl "vendor:raylib"
 import "vendor:raylib/rlgl"
 
 import ast "astrolib"
-import am "astromath"
 
-// u_to_rl :: am.u_to_rl
-// rl_to_u :: am.rl_to_u
+// u_to_rl :: ast.u_to_rl
+// rl_to_u :: ast.rl_to_u
 
 main2 :: proc() {
 	// Raylib window
@@ -86,7 +85,7 @@ main2 :: proc() {
 	model_satellite := rl.LoadModelFromMesh(
 		rl.GenMeshCube(model_size[0], model_size[1], model_size[2]),
 	)
-	am.SetTranslation(
+	ast.SetTranslation(
 		&model_satellite.transform,
 		la.array_cast(satellite.pos * u_to_rl, f32),
 	)
@@ -106,7 +105,7 @@ main2 :: proc() {
 	// Trajectory Trail
 	N_trail: int : 20000
 	trail_pos: [N_trail][3]f32
-	x0 := la.array_cast(am.GetTranslation(model_satellite.transform), f32)
+	x0 := la.array_cast(ast.GetTranslation(model_satellite.transform), f32)
 	for i := 0; i < N_trail; i += 1 {
 		trail_pos[i] = x0
 	}
@@ -156,7 +155,7 @@ main2 :: proc() {
 	}
 	camera.target = la.array_cast(satellite.pos, f32) * u_to_rl
 	camera.position =
-		am.azel_to_cart(la.array_cast(camera_azel, f32)) + camera.target
+		ast.azel_to_cart(la.array_cast(camera_azel, f32)) + camera.target
 	camera.up = {0., 0., 1.}
 	camera.fovy = 90
 	camera.projection = .PERSPECTIVE
@@ -186,23 +185,23 @@ main2 :: proc() {
 			cum_time += dt * f32(time_scale)
 			fps = 1 / f64(dt)
 			for k := 0; k < substeps; k += 1 {
-				am.set_vector_slice(&xlk, satellite.pos, satellite.vel)
-				am.set_vector_slice(&xrk, satellite.ep, satellite.omega)
-				// _, xlk = am.rk4_step(
+				ast.set_vector_slice(&xlk, satellite.pos, satellite.vel)
+				ast.set_vector_slice(&xrk, satellite.ep, satellite.omega)
+				// _, xlk = ast.rk4_step(
 				// 	ast.gravity_pointmass,
 				// 	f64(cum_time),
 				// 	xlk,
 				// 	f64(dt) * time_scale,
 				// 	&gravity_params,
 				// )
-				_, xlk = am.rk4_step(
+				_, xlk = ast.rk4_step(
 					ast.gravity_zonal,
 					f64(cum_time),
 					xlk,
 					f64(dt) * time_scale,
 					&zonal_params,
 				)
-				_, xrk = am.rk4_step(
+				_, xrk = ast.rk4_step(
 					ast.euler_param_dynamics,
 					f64(cum_time),
 					xrk,
@@ -210,23 +209,23 @@ main2 :: proc() {
 					&attitude_params,
 				)
 				// set rotation
-				am.set_vector_slice_1(&satellite.ep, xrk, s1 = 0, l1 = 4)
-				am.set_vector_slice_1(&satellite.omega, xrk, s1 = 4, l1 = 3)
+				ast.set_vector_slice_1(&satellite.ep, xrk, s1 = 0, l1 = 4)
+				ast.set_vector_slice_1(&satellite.omega, xrk, s1 = 4, l1 = 3)
 				satellite.ep = la.vector_normalize0(satellite.ep)
-				q := am.euler_param_to_quaternion(la.array_cast(satellite.ep, f32))
+				q := ast.euler_param_to_quaternion(la.array_cast(satellite.ep, f32))
 				N_R_B := rl.QuaternionToMatrix(q)
 				model_satellite.transform = N_R_B
 				// set translation
-				am.set_vector_slice_1(&satellite.pos, xlk, l1 = 3, s1 = 0)
-				am.set_vector_slice_1(&satellite.vel, xlk, l1 = 3, s1 = 3)
-				am.SetTranslation(
+				ast.set_vector_slice_1(&satellite.pos, xlk, l1 = 3, s1 = 0)
+				ast.set_vector_slice_1(&satellite.vel, xlk, l1 = 3, s1 = 3)
+				ast.SetTranslation(
 					&model_satellite.transform,
 					la.array_cast(satellite.pos * u_to_rl, f32),
 				)
 			}
 		}
 
-		N_R_B_3x3 := am.GetRotation(model_satellite.transform)
+		N_R_B_3x3 := ast.GetRotation(model_satellite.transform)
 		sat_pos_f32 := la.array_cast(satellite.pos, f32)
 
 		// update camera
@@ -234,13 +233,13 @@ main2 :: proc() {
 		if rl.IsKeyPressed(rl.KeyboardKey.C) {
 			if cam_frame == .origin {
 				// switch to satellite
-				camera_azel = am.cart_to_azel([3]f64{1, 1, 1} * u_to_rl)
+				camera_azel = ast.cart_to_azel([3]f64{1, 1, 1} * u_to_rl)
 				cam_frame = .satellite
 			} else if cam_frame == .satellite {
-				camera_azel = am.cart_to_azel([3]f64{7500., 7500., 7500.} * u_to_rl)
+				camera_azel = ast.cart_to_azel([3]f64{7500., 7500., 7500.} * u_to_rl)
 				cam_frame = .origin
 			} else {
-				camera_azel = am.cart_to_azel([3]f64{1, 1, 1} * u_to_rl)
+				camera_azel = ast.cart_to_azel([3]f64{1, 1, 1} * u_to_rl)
 				cam_frame = .satellite
 			}
 		} else if rl.IsKeyPressed(.X) {
@@ -268,13 +267,13 @@ main2 :: proc() {
 		case .origin:
 			rlgl.SetClipPlanes(1.0e-1, 1.0e3)
 			camera.position = la.array_cast(
-				am.azel_to_cart(la.array_cast(camera_azel, f64)),
+				ast.azel_to_cart(la.array_cast(camera_azel, f64)),
 				f32,
 			)
 			camera.target = origin
 		case .satellite:
 			camera.position =
-				la.array_cast(am.azel_to_cart(la.array_cast(camera_azel, f64)), f32) +
+				la.array_cast(ast.azel_to_cart(la.array_cast(camera_azel, f64)), f32) +
 				sat_pos_f32 * u_to_rl
 			camera.target = sat_pos_f32 * u_to_rl
 			rlgl.SetClipPlanes(5.0e-5, 5e2)

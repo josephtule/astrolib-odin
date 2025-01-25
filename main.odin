@@ -13,13 +13,12 @@ import "core:time"
 import "core:unicode/utf8"
 
 import ast "astrolib"
-import am "astromath"
 import rl "vendor:raylib"
 import "vendor:raylib/rlgl"
 
 
-u_to_rl :: am.u_to_rl
-rl_to_u :: am.rl_to_u
+u_to_rl :: ast.u_to_rl
+rl_to_u :: ast.rl_to_u
 
 print_fps: bool
 print_dtsim: bool
@@ -47,7 +46,7 @@ main :: proc() {
 	earth.max_degree = 2
 	earth.fixed = true
 	q := la.quaternion_from_euler_angle_x(math.to_radians(f64(23.5)))
-	earth.ep = am.quaternion_to_euler_param(q)
+	earth.ep = ast.quaternion_to_euler_param(q)
 	earth.update_attitude = true
 	model_size :=
 		[3]f32 {
@@ -255,15 +254,16 @@ main :: proc() {
 	// 3D camera
 	target_sat := num_sats / 8
 	camera: rl.Camera3D
-	camera.target = am.cast_f32(origin) * u_to_rl
-	camera.position = am.azel_to_cart(
-		[3]f32{15000 * u_to_rl, math.PI / 4, math.PI / 4},
+	camera.target = ast.cast_f32(origin) * u_to_rl
+	camera.position = ast.azel_to_cart(
+		[3]f32{math.PI / 4, math.PI / 4, 15000 * u_to_rl},
+		.RADIANS,
 	)
 	camera.up = {0., 0., 1.}
 	camera.fovy = 90
 	camera.projection = .PERSPECTIVE
 	camera_params := CameraParams {
-		azel       = am.cart_to_azel(am.cast_f64(camera.position)),
+		azel       = ast.cart_to_azel(ast.cast_f64(camera.position), .RADIANS),
 		target_sat = &asystem.satellites[target_sat],
 		frame      = .origin,
 	}
@@ -541,57 +541,59 @@ update_camera :: proc(
 	if rl.IsKeyPressed(rl.KeyboardKey.C) && !rl.IsKeyDown(.LEFT_SHIFT) {
 		if params.frame == .origin {
 			// switch to satellite
-			params.azel = am.cart_to_azel([3]f64{1, 1, 1} * u_to_rl)
+			params.azel = ast.cart_to_azel([3]f64{1, 1, 1} * u_to_rl, .RADIANS)
 			params.frame = .satellite
+			fmt.println(params.azel)
 		} else if params.frame == .satellite {
-			params.azel = {10000 * u_to_rl, math.PI / 4, math.PI / 4}
+			params.azel = {math.PI / 4, math.PI / 4, 10000 * u_to_rl}
 			params.frame = .body
 		} else if params.frame == .body {
-			params.azel = {15000 * u_to_rl, math.PI / 4, math.PI / 4}
+			params.azel = {math.PI / 4, math.PI / 4, 15000 * u_to_rl}
 			params.frame = .origin
 		} else  /* default to satellite camera*/{
-			params.azel = am.cart_to_azel([3]f64{1, 1, 1} * u_to_rl)
+			params.azel = ast.cart_to_azel([3]f64{1, 1, 1} * u_to_rl)
 			params.frame = .satellite
 		}
 	} else if rl.IsKeyPressed(.C) && rl.IsKeyDown(.LEFT_SHIFT) {
 		params.frame = .locked
 	}
-
 	// camera movement
 	if rl.GetMouseWheelMove() < 0 {
-		params.azel.x *= 1.1
+		params.azel.z *= 1.1
 	} else if rl.GetMouseWheelMove() > 0 {
-		params.azel.x /= 1.1
+		params.azel.z /= 1.1
 	}
 	if rl.IsKeyDown(.A) {
-		params.azel.y -= math.to_radians(f64(90.)) * dt
+		params.azel.x -= math.to_radians(f64(90.)) * dt
 	}
 	if rl.IsKeyDown(.D) {
-		params.azel.y += math.to_radians(f64(90.)) * dt
+		params.azel.x += math.to_radians(f64(90.)) * dt
 	}
 	if rl.IsKeyDown(.S) {
-		params.azel.z -= math.to_radians(f64(90.)) * dt
+		params.azel.y -= math.to_radians(f64(90.)) * dt
 	}
 	if rl.IsKeyDown(.W) {
-		params.azel.z += math.to_radians(f64(90.)) * dt
+		params.azel.y += math.to_radians(f64(90.)) * dt
 	}
 
 	#partial switch params.frame {
 	case .origin:
 		rlgl.SetClipPlanes(1.0e-1, 1.0e3)
-		camera.position = am.cast_f32(am.azel_to_cart(am.cast_f64(params.azel)))
-		camera.target = am.origin_f32
+		camera.position = ast.cast_f32(
+			ast.azel_to_cart(ast.cast_f64(params.azel), .RADIANS),
+		)
+		camera.target = ast.origin_f32
 	case .satellite:
-		sat_pos_f32 := am.cast_f32(params.target_sat.pos)
+		sat_pos_f32 := ast.cast_f32(params.target_sat.pos)
 		camera.position =
-			am.cast_f32(am.azel_to_cart(am.cast_f64(params.azel))) +
+			ast.cast_f32(ast.azel_to_cart(ast.cast_f64(params.azel), .RADIANS)) +
 			sat_pos_f32 * u_to_rl
 		camera.target = sat_pos_f32 * u_to_rl
 		rlgl.SetClipPlanes(5.0e-5, 5e2)
 	case .body:
-		body_pos_f32 := am.cast_f32(params.target_body.pos)
+		body_pos_f32 := ast.cast_f32(params.target_body.pos)
 		camera.position =
-			am.cast_f32(am.azel_to_cart(am.cast_f64(params.azel))) +
+			ast.cast_f32(ast.azel_to_cart(ast.cast_f64(params.azel), .RADIANS)) +
 			body_pos_f32 * u_to_rl
 		camera.target = body_pos_f32 * u_to_rl
 		rlgl.SetClipPlanes(5.0e-3, 5e3)
@@ -617,7 +619,7 @@ CameraType :: enum {
 
 
 CameraParams :: struct {
-	azel:           [3]f64,
+	azel:           [3]f64, // TODO: change to degrees
 	target_sat:     ^ast.Satellite,
 	target_sat_id:  int,
 	target_body:    ^ast.CelestialBody,

@@ -9,10 +9,6 @@ import tt "core:time"
 import rl "vendor:raylib"
 
 import ast "../astrolib"
-import am "../astromath"
-
-
-u_to_rl :: am.u_to_rl
 
 
 main :: proc() {
@@ -34,7 +30,7 @@ main :: proc() {
 	earth.max_order = 4
 	earth.fixed = true
 	q := la.quaternion_from_euler_angle_x(math.to_radians(f64(23.5)))
-	earth.ep = am.quaternion_to_euler_param(q)
+	earth.ep = ast.quaternion_to_euler_param(q)
 	earth.update_attitude = true
 	model_size :=
 		[3]f32 {
@@ -42,7 +38,7 @@ main :: proc() {
 			f32(earth.semiminor_axis),
 			f32(earth.semiminor_axis),
 		} *
-		u_to_rl
+		ast.u_to_rl
 	earth_model := ast.gen_celestialbody_model(
 		earth,
 		model_size = model_size,
@@ -63,7 +59,7 @@ main :: proc() {
 
 	time: f64 = 0.
 	total_time: f64 = (10) * 86400.
-	dt := am.compute_dt_inrange(total_time, 2500, dt_max = 100)
+	dt := ast.compute_dt_inrange(total_time, 2500, dt_max = 100)
 	n_steps := math.abs(int(math.ceil(total_time / dt)))
 	fmt.println("dt:", dt)
 
@@ -71,7 +67,7 @@ main :: proc() {
 	sat.gravity_model = .zonal
 
 	lowest_model: ast.GravityModel = min(sat.gravity_model, earth.gravity_model)
-	
+
 	params := &ast.Params_Gravity_Onebody {
 		body = earth,
 		self_mass = sat.mass,
@@ -84,14 +80,14 @@ main :: proc() {
 	N_itr: int : 1000
 
 	for itr := 0; itr < N_itr; itr += 1 {
-		state = am.posvel_to_state(sat.pos, sat.vel)
+		state = ast.posvel_to_state(sat.pos, sat.vel)
 		// rando1 := rand.float64_uniform(0, 10)
 		// rando2 := rand.float64_uniform(0, 10)
 		// rando3 := rand.float64_normal(0, 10)
 		// state[0] += rando1
 		// state[1] += rando2
 		// state[2] += rando3
-		_, _ = am.integrate_single_fixed(
+		_, _ =ast.integrate_single_fixed(
 			ast.gravity_onebody,
 			0,
 			total_time,
@@ -118,7 +114,7 @@ main :: proc() {
 		sep = "",
 	)
 
-	dtt := am.compute_dt_iterative(
+	dtt := ast.compute_dt_iterative(
 		-total_time,
 		N_max = 10,
 		dt_max = 10,
@@ -128,7 +124,11 @@ main :: proc() {
 
 	// fmt.println(dtt, steps)
 	// for state in states {
-	// 	pos, vel := am.state_to_posvel(state)
-	// 	fmt.println(am.mag(pos))
+	// 	pos, vel := state_to_posvel(state)
+	// 	fmt.println(mag(pos))
 	// }
+	radec := ast.cart_to_radec([3]f64{1., 2, 3})
+	fmt.println(radec)
+	val := ast.convert_linear(f64(10.), .METER, .FOOT)
+	fmt.println(val)
 }

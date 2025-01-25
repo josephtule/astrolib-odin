@@ -7,9 +7,6 @@
 - [ ] Add celestial body constuctor
   - [ ] compute mass/mu depending on input
   - [ ] compute radii (semimajor, semiminor, mean) based on input
-- [ ] Profile and speed up simulation
-  - [ ] add multi-threading (separate translational and rotational dynamics?)
-    - [ ] satellite and body translation dynamics are decoupled (satellites only depend on bodies and bodies only update at the very end)
   - [x] different integrators
 - [ ] Add game states (paused, play, restart, etc.)
   - [x] paused
@@ -72,6 +69,10 @@
   - [x] jd in system
   - [ ] simulation current time
 - [x] orbital elements should be adjusted to equatorial plane
+- [ ] Generate orbit from observations
+  - [ ] RA/Dec
+  - [ ] Az/El
+  - [ ] observations based on observer long/lat/height (geoc and geod) -> equatorial cartesian (rotated to planet) -> inertial cartesian (rotated to inertial frame)
 
 ## Visual
 
@@ -83,13 +84,22 @@
 - [x] Add different cameras (inertial/origin, satellite/body, fixed)
   - NOTE: currently only locks, cannot pan
   - [ ] adjust clipping planes dynamically depending on distance to target
+  - [ ] change azel to degrees
 - [x] Move trail, axes, and position vector draws to update_satellite_model
 - [ ] Optimize trail update and drawing
 - [ ] Move trail length and update rates into satellite model
 - [ ] Add change trail length
   - [ ] if trail length updated, dont reset, just append more to the end?
-- [ ] Move to raw opengl for performance?
 - [ ] add trails, axes, and position vector to celestial bodies
+
+## Performance
+
+- [ ] Profile and speed up simulation
+  - [ ] add multi-threading (separate translational and rotational dynamics?)
+    - [ ] satellite and body translation dynamics are decoupled (satellites only depend on bodies and bodies only update at the very end)
+- [ ] Move to raw opengl for performance?
+- [ ] z-axis jittery in close satellites (i think this might have to do with camera updates)
+- [ ] random lag spikes every once in a while (from 2kfps to 300fps)
 
 ## UI/Controls
 
@@ -110,5 +120,4 @@
 
 ## Misc
 
-- [ ] z-axis jittery in close satellites (i think this might have to do with camera updates)
 - [x] Organize TODO

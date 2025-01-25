@@ -4,7 +4,6 @@ import "core:math"
 import la "core:math/linalg"
 import rl "vendor:raylib"
 
-import am "../astromath"
 
 PosVel :: struct {
 	pos, vel, pos_origin: [3]f32,
@@ -16,8 +15,8 @@ PosVel :: struct {
 }
 
 update_posvel :: #force_inline proc(pv: ^PosVel, pos, vel: [3]f64) {
-	pv.pos = am.cast_f32(pos) * u_to_rl
-	pv.vel = am.cast_f32(vel) * u_to_rl * pv.vel_scale
+	pv.pos = cast_f32(pos) * u_to_rl
+	pv.vel = cast_f32(vel) * u_to_rl * pv.vel_scale
 }
 
 set_pos_origin :: #force_inline proc(pv: ^PosVel, system: AstroSystem) {
@@ -26,10 +25,10 @@ set_pos_origin :: #force_inline proc(pv: ^PosVel, system: AstroSystem) {
 		target_ind := system.id[pv.target_id]
 		if pv.target_id >= g_body_id_base {
 			// target is a body
-			pv.pos_origin = am.cast_f32(system.bodies[target_ind].pos) * u_to_rl
+			pv.pos_origin = cast_f32(system.bodies[target_ind].pos) * u_to_rl
 		} else {
 			// target is satellite
-			pv.pos_origin = am.cast_f32(system.satellites[target_ind].pos) * u_to_rl
+			pv.pos_origin = cast_f32(system.satellites[target_ind].pos) * u_to_rl
 		}
 	}
 }

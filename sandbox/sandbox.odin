@@ -1,8 +1,6 @@
 package sandbox
 
 import ast "../astrolib"
-import am "../astromath"
-
 
 import "core:fmt"
 import "core:math"
@@ -51,7 +49,7 @@ main2 :: proc() {
 	append(&s1, person{age = 3, height = 2})
 	append(&s1, person{age = 3, height = 2})
 	append(&s1, person{age = 3, height = 2})
-	s2 = am.copy_soa_array(s1)
+	s2 = ast.copy_soa_array(s1)
 	s1[0].age = 999
 	fmt.println(s2[0].age)
 }

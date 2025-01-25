@@ -1,4 +1,4 @@
-package astromath
+package astrolib
 
 import "core:fmt"
 import "core:math"

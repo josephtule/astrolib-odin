@@ -1,10 +1,9 @@
-package astromath
+package astrolib
 
 import "core:math"
 import la "core:math/linalg"
 
-deg_to_rad :: math.PI / 180.
-rad_to_deg :: 180. / math.PI
+
 
 
 ecc_from_flat :: #force_inline proc(flat: $T) -> T {

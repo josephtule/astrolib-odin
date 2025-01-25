@@ -4,10 +4,6 @@ import "core:math"
 import la "core:math/linalg"
 import rl "vendor:raylib"
 
-import am "../astromath"
-
-
-u_to_rl :: am.u_to_rl
 g_body_id_base: int : 0
 g_body_id: int = g_body_id_base
 
@@ -29,7 +25,7 @@ CelestialBody :: struct {
 	J:               [7]f64,
 	C:               ^[dynamic]f64,
 	S:               ^[dynamic]f64,
-	base_unit:       am.UnitsLinear,
+	base_unit:       UnitsLinear,
 	name:            string,
 	fixed:           bool,
 	update_attitude: bool,
@@ -54,7 +50,7 @@ update_body :: #force_inline proc(
 	model: ^Model,
 	state_new: ^[6]f64,
 	dt, time, time_scale: f64,
-	integrator: am.IntegratorType,
+	integrator: IntegratorType,
 	params_translate, params_attitude: rawptr,
 ) {
 	if body.update_attitude {
@@ -63,15 +59,15 @@ update_body :: #force_inline proc(
 		// TODO: figure out how to optimize this
 		angle := body.omega * dt * time_scale
 		rotz := la.matrix4_from_euler_angle_z(-angle)
-		attitude := la.matrix4_from_quaternion(am.euler_param_to_quaternion(body.ep))
+		attitude := la.matrix4_from_quaternion(euler_param_to_quaternion(body.ep))
 		q := la.normalize0(la.quaternion_from_matrix4(attitude * rotz))
-		body.ep = am.quaternion_to_euler_param(q)
+		body.ep = quaternion_to_euler_param(q)
 	}
 
 	if !body.fixed {
 		// update body translation
-		state_current := am.posvel_to_state(body.pos, body.vel)
-		_, state_new^ = am.integrate_step(
+		state_current := posvel_to_state(body.pos, body.vel)
+		_, state_new^ = integrate_step(
 			gravity_nbody,
 			time,
 			state_current,
@@ -85,7 +81,7 @@ update_body :: #force_inline proc(
 draw_body :: #force_inline proc(model: ^Model, body: CelestialBody) {
 	update_body_model(model, body)
 
-	rl.DrawModel(model.model, am.origin_f32, 1, model.tint)
+	rl.DrawModel(model.model, origin_f32, 1, model.tint)
 
 	if model.axes.draw {
 		draw_axes(body.update_attitude, &model.axes, model.model)
@@ -104,18 +100,18 @@ update_body_model :: #force_inline proc(
 
 	// set rotation
 	// if body.update_attitude {
-	q := am.euler_param_to_quaternion(am.cast_f32(body.ep))
+	q := euler_param_to_quaternion(cast_f32(body.ep))
 	model.transform = rl.QuaternionToMatrix(q)
 	// } else {
 	// 	model.transform = (# row_major matrix[4, 4]f32)(la.MATRIX4F32_IDENTITY)
 	// }
 
 	// set scale 
-	am.SetScale(&model.transform, scale)
+	SetScale(&model.transform, scale)
 
 	// set translation
-	body_pos_f32 := am.cast_f32(body.pos) * u_to_rl
-	am.SetTranslation(&model.transform, body_pos_f32)
+	body_pos_f32 := cast_f32(body.pos) * u_to_rl
+	SetTranslation(&model.transform, body_pos_f32)
 
 }
 
@@ -128,7 +124,7 @@ gen_celestialbody :: #force_inline proc(
 	semiminor_axis: f64 = 0,
 	mean_radius: f64 = 0,
 	gravity_model: GravityModel = .pointmass,
-	units: am.UnitsLinear = .KILOMETER,
+	units: UnitsLinear = .KILOMETER,
 ) -> (
 	body: CelestialBody,
 ) {
@@ -143,8 +139,8 @@ gen_celestialbody :: #force_inline proc(
 	// compute parameters
 	body.mass = mass // mass
 	#partial switch units {
-	case .KILOMETER: body.mu = am.G_km * body.mass
-	case .METER: body.mu = am.G_m * body.mass
+	case .KILOMETER: body.mu = G_km * body.mass
+	case .METER: body.mu = G_m * body.mass
 	case:
 		panic("ERROR: input units not yet supported")
 	}
@@ -192,9 +188,9 @@ gen_celestialbody_model :: #force_inline proc(
 	// local axes
 	model.axes.draw = true
 	model.axes.size = 2 * f32(body.semimajor_axis) * u_to_rl
-	model.axes.x = am.xaxis_f32 
-	model.axes.y = am.yaxis_f32 
-	model.axes.z = am.zaxis_f32 
+	model.axes.x = xaxis_f32 
+	model.axes.y = yaxis_f32 
+	model.axes.z = zaxis_f32 
 
 	// // position/velocity vectors
 	// model.posvel.draw_pos = true
@@ -245,7 +241,7 @@ add_celestialbody_copy :: #force_inline proc(
 
 
 wgs84 :: #force_inline proc(
-	units: am.UnitsLinear = .KILOMETER,
+	units: UnitsLinear = .KILOMETER,
 	max_degree: int = 0,
 	max_order: int = 0,
 	id: int = g_body_id,
@@ -276,7 +272,7 @@ wgs84 :: #force_inline proc(
 			},
 			base_unit      = units,
 		}
-		earth.mass = earth.mu / am.G_m
+		earth.mass = earth.mu / G_m
 	case .KILOMETER:
 		earth = CelestialBody {
 			mu             = 3.986004418000000e+05,
@@ -301,7 +297,7 @@ wgs84 :: #force_inline proc(
 			},
 			base_unit      = units,
 		}
-		earth.mass = earth.mu / am.G_km
+		earth.mass = earth.mu / G_km
 	case:
 		panic("ERROR: units for wgs84 are incorrect")
 	}
@@ -312,7 +308,7 @@ wgs84 :: #force_inline proc(
 }
 
 luna_params :: #force_inline proc(
-	units: am.UnitsLinear = .KILOMETER,
+	units: UnitsLinear = .KILOMETER,
 	max_degree: int = 0,
 	max_order: int = 0,
 	id: int = g_body_id,
@@ -332,8 +328,8 @@ luna_params :: #force_inline proc(
 			J              = {0, 0, 202.7e-6, 0, 0, 0, 0},
 			base_unit      = units,
 		}
-		moon.eccentricity = am.ecc_from_flat(moon.flattening)
-		moon.mass = moon.mu / am.G_km
+		moon.eccentricity = ecc_from_flat(moon.flattening)
+		moon.mass = moon.mu / G_km
 	case .METER:
 		moon = {
 			mu             = 4902.800118 * 1000 * 1000 * 1000,
@@ -347,8 +343,8 @@ luna_params :: #force_inline proc(
 			J              = {0, 0, 202.7e-6, 0, 0, 0, 0},
 			base_unit      = units,
 		}
-		moon.eccentricity = am.ecc_from_flat(moon.flattening)
-		moon.mass = moon.mu / am.G_m
+		moon.eccentricity = ecc_from_flat(moon.flattening)
+		moon.mass = moon.mu / G_m
 	case:
 		panic("ERROR: incorrect units for the moon")
 	}

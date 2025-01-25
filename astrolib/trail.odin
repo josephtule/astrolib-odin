@@ -5,8 +5,6 @@ import "core:math"
 import la "core:math/linalg"
 import rl "vendor:raylib"
 
-import am "../astromath"
-
 
 Trail :: struct {
 	pos:       [dynamic][3]f32,
@@ -26,7 +24,7 @@ create_trail :: #force_inline proc(
 ) where intrinsics.type_is_float(T) {
 	for i := 0; i < N_trail_sat; i += 1 {
 		// for i in 0..<N_trail_sat {
-		append_elem(&trail.pos, am.cast_f32(pos) * u_to_rl)
+		append_elem(&trail.pos, cast_f32(pos) * u_to_rl)
 	}
 	trail.index = 0
 }
@@ -43,7 +41,7 @@ reset_trail :: #force_inline proc(
 	pos: [3]$T,
 ) where intrinsics.type_is_float(T) {
 	for i := 0; i < N_trail_sat; i += 1 {
-		trail.pos[i] = am.cast_f32(pos) * u_to_rl
+		trail.pos[i] = cast_f32(pos) * u_to_rl
 	}
 	trail.index = 0
 	trail.increment = 0
@@ -53,7 +51,7 @@ update_trail :: #force_inline proc(new_pos: [3]f64, model: ^Model) {
 	increment = (increment + 1)
 	if increment == mod_trail_sat {
 		increment = 0
-		pos[index] = am.cast_f32(new_pos) * u_to_rl
+		pos[index] = cast_f32(new_pos) * u_to_rl
 		index = (index + 1)
 		if index == N_trail_sat {
 			index = 0 // Wrap around without modulo

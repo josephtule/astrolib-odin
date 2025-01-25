@@ -3,7 +3,6 @@ package astrolib
 import "core:math"
 import la "core:math/linalg"
 
-import am "../astromath"
 
 GravityModel :: enum {
 	pointmass          = 0,
@@ -28,9 +27,9 @@ gravity_nbody :: #force_inline proc(
 
 	params := cast(^Params_Gravity_Nbody)(params)
 	r: [3]f64 = {x[0], x[1], x[2]}
-	// am.set_vector_slice(&r, x, l1 = 3)
+	// set_vector_slice(&r, x, l1 = 3)
 	v: [3]f64 = {x[3], x[4], x[5]}
-	// am.set_vector_slice_1(&v, x, s1 = 3, l1 = 3)
+	// set_vector_slice_1(&v, x, s1 = 3, l1 = 3)
 
 	a: [3]f64
 	for &body, i in params.bodies {
@@ -57,7 +56,7 @@ gravity_nbody :: #force_inline proc(
 
 		}
 	}
-	// am.set_vector_slice_2(&dxdt, v, a)
+	// set_vector_slice_2(&dxdt, v, a)
 	dxdt = {v[0], v[1], v[2], a[0], a[1], a[2]}
 	return dxdt
 }
@@ -77,16 +76,16 @@ gravity_onebody :: #force_inline proc(
 
 	params := cast(^Params_Gravity_Onebody)(params)
 	r: [3]f64 = {x[0], x[1], x[2]}
-	// am.set_vector_slice(&r, x, l1 = 3)
+	// set_vector_slice(&r, x, l1 = 3)
 	v: [3]f64 = {x[3], x[4], x[5]}
-	// am.set_vector_slice_1(&v, x, s1 = 3, l1 = 3)
+	// set_vector_slice_1(&v, x, s1 = 3, l1 = 3)
 
 	a: [3]f64
 	body := params.body
 	r_rel := r - body.pos
 
 	// check collision
-	if am.mag(r_rel) < (params.self_radius + body.semimajor_axis) {
+	if mag(r_rel) < (params.self_radius + body.semimajor_axis) {
 		// collision resolution
 		// TODO: fix collision resolution
 		return dxdt
@@ -103,7 +102,7 @@ gravity_onebody :: #force_inline proc(
 		panic("ERROR: invalid gravity model")
 	}
 
-	// am.set_vector_slice_2(&dxdt, v, a)
+	// set_vector_slice_2(&dxdt, v, a)
 	dxdt = {v[0], v[1], v[2], a[0], a[1], a[2]}
 	return dxdt
 }
@@ -120,20 +119,20 @@ gravity_pointmass :: #force_inline proc(
 
 	params := cast(^Params_Gravity_Pointmass)(params)
 	r: [3]f64 = {x[0], x[1], x[2]}
-	// am.set_vector_slice(&r, x, l1 = 3)
+	// set_vector_slice(&r, x, l1 = 3)
 	v: [3]f64 = {x[3], x[4], x[5]}
-	// am.set_vector_slice_1(&v, x, s1 = 3, l1 = 3)
+	// set_vector_slice_1(&v, x, s1 = 3, l1 = 3)
 
-	r_mag := am.mag(r)
+	r_mag := mag(r)
 
 	a := accel_pointmass(r, params.mu)
-	// am.set_vector_slice_2(&dxdt, v, a)
+	// set_vector_slice_2(&dxdt, v, a)
 	dxdt = {v[0], v[1], v[2], a[0], a[1], a[2]}
 
 	return dxdt
 }
 accel_pointmass :: #force_inline proc(r: [3]f64, mu: f64) -> (a: [3]f64) {
-	r_mag := am.mag(r)
+	r_mag := mag(r)
 	a = -mu / (r_mag * r_mag * r_mag) * r
 	return a
 }
@@ -158,13 +157,13 @@ gravity_zonal :: #force_inline proc(
 
 	params := cast(^Params_Gravity_SphHarmon)(params)
 	r: [3]f64 = {x[0], x[1], x[2]}
-	// am.set_vector_slice(&r, x, l1 = 3)
+	// set_vector_slice(&r, x, l1 = 3)
 	v: [3]f64 = {x[3], x[4], x[5]}
-	// am.set_vector_slice_1(&v, x, s1 = 3, l1 = 3)
+	// set_vector_slice_1(&v, x, s1 = 3, l1 = 3)
 
 	a := accel_pointmass(r, params.mu)
 	a += accel_zonal(r, params.mu, params.R_cb, params.J, params.max_degree)
-	// am.set_vector_slice_2(&dxdt, v, a)
+	// set_vector_slice_2(&dxdt, v, a)
 	dxdt = {v[0], v[1], v[2], a[0], a[1], a[2]}
 
 	return dxdt
@@ -177,8 +176,8 @@ accel_zonal :: #force_inline proc(
 ) -> (
 	a: [3]f64,
 ) {
-	r_mag := am.mag(r)
-	r_mag2 := am.mag2(r)
+	r_mag := mag(r)
+	r_mag2 := mag2(r)
 	Rr := R_cb / r_mag
 	mur2 := mu / r_mag2
 	r0r := r[0] / r_mag

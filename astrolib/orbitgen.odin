@@ -1,7 +1,5 @@
 package astrolib
 
-
-import am "../astromath"
 import "core:math"
 import la "core:math/linalg"
 import "core:math/rand"
@@ -23,7 +21,7 @@ coe_to_rv :: #force_inline proc(
 	a, ecc, inc, raan, aop, ta: f64,
 	cb: CelestialBody,
 	tol: f64 = 1.0e-12,
-	units_in: am.UnitsAngle = .DEGREES,
+	units_in: UnitsAngle = .DEGREES,
 ) -> (
 	pos, vel: [3]f64,
 ) {
@@ -72,14 +70,14 @@ coe_to_rv :: #force_inline proc(
 		0.,
 	}
 
-	// rotate into equatorial frame
-	seq := [3]am.RotAxis{.z,.x,.z}
-	R := am.ea_to_dcm([3]f64{-aop, -inc, -raan}, seq)
+	// rotate into equatorial frame (body fixed)
+	seq := [3]RotAxis{.z,.x,.z}
+	R := ea_to_dcm([3]f64{-aop, -inc, -raan}, seq)
 	pos = R * r_pqw
 	vel = R * v_pqw
 
 	// rotate into inertial frame
-	R = la.matrix3_from_quaternion(am.euler_param_to_quaternion(cb.ep)) // rotation to equatorial plane
+	R = la.matrix3_from_quaternion(euler_param_to_quaternion(cb.ep)) // rotation to equatorial plane
 	pos = R * pos + cb.pos
 	vel = R * vel + cb.vel
 	return pos, vel
@@ -89,29 +87,29 @@ coe_to_rv :: #force_inline proc(
 rv_to_coe :: #force_inline proc(
 	pos, vel: [3]f64, // inertial input
 	cb: CelestialBody,
-	units_out: am.UnitsAngle = .DEGREES,
+	units_out: UnitsAngle = .DEGREES,
 	tol: f64 = 1.0e-12,
 ) -> (
 	sma, ecc, inc, raan, aop, ta: f64,
 ) {
 	// FIXME: not sure if this is right
-	// rotate into equatorial frame
+	// rotate into equatorial frame (body fixed)
 	R := la.transpose(
-		la.matrix3_from_quaternion(am.euler_param_to_quaternion(cb.ep)),
+		la.matrix3_from_quaternion(euler_param_to_quaternion(cb.ep)),
 	)
 	pos := R * (pos - cb.pos)
 	vel := R * (vel - cb.vel)
 
-	r_mag := am.mag(pos)
-	v_mag := am.mag(vel)
+	r_mag := mag(pos)
+	v_mag := mag(vel)
 
 	h := la.cross(pos, vel)
-	h_mag := am.mag(h)
+	h_mag := mag(h)
 
 	inc = la.acos(h[2] / h_mag)
 
 	N := la.cross([3]f64{0, 0, 1}, h)
-	N_mag := am.mag(N)
+	N_mag := mag(N)
 
 	raan = la.acos(N[0] / N_mag)
 	if N[1] < 0 {
@@ -121,7 +119,7 @@ rv_to_coe :: #force_inline proc(
 	v_r := la.dot(pos, vel) / r_mag
 	e :=
 		1. / cb.mu * ((v_mag * v_mag - cb.mu / r_mag) * pos - la.dot(pos, vel) * vel)
-	e_mag := am.mag(e)
+	e_mag := mag(e)
 	ecc = e_mag
 
 	aop = la.acos(la.dot(N, e) / N_mag / e_mag)
@@ -129,7 +127,7 @@ rv_to_coe :: #force_inline proc(
 		aop = 2 * math.PI - aop
 	}
 
-	ta = real(am.acos_complex(la.dot(e, pos) / e_mag / r_mag))
+	ta = real(acos_complex(la.dot(e, pos) / e_mag / r_mag))
 	if v_r < 0 {
 		ta = 2 * math.PI - ta
 	}
@@ -145,10 +143,10 @@ rv_to_coe :: #force_inline proc(
 	}
 
 	if units_out == .DEGREES {
-		inc = am.rad_to_deg * inc
-		raan = am.rad_to_deg * raan
-		aop = am.rad_to_deg * aop
-		ta = am.rad_to_deg * ta
+		inc = rad_to_deg * inc
+		raan = rad_to_deg * raan
+		aop = rad_to_deg * aop
+		ta = rad_to_deg * ta
 	}
 
 
@@ -185,7 +183,7 @@ gen_rand_coe :: #force_inline proc(
 	ecc_max := ecc_max
 	rp_cond: bool = false
 	iter := 0
-	for !rp_cond && iter < am.max_iter_small {
+	for !rp_cond && iter < max_iter_small {
 		if sma_max == -1 {
 			sma_max = 100 * cb.semimajor_axis
 		}

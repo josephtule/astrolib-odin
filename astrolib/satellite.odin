@@ -1,7 +1,5 @@
 package astrolib
 
-import am "../astromath"
-
 import "core:fmt"
 import "core:math"
 import la "core:math/linalg"
@@ -24,8 +22,8 @@ Satellite :: struct {
 	mass:                 f64,
 	inertia, inertia_inv: matrix[3, 3]f64,
 	radius:               f64, // hardbody radius
-	linear_units:         am.UnitsLinear,
-	angular_units:        am.UnitsAngle,
+	linear_units:         UnitsLinear,
+	angular_units:        UnitsAngle,
 	gravity_model:        GravityModel,
 	update_attitude:      bool,
 	info:                 SatelliteInfo,
@@ -43,8 +41,8 @@ SatelliteInfo :: struct {
 // -----------------------------------------------------------------------------
 draw_satellite :: #force_inline proc(model: ^Model, sat: Satellite) {
 	update_satellite_model(model, sat)
-	sat_pos_f32 := am.cast_f32(sat.pos) * u_to_rl
-	rl.DrawModel(model.model, am.origin_f32, 1, model.tint)
+	sat_pos_f32 := cast_f32(sat.pos) * u_to_rl
+	rl.DrawModel(model.model, origin_f32, 1, model.tint)
 
 	if model.axes.draw {
 		draw_axes(sat.update_attitude, &model.axes, model.model)
@@ -62,17 +60,17 @@ update_satellite_model :: #force_inline proc(
 	// set rotation
 	// model.transform = (# row_major matrix[4, 4]f32)(la.MATRIX4F32_IDENTITY)
 	// if sat.update_attitude {
-	q := am.euler_param_to_quaternion(am.cast_f32(sat.ep))
+	q := euler_param_to_quaternion(cast_f32(sat.ep))
 	N_R_B := rl.QuaternionToMatrix(q)
 	model.transform = N_R_B
 	// }
 
 	// set scale 
-	am.SetScale(&model.transform, scale)
+	SetScale(&model.transform, scale)
 
 	// set translation
-	sat_pos_f32 := am.cast_f32(sat.pos) * u_to_rl
-	am.SetTranslation(&model.transform, sat_pos_f32)
+	sat_pos_f32 := cast_f32(sat.pos) * u_to_rl
+	SetTranslation(&model.transform, sat_pos_f32)
 }
 
 
@@ -83,13 +81,13 @@ update_satellite :: #force_inline proc(
 	sat: ^Satellite,
 	model: ^Model,
 	dt, time, time_scale: f64,
-	integrator: am.IntegratorType,
+	integrator: IntegratorType,
 	params_translate, params_attitude: rawptr,
 ) {
 	// attitude dynamics
 	if sat.update_attitude {
-		attitude_current := am.epomega_to_state(sat.ep, sat.omega)
-		_, attitude_new := am.integrate_step(
+		attitude_current := epomega_to_state(sat.ep, sat.omega)
+		_, attitude_new := integrate_step(
 			euler_param_dynamics,
 			time,
 			attitude_current,
@@ -98,12 +96,12 @@ update_satellite :: #force_inline proc(
 			integrator,
 		)
 		sat.ep = la.normalize0(sat.ep)
-		sat.ep, sat.omega = am.state_to_epomega(attitude_new)
+		sat.ep, sat.omega = state_to_epomega(attitude_new)
 	}
 
 	// translational dynamics
-	state_current := am.posvel_to_state(sat.pos, sat.vel)
-	_, state_new := am.integrate_step(
+	state_current := posvel_to_state(sat.pos, sat.vel)
+	_, state_new := integrate_step(
 		gravity_nbody,
 		time,
 		state_current,
@@ -111,7 +109,7 @@ update_satellite :: #force_inline proc(
 		params_translate,
 		integrator,
 	)
-	sat.pos, sat.vel = am.state_to_posvel(state_new)
+	sat.pos, sat.vel = state_to_posvel(state_new)
 	update_trail(sat.pos, model)
 }
 
@@ -175,7 +173,7 @@ gen_satmodel :: #force_inline proc(
 	m.model = rl.LoadModelFromMesh(mesh)
 	m.model.transform = (# row_major matrix[4, 4]f32)(la.MATRIX4F32_IDENTITY)
 	m.model_size = model_size
-	am.SetTranslation(&m.model.transform, am.cast_f32(sat.pos * u_to_rl))
+	SetTranslation(&m.model.transform, cast_f32(sat.pos * u_to_rl))
 	m.tint = tint
 
 	// trail
@@ -186,9 +184,9 @@ gen_satmodel :: #force_inline proc(
 	// local axes
 	m.axes.draw = true
 	m.axes.size = 5 * f32(sat.radius) * u_to_rl
-	m.axes.x = am.xaxis_f32 * m.axes.size
-	m.axes.y = am.yaxis_f32 * m.axes.size
-	m.axes.z = am.zaxis_f32 * m.axes.size
+	m.axes.x = xaxis_f32 * m.axes.size
+	m.axes.y = yaxis_f32 * m.axes.size
+	m.axes.z = zaxis_f32 * m.axes.size
 
 	// position/velocity vectors
 	m.posvel.draw_pos = true
