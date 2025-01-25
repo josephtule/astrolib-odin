@@ -1,10 +1,6 @@
 package astrolib
 
 import "core:math"
-import la "core:math/linalg"
-
-
-
 
 ecc_from_flat :: #force_inline proc(flat: $T) -> T {
 	ecc := math.sqrt(2 * flat - flat * flat)

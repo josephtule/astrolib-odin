@@ -1,7 +1,34 @@
 package astrolib
 
 import "core:math"
-// import la "core:math/linalg"
+import la "core:math/linalg"
+
+
+eq_to_inertial :: #force_inline proc "contextless" (
+	vin: [3]f64,
+	cb: CelestialBody,
+) -> (
+	vout: [3]f64,
+) #no_bounds_check {
+	R := la.matrix3_from_quaternion(euler_param_to_quaternion(cb.ep)) // rotation to equatorial plane
+	vout = R * vin + cb.pos
+
+	return vout
+}
+
+intertial_to_eq :: #force_inline proc "contextless" (
+	vin: [3]f64,
+	cb: CelestialBody,
+) -> (
+	vout: [3]f64,
+) #no_bounds_check {
+	R := la.transpose(
+		la.matrix3_from_quaternion(euler_param_to_quaternion(cb.ep)),
+	)
+	vout = R * (vin - cb.pos)
+
+	return vout
+}
 
 azzen_to_cart :: #force_inline proc "contextless" (
 	azzen: [3]$T,
@@ -113,7 +140,7 @@ radec_to_cart :: #force_inline proc "contextless" (
 	units: UnitsAngle = .DEGREES,
 ) -> (
 	r: [3]T,
-) where intrinsics.type_is_float(t) {
+) #no_bounds_check {
 	ra := radec[0]
 	dec := radec[1]
 	r_mag := radec[2]
@@ -141,7 +168,7 @@ geod_to_eqfixed :: #force_inline proc "contextless" (
 	units: UnitsAngle,
 ) -> (
 	r: [3]T,
-) where intrinsics.type_is_float(T) #no_bounds_check {
+) #no_bounds_check {
 	// will inherit the units of input height
 	lat := latlonh.x
 	lon := latlonh.y
@@ -156,10 +183,10 @@ geod_to_eqfixed :: #force_inline proc "contextless" (
 	e2 := 2 * f - f * f
 	a := cb.semimajor_axis
 
-	slat = math.sin(lat)
-	clat = math.cos(lat)
+	slat := math.sin(lat)
+	clat := math.cos(lat)
 
-	N = a / math.sqrt(1. - e2 * slat * slat)
+	N := a / math.sqrt(1. - e2 * slat * slat)
 
 	r.x = (N + h) * clat * math.cos(lon)
 	r.y = (N + h) * clat * math.sin(lon)
@@ -174,7 +201,7 @@ geoc_to_eqfixed :: #force_inline proc "contextless" (
 	units: UnitsAngle,
 ) -> (
 	r: [3]T,
-) where intrinsics.type_is_float(T) #no_bounds_check {
+) #no_bounds_check {
 	lat := latlonr.x
 	lon := latlonr.y
 	r_mag := latlonr.z
@@ -196,12 +223,12 @@ eqfixed_to_geod :: #force_inline proc "contextless" (
 	units: UnitsAngle = .DEGREES,
 ) -> (
 	latlonh: [3]T,
-) where intrinsics.type_is_float(T) #no_bounds_check {
+) #no_bounds_check {
 	r_mag := mag(r)
 	r_tilde_mag2 := r.x * r.x + r.y * r.y
 	r_tilde_mag := math.sqrt(r_tilde_mag2)
 
-	z2 := z * z
+	z2 := r.z * r.z
 
 	a := cb.semimajor_axis
 	b := a * (1. - cb.flattening)
@@ -223,28 +250,39 @@ eqfixed_to_geod :: #force_inline proc "contextless" (
 			P * (1. - e2) * z2 / (Q * (1. + Q)) -
 			P * r_tilde_mag2 / 2.,
 		)
-	U := math.sqrt(math.pow(r_tilde - e2 * r0, 2) + z2)
-	V := math.sqrt(math.pow(r_tilde - e2 * r0, 2) + (1. - e2) * z2)
-	z0 := b2 * z / (a * V)
+	U := math.sqrt(math.pow(r_tilde_mag - e2 * r0, 2) + z2)
+	V := math.sqrt(math.pow(r_tilde_mag - e2 * r0, 2) + (1. - e2) * z2)
+	z0 := b2 * r.z / (a * V)
 
-	h = U * (1. - b2 / (a * V))
-	lat = math.atan2((r.z + ep2 * z0), r_tilde)
-	lon = math.atan2(r.y, r.x)
-    
-    if units != .DEGREES {
-        lat = convert_angle(lat, .RADIANS, units)
-        lon = convert_angle(lon, .RADIANS, units)
-    }
-    latlonh = {lat, lon, h}
+	h := U * (1. - b2 / (a * V))
+	lat := math.atan2((r.z + ep2 * z0), r_tilde_mag)
+	lon := math.atan2(r.y, r.x)
+
+	if units != .DEGREES {
+		lat = convert_angle(lat, .RADIANS, units)
+		lon = convert_angle(lon, .RADIANS, units)
+	}
+	latlonh = {lat, lon, h}
 
 	return latlonh
 }
 eqfixed_to_geoc :: #force_inline proc "contextless" (
 	r: [3]$T,
+	units: UnitsAngle = .DEGREES,
 ) -> (
 	latlonr: [3]T,
-) where intrinsics.type_is_float(T) #no_bounds_check {
+) #no_bounds_check {
+	r_tilde_mag := math.sqrt(r.x * r.x + r.y + r.y)
 
+	lat := math.atan2(r.y, r.x)
+	lon := math.atan2(r.z, r_tilde_mag)
+	r_mag := mag(r)
+
+	if units != .RADIANS {
+		lat = convert_angle(lat, .RADIANS, units)
+		lon = convert_angle(lon, .RADIANS, units)
+	}
+	latlonr = {lat, lon, r_mag}
 
 	return latlonr
 }

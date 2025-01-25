@@ -1,11 +1,6 @@
 package astrolib
 
-import "core:fmt"
-import "core:math"
-import la "core:math/linalg"
 import "core:slice"
-import "core:sync"
-import "core:thread"
 import rl "vendor:raylib"
 
 

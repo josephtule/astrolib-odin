@@ -1,8 +1,6 @@
 package astrolib
 
-import "core:fmt"
 import "core:math"
-import la "core:math/linalg"
 
 // NOTE: direction cosine matrix (DCM) notation: [BN]: from N->B, [NB]: B->N
 // Odin/Raylib is N->B by default

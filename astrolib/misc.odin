@@ -25,9 +25,8 @@ eps_f32 :: proc(x: f32) -> f32 {
 	} else if math.is_nan(x) || math.is_inf(x) {
 		return math.nan_f32()
 	} else {
-		// extract exponent
 		exponent := math.floor(math.log2(math.abs(x)))
-		return math.pow(2.0, exponent - 23) // 52 is the mantissa bit count in double precision
+		return math.pow(2.0, exponent - 23)
 	}
 }
 eps_f16 :: proc(x: f16) -> f16 {
@@ -36,17 +35,16 @@ eps_f16 :: proc(x: f16) -> f16 {
 	} else if math.is_nan(x) || math.is_inf(x) {
 		return math.nan_f16()
 	} else {
-		// extract exponent
 		exponent := math.floor(math.log2(math.abs(x)))
-		return math.pow_f16(2.0, exponent - 10) // 52 is the mantissa bit count in double precision
+		return math.pow_f16(2.0, exponent - 10)
 	}
 }
 
-// copy_soa_array :: proc(orig: $T/#soa[dynamic]$E) -> T {
-// 	out: #soa[dynamic]E
-// 	for elem in orig {
-// 		append(&out, elem)
-// 	}
-// 	a=1
-// 	return out
-// }
+
+copy_soa_array :: proc(orig: $T/#soa[dynamic]$E) -> T {
+	out: #soa[dynamic]E
+	for elem in orig {
+		append(&out, elem)
+	}
+	return out
+}

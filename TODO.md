@@ -70,10 +70,17 @@
   - [ ] simulation current time
 - [x] orbital elements should be adjusted to equatorial plane
 - [ ] Generate orbit from observations
-  - [ ] RA/Dec
-  - [ ] Az/El
+  - [x] RA/Dec -> pos function
+  - [x] Az/El -> pos function 
   - [ ] observations based on observer long/lat/height (geoc and geod) -> equatorial cartesian (rotated to planet) -> inertial cartesian (rotated to inertial frame)
-  - [ ] add remove after collision flag for satellites/bodies
+  - [ ] IOD methods
+    - [ ] gibbs
+    - [ ] herrick-gibbs
+    - [ ] gauss
+    - [ ] laplace
+  - [ ] implement functions that transform from topocentric to equatorial to inertial
+- [ ] add remove after collision flag for satellites/bodies
+  - [ ] 
 
 ## Visual
 

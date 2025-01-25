@@ -1,8 +1,6 @@
 package astrolib
 
-import "core:fmt"
 import "core:math"
-import la "core:math/linalg"
 
 IntegratorType :: enum {
 	rk1, // same as euler 

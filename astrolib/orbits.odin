@@ -1,6 +1,5 @@
 package astrolib
 
-import "core:fmt"
 import "core:math"
 import la "core:math/linalg"
 import "core:math/rand"
@@ -324,3 +323,5 @@ orbital_energy_sma :: #force_inline proc(a, mu: f64) -> f64 {
 orbital_energy_angecc :: #force_inline proc(h: [3]f64, ecc, mu: f64) -> f64 {
 	return -0.5 * (mu * mu / mag2(h) * (1 - ecc * ecc))
 }
+
+

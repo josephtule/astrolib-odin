@@ -19,6 +19,17 @@ magnitude2 :: la.length2
 mag :: la.length
 mag2 :: la.length2
 
+vector_angle :: #force_inline proc "contextless" (
+	v1, v2: [$N]$T,
+	units: UnitsAngle = .DEGREES,
+) -> (
+	angle: T,
+) #no_bounds_check {
+	angle = math.acos(la.dot(v1, v2) / (mag(v2) * mag(v2)))
+
+	return angle
+}
+
 
 posvel_to_state :: #force_inline proc "contextless" (
 	pos, vel: [3]$T,
@@ -83,8 +94,8 @@ state_to_epomega :: #force_inline proc "contextless" (
 set_vector_slice :: proc {
 	set_vector_slice_1,
 	set_vector_slice_2,
-	// set_vector_slice_3,
-	// set_vector_slice_4,
+// set_vector_slice_3,
+// set_vector_slice_4,
 }
 
 set_vector_slice_1 :: #force_inline proc(
@@ -220,3 +231,16 @@ cast_f64 :: #force_inline proc(v: $T/[$N]$E) -> [N]f64 {
 // 		mat[i, i] = vec[i]
 // 	}
 // }
+
+
+vector_contains :: proc {
+	vector_contains_fixed,
+}
+vector_contains_fixed :: proc(val: $T, vec: [$N]T) -> bool {
+	for elem in vec {
+		if val == elem {
+			return true
+		}
+	}
+	return false
+}
