@@ -13,9 +13,9 @@ azzen_to_cart :: #force_inline proc "contextless" (
 	az := azzen.x
 	zen := azzen.y
 	rho := azzen.z
-	if units == .DEGREES {
-		az *= deg_to_rad
-		zen *= deg_to_rad
+	if units != .RADIANS {
+		az = convert_angle(az, units, .RADIANS)
+		zen = convert_angle(zen, units, .RADIANS)
 	}
 
 	r.x = math.sin(zen) * math.cos(az)
@@ -36,9 +36,9 @@ azel_to_cart :: #force_inline proc "contextless" (
 	az := azel.x
 	el := azel.y
 	rho := azel.z
-	if units == .DEGREES {
-		az *= deg_to_rad
-		el *= deg_to_rad
+	if units != .RADIANS {
+		az = convert_angle(az, units, .RADIANS)
+		el = convert_angle(el, units, .RADIANS)
 	}
 
 	r.x = math.cos(el) * math.cos(az)
@@ -58,9 +58,9 @@ cart_to_azzen :: #force_inline proc "contextless" (
 	rho := mag(r)
 	az := math.atan2(r[1], r[0])
 	zen := math.acos(r[2] / rho)
-	if units == .DEGREES {
-		az *= rad_to_deg
-		zen *= rad_to_deg
+	if units != .RADIANS {
+		az = convert_angle(az, .RADIANS, units)
+		zen = convert_angle(zen, .RADIANS, units)
 	}
 
 	azzen = {az, zen, rho}
@@ -79,9 +79,9 @@ cart_to_azel :: #force_inline proc "contextless" (
 	az := math.atan2(r[1], r[0])
 	el := math.asin(r[2] / rho)
 
-	if units == .DEGREES {
-		az *= deg_to_rad
-		el *= deg_to_rad
+	if units != .RADIANS {
+		az = convert_angle(az, .RADIANS, units)
+		el = convert_angle(el, .RADIANS, units)
 	}
 
 	azel = {az, el, rho}
@@ -99,9 +99,9 @@ cart_to_radec :: #force_inline proc "contextless" (
 	ra := math.atan2(r[1], r[0])
 	dec := math.atan2(r[2], math.sqrt(r[0] * r[0] + r[1] * r[1]))
 
-	if units == .DEGREES {
-		ra *= rad_to_deg
-		dec *= rad_to_deg
+	if units != .RADIANS {
+		ra = convert_angle(ra, .RADIANS, units)
+		dec = convert_angle(dec, .RADIANS, units)
 	}
 	radec = {ra, dec, r_mag}
 
@@ -117,9 +117,10 @@ radec_to_cart :: #force_inline proc "contextless" (
 	ra := radec[0]
 	dec := radec[1]
 	r_mag := radec[2]
-	if units == .DEGREES {
-		ra *= deg_to_rad
-		dec *= deg_to_rad
+
+	if units != .RADIANS {
+		ra = convert_angle(ra, units, .RADIANS)
+		dec = convert_angle(dec, units, .RADIANS)
 	}
 
 	cra := math.cos(ra)
@@ -145,9 +146,10 @@ geod_to_eqfixed :: #force_inline proc "contextless" (
 	lat := latlonh.x
 	lon := latlonh.y
 	h := latlonh.z
-	if units == .DEGREES {
-		lat *= deg_to_rad
-		lon *= deg_to_rad
+
+	if units != .RADIANS {
+		lat = convert_angle(lat, units, .RADIANS)
+		lon = convert_angle(lon, units, .RADIANS)
 	}
 
 	f := cb.flattening
@@ -176,9 +178,10 @@ geoc_to_eqfixed :: #force_inline proc "contextless" (
 	lat := latlonr.x
 	lon := latlonr.y
 	r_mag := latlonr.z
-	if units == .DEGREES {
-		lat *= deg_to_rad
-		lon *= deg_to_rad
+
+	if units != .RADIANS {
+		lat = convert_angle(lat, units, .RADIANS)
+		lon = convert_angle(lat, units, .RADIANS)
 	}
 
 	r = radec_to_cart([3]T{lon, lat, r_mag}, units = units)
@@ -186,7 +189,7 @@ geoc_to_eqfixed :: #force_inline proc "contextless" (
 	return r
 }
 
-
+// TODO: finish these two
 eqfixed_to_geod :: #force_inline proc "contextless" (
 	r: [3]$T,
 	units: UnitsAngle = .DEGREES,

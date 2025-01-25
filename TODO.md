@@ -91,6 +91,11 @@
 - [ ] Add change trail length
   - [ ] if trail length updated, dont reset, just append more to the end?
 - [ ] add trails, axes, and position vector to celestial bodies
+  - [ ] trails
+  - [x] axes
+  - [ ] position/velocity vector
+- [ ] Update render/system info at lower frequencies (causing slowdown right now)
+  - [ ] update controls displayed or remove
 
 ## Performance
 

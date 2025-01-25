@@ -313,10 +313,18 @@ main :: proc() {
 
 		rl.EndMode3D()
 		// draw 2D stuff here
+		if rl.IsKeyPressed(.B) {
+			show_render_info = !show_render_info
+		}
+		if show_render_info {
+			render_sim_info(fps, camera_params, asystem^)
+		}
+
 		rl.EndDrawing()
 	}
 }
 
+show_render_info := false
 
 get_delta_time :: proc(current: time.Tick, last: ^time.Tick) -> (dt: f64) {
 	dt = f64(current._nsec - last._nsec) * 1.0e-9
@@ -482,6 +490,7 @@ update_simulation :: proc(
 		sat.update_attitude = true
 		ast.add_satellite(&satellites, sat)
 		ast.add_model_to_array(&satellite_models, sat_model)
+		num_satellites += 1
 		fmt.println("Added satellite (ID):", sat.id)
 	}
 	if rl.IsKeyDown(.RIGHT_SHIFT) && rl.IsKeyPressed(.PERIOD) {
@@ -511,6 +520,7 @@ update_simulation :: proc(
 			sat.update_attitude = true
 			ast.add_satellite(&satellites, sat)
 			ast.add_model_to_array(&satellite_models, sat_model)
+			num_satellites += 1
 			fmt.println("Added satellite (ID):", sat.id)
 		}
 	}
@@ -625,4 +635,98 @@ CameraParams :: struct {
 	target_body:    ^ast.CelestialBody,
 	target_body_id: int,
 	frame:          CameraType,
+}
+
+
+// TODO: this is not set up yet 
+
+render_sim_info :: proc(
+	fps: f64,
+	cam_params: CameraParams,
+	system: ast.AstroSystem,
+) {
+	substeps := system.substeps
+	time_scale := system.time_scale
+	num_sats := system.num_satellites
+	num_bodies := system.num_bodies
+
+	azel := cam_params.azel
+
+
+	fontsize: i32 = 10
+	// fps
+	posy: i32 = fontsize
+	fps_str := strings.builder_make()
+	strings.write_string(&fps_str, "FPS: ")
+	strings.write_float(&fps_str, fps, fmt = 'f', prec = 3, bit_size = 64)
+	rl.DrawText(strings.to_cstring(&fps_str), 10, posy, fontsize, rl.WHITE)
+
+	// time scale
+	posy = fontsize * 2
+	ts_str := strings.builder_make()
+	strings.write_string(&ts_str, "Time Scale: ")
+	strings.write_float(&ts_str, time_scale, fmt = 'f', prec = 4, bit_size = 64)
+	rl.DrawText(strings.to_cstring(&ts_str), 10, posy, fontsize, rl.WHITE)
+	// substeps
+	posy = fontsize * 3
+	sub_str := strings.builder_make()
+	strings.write_string(&sub_str, "Substeps: ")
+	strings.write_int(&sub_str, substeps, 10)
+	rl.DrawText(strings.to_cstring(&sub_str), 10, posy, fontsize, rl.WHITE)
+	// Camera AzEl
+	posy = fontsize * 4
+	azel_str := strings.builder_make()
+	strings.write_string(&azel_str, "[Range, Az, El]: [")
+	strings.write_float(
+		&azel_str,
+		f64(math.to_degrees(azel.x)),
+		fmt = 'f',
+		prec = 2,
+		bit_size = 64,
+	)
+	strings.write_string(&azel_str, ", ")
+	strings.write_float(
+		&azel_str,
+		f64(math.to_degrees(azel.y)),
+		fmt = 'f',
+		prec = 0,
+		bit_size = 64,
+	)
+	strings.write_string(&azel_str, ", ")
+	strings.write_float(
+		&azel_str,
+		f64(math.to_degrees(azel.z)),
+		fmt = 'f',
+		prec = 0,
+		bit_size = 64,
+	)
+	strings.write_string(&azel_str, "]")
+	rl.DrawText(strings.to_cstring(&azel_str), 10, posy, fontsize, rl.WHITE)
+
+	// satellite stats
+	posy = fontsize * 5
+	sats_str := strings.builder_make()
+	strings.write_string(&sats_str, "Num sats: ")
+	strings.write_int(&sats_str, num_sats, 10)
+	rl.DrawText(strings.to_cstring(&sats_str), 10, posy, fontsize, rl.WHITE)
+
+	// bodies stats
+	posy = fontsize * 6
+	bodies_str := strings.builder_make()
+	strings.write_string(&bodies_str, "Num bodies: ")
+	strings.write_int(&bodies_str, num_bodies, 10)
+	rl.DrawText(strings.to_cstring(&bodies_str), 10, posy, fontsize, rl.WHITE)
+
+	// controls
+	posy = fontsize * 7
+	controls_str := `Controls:
+	Adjust Time Scale: [UP, DOWN]
+	Adjust Substeps: [LEFT, RIGHT]
+	Reset Time/Steps: [ENTER]
+	Pause: [SPACE]
+	Trails: [T]
+	Camera/Lock: [C, X]`
+
+
+	rl.DrawText(strings.clone_to_cstring(controls_str), 10, posy, 10, rl.WHITE)
 }
