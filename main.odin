@@ -466,7 +466,7 @@ update_simulation :: proc(
 
 	if !rl.IsKeyDown(.RIGHT_SHIFT) && rl.IsKeyPressed(.PERIOD) {
 		earth := bodies[0] // TODO: change this later
-		orbittype := ast.OrbitType(rand.int_max(3))
+		orbittype := ast.EarthOrbitType(rand.int_max(3))
 		// pos0, vel0 := ast.gen_rand_coe_orientation(10000, 0.1, earth)
 		pos0, vel0 := ast.gen_rand_coe_earth(earth, orbittype)
 		ep0: [4]f64 = {0, 0, 0, 1}

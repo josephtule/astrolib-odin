@@ -19,7 +19,6 @@ eps_f64 :: proc(x: f64) -> f64 {
 		return math.pow_f64(2.0, exponent - 52) // 52 is the mantissa bit count in double precision
 	}
 }
-
 eps_f32 :: proc(x: f32) -> f32 {
 	if x == 0.0 {
 		return 1.1754943508222875e-38
@@ -42,20 +41,12 @@ eps_f16 :: proc(x: f16) -> f16 {
 		return math.pow_f16(2.0, exponent - 10) // 52 is the mantissa bit count in double precision
 	}
 }
-// case f64:
-// 	fmin = 2.2250738585072014e-308
-// 	mantissa_bits = 52
-// case f32:
-// 	fmin = 1.1754943508222875e-38
-// 	mantissa_bits = 23
-// case f16:
-// 	fmin = 6.103515625e-5
-// 	mantissa_bits = 10
 
-copy_soa_array :: proc(orig: $T/#soa[dynamic]$E) -> T {
-	out: #soa[dynamic]E
-	for elem in orig {
-		append(&out, elem)
-	}
-	return out
-}
+// copy_soa_array :: proc(orig: $T/#soa[dynamic]$E) -> T {
+// 	out: #soa[dynamic]E
+// 	for elem in orig {
+// 		append(&out, elem)
+// 	}
+// 	a=1
+// 	return out
+// }

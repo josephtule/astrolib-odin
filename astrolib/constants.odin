@@ -1,5 +1,7 @@
 package astrolib
 
+import "core:math"
+
 rl_to_u :: 1000.
 u_to_rl :: 1. / rl_to_u
 
@@ -29,3 +31,5 @@ max_iter_1000 :: max_iter_vsmall
 max_iter_10000 :: max_iter_small
 max_iter_100000 :: max_iter_medium
 max_iter_1000000 :: max_iter_large
+
+pi :: math.PI

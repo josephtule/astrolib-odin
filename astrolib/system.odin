@@ -30,17 +30,6 @@ AstroSystem :: struct {
 	JD0:              f64,
 }
 
-Model :: struct {
-	id:         int,
-	model:      rl.Model,
-	model_size: [3]f32,
-	scale:      f32,
-	tint:       rl.Color,
-	draw_model: bool,
-	trail:      Trail,
-	axes:       Axes,
-	posvel:     PosVel,
-}
 
 update_system :: #force_inline proc(system: ^AstroSystem, dt, time: f64) {
 	using system
@@ -275,20 +264,3 @@ add_models_to_system :: #force_inline proc(
 	}
 }
 
-add_model_to_array :: proc {
-	add_model_to_array_ptr,
-	add_model_to_array_copy,
-}
-add_model_to_array_ptr :: #force_inline proc(
-	models: ^[dynamic]Model,
-	model: ^Model,
-) {
-	append_elem(models, model^)
-	free(model)
-}
-add_model_to_array_copy :: #force_inline proc(
-	models: ^[dynamic]Model,
-	model: Model,
-) {
-	append_elem(models, model)
-}

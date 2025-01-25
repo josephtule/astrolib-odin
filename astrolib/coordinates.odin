@@ -1,7 +1,7 @@
 package astrolib
 
 import "core:math"
-import la "core:math/linalg"
+// import la "core:math/linalg"
 
 azzen_to_cart :: #force_inline proc "contextless" (
 	azzen: [3]$T,
@@ -201,7 +201,7 @@ eqfixed_to_geod :: #force_inline proc "contextless" (
 	r_tilde_mag2 := r.x * r.x + r.y * r.y
 	r_tilde_mag := math.sqrt(r_tilde_mag2)
 
-	z2 = z * z
+	z2 := z * z
 
 	a := cb.semimajor_axis
 	b := a * (1. - cb.flattening)
