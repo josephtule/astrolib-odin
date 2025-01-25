@@ -73,6 +73,7 @@
   - [ ] RA/Dec
   - [ ] Az/El
   - [ ] observations based on observer long/lat/height (geoc and geod) -> equatorial cartesian (rotated to planet) -> inertial cartesian (rotated to inertial frame)
+  - [ ] add remove after collision flag for satellites/bodies
 
 ## Visual
 

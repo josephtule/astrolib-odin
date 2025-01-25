@@ -192,11 +192,50 @@ geoc_to_eqfixed :: #force_inline proc "contextless" (
 // TODO: finish these two
 eqfixed_to_geod :: #force_inline proc "contextless" (
 	r: [3]$T,
+	cb: CelestialBody,
 	units: UnitsAngle = .DEGREES,
 ) -> (
 	latlonh: [3]T,
 ) where intrinsics.type_is_float(T) #no_bounds_check {
+	r_mag := mag(r)
+	r_tilde_mag2 := r.x * r.x + r.y * r.y
+	r_tilde_mag := math.sqrt(r_tilde_mag2)
 
+	z2 = z * z
+
+	a := cb.semimajor_axis
+	b := a * (1. - cb.flattening)
+	a2 := a * a
+	b2 := b * b
+
+	e2 := (a2 - b2) / a2
+	ep2 := (a2 - b2) / b2
+	F := 54. * b2 * z2
+	G := r_tilde_mag2 + (1. - e2) * z2 - e2 * (a2 - b2)
+	c := e2 * e2 * F * r_tilde_mag2 / (G * G * G)
+	s := math.pow(1 + c + math.sqrt(c * c + 2 * c), 1. / 3.)
+	P := F / (3. * (s + (1. / s) + 1.) * (s + (1. / s) + 1) * G * G)
+	Q := math.sqrt(1. + 2. * e2 * e2 * P)
+	r0 :=
+		-P * e2 * r_tilde_mag / (1. / +Q) +
+		math.sqrt(
+			a2 / 2. * (1. + 1. / Q) -
+			P * (1. - e2) * z2 / (Q * (1. + Q)) -
+			P * r_tilde_mag2 / 2.,
+		)
+	U := math.sqrt(math.pow(r_tilde - e2 * r0, 2) + z2)
+	V := math.sqrt(math.pow(r_tilde - e2 * r0, 2) + (1. - e2) * z2)
+	z0 := b2 * z / (a * V)
+
+	h = U * (1. - b2 / (a * V))
+	lat = math.atan2((r.z + ep2 * z0), r_tilde)
+	lon = math.atan2(r.y, r.x)
+    
+    if units != .DEGREES {
+        lat = convert_angle(lat, .RADIANS, units)
+        lon = convert_angle(lon, .RADIANS, units)
+    }
+    latlonh = {lat, lon, h}
 
 	return latlonh
 }
