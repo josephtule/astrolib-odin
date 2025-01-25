@@ -16,7 +16,7 @@ Millenium :: enum (int) {
 
 tle_parse :: proc {
 	tle_parse_to_sys,
-	tle_parse_to_sat,
+	tle_parse_to_sat_model,
 	tle_date,
 }
 
@@ -79,7 +79,49 @@ tle_parse_to_sat :: #force_inline proc(
 	millenium: Millenium = .two_thousand,
 	num_to_read: int = -1,
 	start_sat: int = 0,
-	gen_model: bool = true,
+) -> (
+	sats: [dynamic]Satellite,
+) {
+	num_read := 0
+	lines: []string = tle_read(file)
+	defer delete(lines)
+
+	// loop through all strings
+	for i := 0; i < len(lines); i += 1 {
+		lines_temp: []string
+		if (num_to_read != -1) && (num_read >= (num_to_read + start_sat)) {
+			break
+		}
+		if len(lines[i]) == 0 {
+			continue // skip blank lines
+		} else if lines[i][0] == 2 {
+			panic("ERROR: problem in reading TLE data")
+		}
+		if lines[i][0] == '0' {
+			lines_temp = []string{lines[i], lines[i + 1], lines[i + 2]}
+			i = i + 2
+		} else {
+			lines_temp = []string{lines[i], lines[i + 1]}
+			i += 1
+		}
+		if num_read >= start_sat {
+			sat, date := extract_tle(lines_temp, cb, millenium)
+			cube_size: f32 = 50 / 1000. * u_to_rl
+			// copy satellite into system
+			append(&sats, sat)
+		}
+		num_read += 1
+	}
+
+	return sats
+}
+
+tle_parse_to_sat_model :: #force_inline proc(
+	file: string,
+	cb: CelestialBody,
+	millenium: Millenium = .two_thousand,
+	num_to_read: int = -1,
+	start_sat: int = 0,
 ) -> (
 	sats: [dynamic]Satellite,
 	models: [dynamic]Model,
@@ -107,7 +149,12 @@ tle_parse_to_sat :: #force_inline proc(
 			i += 1
 		}
 		if num_read >= start_sat {
-			sat, model, date := extract_tle(lines_temp, cb, millenium, gen_model)
+			sat, date := extract_tle(lines_temp, cb, millenium)
+			cube_size: f32 = 50 / 1000. * u_to_rl
+			model := gen_satmodel(
+			&sat,
+			[3]f32{cube_size, cube_size, cube_size}, // default to cube
+			)
 			// copy satellite into system
 			append(&sats, sat)
 			append(&models, model)
@@ -126,7 +173,6 @@ tle_parse_to_sys :: #force_inline proc(
 	time_only: bool = false,
 	num_to_read: int = -1, // number of satellites to read
 	start_sat: int = 0, // starting satellite index in file
-	gen_model: bool = true,
 ) {
 	num_read := 0
 	lines: []string = tle_read(file)
@@ -151,7 +197,12 @@ tle_parse_to_sys :: #force_inline proc(
 			i += 1
 		}
 		if num_read >= start_sat {
-			sat, model, date := extract_tle(lines_temp, cb, millenium, gen_model)
+			sat, date := extract_tle(lines_temp, cb, millenium)
+			cube_size: f32 = 50 / 1000. * u_to_rl
+			model := gen_satmodel(
+			&sat,
+			[3]f32{cube_size, cube_size, cube_size}, // default to cube
+			)
 			sat.gravity_model = .zonal
 
 			// propagate to target time
@@ -186,10 +237,8 @@ extract_tle :: #force_inline proc(
 	lines: []string,
 	cb: CelestialBody,
 	millenium: Millenium = .two_thousand,
-	gen_model: bool = false,
 ) -> (
 	sat: Satellite,
-	model: Model,
 	date: Date,
 ) {
 	// parse line 0
@@ -246,20 +295,13 @@ extract_tle :: #force_inline proc(
 	ep: [4]f64 = {0., 0., 0., 1.}
 	omega: [3]f64 = {0., 0., 0.}
 	// TODO: change this later
-	cube_size: f32 = 50 / 1000. * u_to_rl
-	sat, model = gen_sat_and_model(
-		pos,
-		vel,
-		ep,
-		omega,
-		[3]f32{cube_size, cube_size, cube_size}, // default to cube
-	)
+	sat = gen_sat(pos, vel, ep, omega)
 	joined, err := str.join([]string{sat.info.name, " (", name, ")"}, "")
 	sat.info.name = joined
 	sat.info.intl_designator = intl_designator
 	sat.info.tle_index = catalog_number
 
-	return sat, model, date
+	return sat, date
 }
 
 
