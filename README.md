@@ -33,9 +33,10 @@
 
 1. Install [Odin-lang](https://odin-lang.org/docs/install/)
 2. Copy myrlgl.odin into `<path_to_odin>/vendor/raylib/rlgl`
-3. Download clay
-   1. Copy clay-odin bindings into external or
-   2. Simlink into external with `ln -s  <path_to_clay_odin> <path_to_external>`
+3. Download [clay](https://github.com/nicbarker/clay)
+   1. Create an `external` directory
+   2. Copy clay-odin bindings into external or
+   3. Simlink into external with `ln -s  <path_to_clay_odin> <path_to_external>`
 4. Create a `build` directory in the project root
 5. Build and run with
    1. Mac/Linux: `<path_to_odin_binary> run . -out:build/out -o:speed`
