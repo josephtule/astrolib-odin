@@ -151,7 +151,7 @@ tle_parse_to_sat_model :: #force_inline proc(
 		if num_read >= start_sat {
 			sat, date := extract_tle(lines_temp, cb, millenium)
 			cube_size: f32 = 50 / 1000. * u_to_rl
-			model := gen_satmodel(
+			model := gen_sat_model(
 			&sat,
 			[3]f32{cube_size, cube_size, cube_size}, // default to cube
 			)
@@ -199,7 +199,7 @@ tle_parse_to_sys :: #force_inline proc(
 		if num_read >= start_sat {
 			sat, date := extract_tle(lines_temp, cb, millenium)
 			cube_size: f32 = 50 / 1000. * u_to_rl
-			model := gen_satmodel(
+			model := gen_sat_model(
 			&sat,
 			[3]f32{cube_size, cube_size, cube_size}, // default to cube
 			)

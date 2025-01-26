@@ -153,7 +153,7 @@ gen_sat :: #force_inline proc(
 	return s
 }
 
-gen_satmodel :: #force_inline proc(
+gen_sat_model :: #force_inline proc(
 	sat: ^Satellite,
 	model_size: [3]f32,
 	scale: f32 = 1,
@@ -163,6 +163,7 @@ gen_satmodel :: #force_inline proc(
 ) -> (
 	m: Model,
 ) {
+	m.id = sat.id
 	sat.radius =
 		f64(max(model_size[0], min(model_size[1], model_size[2]))) / u_to_rl
 
@@ -206,7 +207,6 @@ gen_satmodel :: #force_inline proc(
 	texture := rl.LoadTextureFromImage(image_checker)
 	rl.UnloadImage(image_checker)
 	m.model.materials[0].maps[rl.MaterialMapIndex.ALBEDO].texture = texture
-	m.id = sat.id
 	return m
 }
 
@@ -226,7 +226,7 @@ gen_sat_and_model :: #force_inline proc(
 	m: Model,
 ) {
 	s = gen_sat(pos, vel, ep, omega, mass)
-	m = gen_satmodel(&s, model_size, scale = scale)
+	m = gen_sat_model(&s, model_size, scale = scale)
 	return s, m
 }
 
@@ -248,7 +248,6 @@ add_satellite_ptr :: #force_inline proc(
 	sat: ^Satellite,
 ) {
 	append_elem(sats, sat^)
-	free(sat)
 }
 add_satellite_copy :: #force_inline proc(
 	sats: ^[dynamic]Satellite,

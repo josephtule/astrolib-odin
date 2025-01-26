@@ -6,17 +6,19 @@ import rl "vendor:raylib"
 
 AstroSystem :: struct {
 	// entity ids 
-	id:               map[int]int, // maps id to index 
+	id:               map[int]int, // maps id to index in relevant array
 	// satellites
 	satellites:       [dynamic]Satellite,
 	satellite_models: [dynamic]Model,
 	num_satellites:   int,
-	// satellite_odeparams: [dynamic]rawptr,
 	// bodies
 	bodies:           [dynamic]CelestialBody,
 	body_models:      [dynamic]Model,
 	num_bodies:       int,
-	// body_odeparams:      [dynamic]rawptr,
+	// stations
+	stations:         [dynamic]Station,
+	station_models:   [dynamic]Model,
+	num_stations:     int,
 	// integrator
 	integrator:       IntegratorType,
 	time_scale:       f64,
@@ -89,6 +91,10 @@ update_system :: #force_inline proc(system: ^AstroSystem, dt, time: f64) {
 			bodies[i].pos, bodies[i].vel = state_to_posvel(state_new_body[i])
 		}
 	}
+
+	for &station in stations {
+		update_station(&station, system^)
+	}
 }
 
 // draw_posvec :: proc(system: AstroSystem, )
@@ -107,6 +113,11 @@ draw_system :: #force_inline proc(
 	// celestial body models
 	for &model, i in body_models {
 		draw_body(&model, bodies[i])
+	}
+
+	// station models 
+	for &model, i in station_models{
+		draw_station(&model, stations[i])
 	}
 }
 
@@ -131,6 +142,10 @@ create_system_empty :: #force_inline proc(
 	system.body_models = make([dynamic]Model)
 	system.num_bodies = len(system.bodies)
 
+	system.stations = make([dynamic]Station)
+	system.station_models = make([dynamic]Model)
+	system.num_stations = len(system.stations)
+
 	system.JD0 = JD0
 	system.integrator = integrator
 	system.time_scale = time_scale
@@ -144,6 +159,8 @@ create_system_full :: #force_inline proc(
 	sat_models: [dynamic]Model,
 	bodies: [dynamic]CelestialBody,
 	body_models: [dynamic]Model,
+	// stations: [dynamic]Station,
+	// station_models: [dynamic]Station,
 	// defaults
 	JD0: f64 = 2451545.0, // default to J2000 TT
 	integrator: IntegratorType = .rk4,
@@ -160,6 +177,10 @@ create_system_full :: #force_inline proc(
 	system.bodies = slice.clone_to_dynamic(bodies[:])
 	system.body_models = slice.clone_to_dynamic(body_models[:])
 	system.num_bodies = len(system.bodies)
+
+	// system.stations = slice.clone_to_dynamic(stations[:])
+	// system.station_models = slice.clone_to_dynamic(station_models[:])
+	// system.num_stations = len(system.stations)
 
 	system.JD0 = JD0
 	system.integrator = integrator
@@ -205,6 +226,8 @@ add_to_system :: proc {
 	add_models_to_system,
 	add_body_to_system,
 	add_bodies_to_system,
+	add_station_to_system,
+	add_stations_to_system,
 }
 add_sat_to_system :: #force_inline proc(system: ^AstroSystem, sat: Satellite) {
 	using system
@@ -223,7 +246,6 @@ add_sats_to_system :: #force_inline proc(
 	}
 	num_satellites += len(sats)
 }
-
 add_body_to_system :: #force_inline proc(
 	system: ^AstroSystem,
 	body: CelestialBody,
@@ -244,7 +266,26 @@ add_bodies_to_system :: #force_inline proc(
 	}
 	num_satellites += len(bodies)
 }
-
+add_station_to_system :: #force_inline proc(
+	system: ^AstroSystem,
+	station: Station,
+) {
+	using system
+	add_station(&stations, station)
+	id[station.id] = num_bodies
+	num_stations += 1
+}
+add_stations_to_system :: #force_inline proc(
+	system: ^AstroSystem,
+	stations: [dynamic]Station,
+) {
+	using system
+	for station, i in stations {
+		add_station(&stations, station)
+		id[station.id] = num_stations + i
+	}
+	num_stations += len(stations)
+}
 add_model_to_system :: #force_inline proc(system: ^AstroSystem, model: Model) {
 	using system
 	add_model_to_array(&satellite_models, model)
@@ -258,4 +299,3 @@ add_models_to_system :: #force_inline proc(
 		add_model_to_array(&satellite_models, model)
 	}
 }
-

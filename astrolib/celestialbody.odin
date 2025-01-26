@@ -93,10 +93,10 @@ draw_body :: #force_inline proc(model: ^Model, body: CelestialBody) {
 }
 
 update_body_model :: #force_inline proc(
-	body_model: ^Model,
+	model: ^Model,
 	body: CelestialBody,
 ) {
-	using body_model
+	using model
 
 	// set rotation
 	// if body.update_attitude {
@@ -175,6 +175,7 @@ gen_celestialbody_model :: #force_inline proc(
 ) -> Model {
 	model: Model
 
+	model.id = body.id
 	model.draw_model = true
 	model.trail.draw = false
 	model.tint = tint
@@ -230,7 +231,6 @@ add_celestialbody_ptr :: #force_inline proc(
 	body: ^CelestialBody,
 ) {
 	append_elem(bodies, body^)
-	free(body)
 }
 add_celestialbody_copy :: #force_inline proc(
 	bodies: ^[dynamic]CelestialBody,
