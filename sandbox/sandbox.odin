@@ -23,13 +23,9 @@ main2 :: proc() {
 	defer rl.CloseWindow()
 
 	a: ast.AstroSystem
-	ss: [dynamic]ast.Satellite
-	sm: [dynamic]ast.Model
-	bb: [dynamic]ast.CelestialBody
-	bm: [dynamic]ast.Model
 	filename := "assets/TLE_data_small.txt"
 	earth := ast.wgs84()
-	a = ast.create_system(ss, sm, bb, bm)
+	a = ast.create_system()
 	ast.add_celestialbody(&a.bodies, earth)
 	// ast.parse_tle_single(filename, &a)
 	// fmt.println("Satellites added:", ast.tle_read_extract(filename, earth.id, &a))

@@ -11,7 +11,7 @@ import rl "vendor:raylib"
 import ast "../astrolib"
 
 
-main :: proc() {
+main3 :: proc() {
 	// raylib init
 	window_width: i32 = 1024 / 2
 	window_height: i32 = 1024 / 2
