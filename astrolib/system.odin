@@ -159,8 +159,8 @@ create_system_full :: #force_inline proc(
 	sat_models: [dynamic]Model,
 	bodies: [dynamic]CelestialBody,
 	body_models: [dynamic]Model,
-	// stations: [dynamic]Station,
-	// station_models: [dynamic]Station,
+	stations: [dynamic]Station,
+	station_models: [dynamic]Model,
 	// defaults
 	JD0: f64 = 2451545.0, // default to J2000 TT
 	integrator: IntegratorType = .rk4,

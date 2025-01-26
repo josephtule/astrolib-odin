@@ -216,6 +216,10 @@ main :: proc() {
 	fps: f64
 	last_time := time.tick_now()
 
+	// create empty array of stations
+	stations: [dynamic]ast.Station
+	station_models : [dynamic]ast.Model
+
 	// set up system
 	asystem := new(ast.AstroSystem)
 	asystem^ = ast.create_system(
@@ -224,6 +228,9 @@ main :: proc() {
 		// bodies
 		bodies = celestialbodies,
 		body_models = celestialbody_models,
+		// stations
+		stations = stations,
+		station_models = station_models,
 		integrator = .ralston,
 		// integrator = .rk4,
 	)
