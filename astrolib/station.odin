@@ -56,7 +56,7 @@ update_station :: #force_inline proc(
 	station: ^Station,
 	system: AstroSystem,
 ) #no_bounds_check {
-	body := system.bodies[system.id[station.body_id]]
+	body := system.bodies[system.entity[station.body_id]]
 	pos_eq := geod_to_eqfixed(station.pos_body, body, .DEGREES)
 	station.pos_inertial = eq_to_inertial(pos_eq, body)
 }

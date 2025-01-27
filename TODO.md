@@ -71,7 +71,7 @@
 - [x] orbital elements should be adjusted to equatorial plane
 - [ ] Generate orbit from observations
   - [x] RA/Dec -> pos function
-  - [x] Az/El -> pos function 
+  - [x] Az/El -> pos function
   - [ ] observations based on observer long/lat/height (geoc and geod) -> equatorial cartesian (rotated to planet) -> inertial cartesian (rotated to inertial frame)
   - [ ] IOD methods
     - [ ] gibbs
@@ -80,7 +80,9 @@
     - [ ] laplace
   - [ ] implement functions that transform from topocentric to equatorial to inertial
 - [ ] add remove after collision flag for satellites/bodies
-  - [ ] 
+- [ ] Add flag and target id for single body dynamics for wrt target
+  - [ ] if single body dynamics chosen, only require target id for gravity source
+  - [ ] Add flag to bodies for body to determine if body is a gravity source, otherwise it will act as a satellite (only affected by other bodies but will not affect the other bodies)
 
 ## Visual
 
@@ -130,6 +132,7 @@
   - [ ] create info struct for celestial bodies
 - [ ] Add warning and confirmation to turn off attitude if simulation delta time too high
 - [ ] Add left and right shift keys
+- [ ] Highlight currently selected entity (body, satellite, station)
 
 ## Misc
 

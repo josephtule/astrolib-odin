@@ -152,7 +152,7 @@ update_posvel :: #force_inline proc(pv: ^PosVel, pos, vel: [3]f64) {
 set_pos_origin :: #force_inline proc(pv: ^PosVel, system: AstroSystem) {
 	// line from origin to satellite
 	if pv.draw_pos {
-		target_ind := system.id[pv.target_id]
+		target_ind := system.entity[pv.target_id]
 		if pv.target_id >= g_body_id_base {
 			// target is a body
 			pv.pos_origin = cast_f32(system.bodies[target_ind].pos) * u_to_rl

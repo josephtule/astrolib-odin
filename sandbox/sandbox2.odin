@@ -55,7 +55,7 @@ main3 :: proc() {
 
 	// create satellite and add
 	filename := "assets/ISS_TLE_HW7.txt"
-	ast.tle_parse(filename, system.bodies[system.id[earth.id]], system)
+	ast.tle_parse(filename, system.bodies[system.entity[earth.id]], system)
 
 	time: f64 = 0.
 	total_time: f64 = (10) * 86400.

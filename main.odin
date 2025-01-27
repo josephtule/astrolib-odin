@@ -241,7 +241,7 @@ main :: proc() {
 	// ast.tle_read_extract(filename, earth.id, asystem)
 
 	filename = "assets/ISS_TLE_HW7.txt"
-	ast.tle_parse(filename, asystem.bodies[asystem.id[earth.id]], asystem)
+	ast.tle_parse(filename, asystem.bodies[asystem.entity[earth.id]], asystem)
 
 
 	for &model, i in asystem.satellite_models {

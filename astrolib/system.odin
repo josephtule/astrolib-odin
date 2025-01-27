@@ -3,10 +3,13 @@ package astrolib
 import "core:slice"
 import rl "vendor:raylib"
 
+g_sys_id_base: int : 0
+g_sys_id: int = g_sys_id_base
 
 AstroSystem :: struct {
 	// entity ids 
-	id:               map[int]int, // maps id to index in relevant array
+	id:               int,
+	entity:           map[int]int, // maps id to index in relevant array
 	// satellites
 	satellites:       [dynamic]Satellite,
 	satellite_models: [dynamic]Model,
@@ -116,7 +119,7 @@ draw_system :: #force_inline proc(
 	}
 
 	// station models 
-	for &model, i in station_models{
+	for &model, i in station_models {
 		draw_station(&model, stations[i])
 	}
 }
@@ -150,6 +153,9 @@ create_system_empty :: #force_inline proc(
 	system.integrator = integrator
 	system.time_scale = time_scale
 	system.substeps = substeps
+
+	system.id = g_sys_id
+	g_sys_id += 1
 
 	return system
 }
@@ -190,11 +196,14 @@ create_system_full :: #force_inline proc(
 
 	// create id map
 	for sat, i in system.satellites {
-		system.id[sat.id] = i
+		system.entity[sat.id] = i
 	}
 	for body, i in system.bodies {
-		system.id[body.id] = i
+		system.entity[body.id] = i
 	}
+
+	system.id = g_sys_id
+	g_sys_id += 1
 
 	return system
 }
@@ -232,7 +241,7 @@ add_to_system :: proc {
 add_sat_to_system :: #force_inline proc(system: ^AstroSystem, sat: Satellite) {
 	using system
 	add_satellite(&satellites, sat)
-	id[sat.id] = num_satellites
+	entity[sat.id] = num_satellites
 	num_satellites += 1
 }
 add_sats_to_system :: #force_inline proc(
@@ -242,7 +251,7 @@ add_sats_to_system :: #force_inline proc(
 	using system
 	for sat, i in sats {
 		add_satellite(&satellites, sat)
-		id[sat.id] = num_satellites + i
+		entity[sat.id] = num_satellites + i
 	}
 	num_satellites += len(sats)
 }
@@ -252,7 +261,7 @@ add_body_to_system :: #force_inline proc(
 ) {
 	using system
 	add_celestialbody(&bodies, body)
-	id[body.id] = num_bodies
+	entity[body.id] = num_bodies
 	num_bodies += 1
 }
 add_bodies_to_system :: #force_inline proc(
@@ -262,7 +271,7 @@ add_bodies_to_system :: #force_inline proc(
 	using system
 	for body, i in bodies {
 		add_celestialbody(&bodies, body)
-		id[body.id] = num_bodies + i
+		entity[body.id] = num_bodies + i
 	}
 	num_satellites += len(bodies)
 }
@@ -272,7 +281,7 @@ add_station_to_system :: #force_inline proc(
 ) {
 	using system
 	add_station(&stations, station)
-	id[station.id] = num_bodies
+	entity[station.id] = num_bodies
 	num_stations += 1
 }
 add_stations_to_system :: #force_inline proc(
@@ -282,7 +291,7 @@ add_stations_to_system :: #force_inline proc(
 	using system
 	for station, i in stations {
 		add_station(&stations, station)
-		id[station.id] = num_stations + i
+		entity[station.id] = num_stations + i
 	}
 	num_stations += len(stations)
 }
