@@ -8,6 +8,7 @@
 <img src="assets/attitude_example.gif" width="512">
 
 ## Controls (subject to change)
+
 - Start Simulation: space
 - Reset Simulation: shift+r
 - Toggle Attitude Dynamics: i
@@ -29,6 +30,13 @@
 - Print FPS to Console: f
 - Print Simulation Delta Time to Console: g
 
+## Dynamics
+
+### Translational
+   $$ \vecb a_i = \sum_j \frac{G m_i m_j}{\norm{\vecb r}{2}^3} \vecb r$$
+
+### Rotational
+
 ## How to Build
 
 1. Install [Odin-lang](https://odin-lang.org/docs/install/)
@@ -43,5 +51,6 @@
    2. Windows: `<path_to_odin_binary> run . -out:build/out.exe -o:speed`
 
 ## Sources
+
 TLE Data: [celestrak](https://celestrak.org/NORAD/elements/) or [space-track](https://www.space-track.org/auth/login)
 Algorithms: Vallado

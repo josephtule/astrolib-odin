@@ -4,8 +4,40 @@ import clay "../external/clay-odin"
 import "core:c"
 import "core:fmt"
 import rl "vendor:raylib"
+import "core:mem"
+import "core:mem/virtual"
 
 import ast "../astrolib"
+
+Context_Status :: enum u8 {
+	RULES,
+	VOLUME,
+	CONNECTED,
+}
+Context_Statuses :: bit_set[Context_Status]
+
+Context :: struct {
+	ui_ctx:          UI_Context,
+	// rule modification
+	active_line_buf: [1024]u8,
+	active_line_len: int,
+	active_line:     int,
+	volume:          f32,
+	// rule creation
+	new_rule_buf:    [1024]u8,
+	new_rule_len:    int,
+	// config state
+	aux_rules:       [dynamic]string,
+	config_file:     string,
+	// inotify_fd:      linux.Fd,
+	// inotify_wd:      linux.Wd,
+	statuses:        Context_Statuses,
+	// ipc
+	// ipc:             IPC_Client_Context,
+	// allocations
+	arena:           virtual.Arena,
+	allocator:       mem.Allocator,
+}
 
 clay_layout_grow := clay.Sizing {
 	width  = clay.SizingGrow({}),
@@ -120,7 +152,7 @@ createLayout :: proc(
 					clay.Layout({sizing = infobar_sizing, layoutDirection = .TOP_TO_BOTTOM}),
 					clay.Rectangle(clay_rectangle_rounded(MEDIUM_GRAY)),
 				) {
-                    // UI_textbox()
+                    // UI_textbox(ctx,)
 				}
 			}
 

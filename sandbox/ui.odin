@@ -198,37 +198,37 @@ UI_should_exit :: proc(ctx: ^UI_Context) -> bool {
 	return rl.WindowShouldClose()
 }
 
-UI_load_font_mem :: proc(
-	ctx: ^UI_Context,
-	fontsize: u16,
-	data: []u8,
-	extension: cstring,
-) -> u16 {
-	font := rl.LoadFontFromMemory(
-		extension,
-		raw_data(data),
-		c.int(len(data)),
-		c.int(fontsize * 2),
-		nil,
-		0,
-	)
-	rl.SetTextureFilter(font.texture, .TRILINEAR)
+// UI_load_font_mem :: proc(
+// 	ctx: ^UI_Context,
+// 	fontsize: u16,
+// 	data: []u8,
+// 	extension: cstring,
+// ) -> u16 {
+// 	font := rl.LoadFontFromMemory(
+// 		extension,
+// 		raw_data(data),
+// 		c.int(len(data)),
+// 		c.int(fontsize * 2),
+// 		nil,
+// 		0,
+// 	)
+// 	rl.SetTextureFilter(font.texture, .TRILINEAR)
 
-	font_map := make(
-		map[u16]rl.Font,
-		16,
-		virtual.arena_allocator(&ctx.font_allocator),
-	)
-	font_map[fontsize] = font
-	raylib_font := RaylibFont {
-		font      = font_map,
-		bytes     = data,
-		extension = extension,
-	}
+// 	font_map := make(
+// 		map[u16]rl.Font,
+// 		16,
+// 		virtual.arena_allocator(&ctx.font_allocator),
+// 	)
+// 	font_map[fontsize] = font
+// 	raylib_font := RaylibFont {
+// 		font      = font_map,
+// 		bytes     = data,
+// 		extension = extension,
+// 	}
 
-	sa.append(&raylibFonts, raylib_font)
-	return u16(sa.len(raylibFonts) - 1)
-}
+// 	sa.append(&raylibFonts, raylib_font)
+// 	return u16(sa.len(raylibFonts) - 1)
+// }
 
 UI_load_font :: proc(ctx: ^UI_Context, fontsize: u16, path: cstring) -> u16 {
 	unimplemented()
@@ -586,8 +586,8 @@ UI__textbox :: proc(
 							for i in 0 ..< textlen^ {
 								if buf[i] > 0x80 && buf[i] < 0xC0 do continue
 
-								clay_str := clay.MakeString(string(buf[:i]))
-								text_size := measureText(&clay_str, text_config)
+								clay_str := clay.MakeStringSlice(string(buf[:i]))
+								text_size := measureText(clay_str, text_config, 0)
 
 								if c.float(rl.GetMouseX()) <
 								   boundingbox.x + text_size.width + c.float(ctx.textbox_offset) {
@@ -604,17 +604,17 @@ UI__textbox :: proc(
 					}
 
 					text_str := string(buf[:textlen^])
-					text_clay_str := clay.MakeString(text_str)
-					text_size := measureText(&text_clay_str, text_config)
+					text_clay_str := clay.MakeStringSlice(text_str)
+					text_size := measureText(text_clay_str, text_config, 0)
 
-					head_clay_str := clay.MakeString(
+					head_clay_str := clay.MakeStringSlice(
 						text_str[:ctx.textbox_state.selection[0]],
 					)
-					head_size := measureText(&head_clay_str, text_config)
-					tail_clay_str := clay.MakeString(
+					head_size := measureText(head_clay_str, text_config,0)
+					tail_clay_str := clay.MakeStringSlice(
 						text_str[:ctx.textbox_state.selection[1]],
 					)
-					tail_size := measureText(&tail_clay_str, text_config)
+					tail_size := measureText(tail_clay_str, text_config,0)
 
 					PADDING :: 20
 					sizing := elem_loc_data.elementLocation
@@ -889,7 +889,7 @@ UI__text_button :: proc(
 				clay.Layout(
 					{
 						sizing = {clay.SizingGrow({}), clay.SizingGrow({})},
-						padding = {text_padding, text_padding},
+						padding = clay.PaddingAll(text_padding)
 					},
 				),
 				clay.Rectangle({color = selected_color, cornerRadius = corner_radius}),
