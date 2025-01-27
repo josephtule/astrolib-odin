@@ -133,8 +133,14 @@
 - [ ] Add warning and confirmation to turn off attitude if simulation delta time too high
 - [ ] Add left and right shift keys
 - [ ] Highlight currently selected entity (body, satellite, station)
-  
+- [ ] Add text editing for editing names/vector input/etc
+  - [ ] may have to copy implementation from microui (use core:text/edit package)
+- [ ] Save/load functionality for individual systems
+  - [ ] save current state and reset state
+
 
 ## Misc
 
 - [x] Organize TODO
+- [ ] port to web????
+
