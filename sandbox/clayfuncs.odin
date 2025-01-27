@@ -54,7 +54,8 @@ header_button :: proc(text: string) {
 		clay.ID(text),
 		clay.Layout({padding = {8, 8, 1, 1}}),
 		// clay.BorderOutsideRadius({2, COLOR_RED}, 10),
-		clay.Rectangle({color = LIGHT_GRAY, cornerRadius = clay.CornerRadiusAll(4)}),
+		clay.Rectangle({color = clay.PointerOver(clay.GetElementId(clay.MakeString(text))) ? LIGHT_GRAY : MEDIUM_GRAY2, cornerRadius = clay.CornerRadiusAll(4)}),
+        
 	) {
 		clay.Text(
 			text,
@@ -64,6 +65,7 @@ header_button :: proc(text: string) {
 		)
 	}
 }
+
 
 // :SYSTEM
 system_new :: proc() -> (system: ast.AstroSystem) {

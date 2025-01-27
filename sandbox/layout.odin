@@ -68,10 +68,15 @@ createLayout :: proc(
 			clay.Text("AstroLib", &headerTextConfig)
 			header_button("Info")
 			if clay.UI(clay.Layout({sizing = {width = clay.SizingGrow({})}})) {}
+			if clay.PointerOver(clay.GetElementId(clay.MakeString("Info"))) &&
+			   rl.IsMouseButtonPressed(.LEFT) {
+				show_info = !show_info
+			}
 			if show_info {
 				header_button("Edit System")
 				header_button("Edit Satellites")
 				header_button("Edit Bodies")
+				header_button("Edit Camera")
 			}
 		}
 
@@ -107,14 +112,16 @@ createLayout :: proc(
 				// empty here
 			}
 			// :infobar on right/bottom TODO: draw only when button pressed
-			if clay.UI(
-				clay.ID("infobar"),
-				clay.Scroll({vertical = true}),
-				clay.Layout({sizing = infobar_sizing, layoutDirection = .TOP_TO_BOTTOM}),
-				clay.Rectangle(clay_rectangle_rounded(MEDIUM_GRAY)),
-			) {
-
-			}
+            if show_info {
+                if clay.UI(
+                    clay.ID("infobar"),
+                    clay.Scroll({vertical = true}),
+                    clay.Layout({sizing = infobar_sizing, layoutDirection = .TOP_TO_BOTTOM}),
+                    clay.Rectangle(clay_rectangle_rounded(MEDIUM_GRAY)),
+                ) {
+    
+                }
+            }
 
 		}
 	}
@@ -123,4 +130,21 @@ createLayout :: proc(
 	return clay.EndLayout()
 }
 
-create_model := true
+
+handle_clay_input_clay :: proc() {}
+handle_clay_input_simulation :: proc(
+	camera: ^rl.Camera,
+	camera_params: ^CameraParams,
+	system: ^ast.AstroSystem,
+	systems: ^[dynamic]ast.AstroSystem,
+) {
+
+	// if 
+
+}
+
+
+// edit_system_input :: proc() {}
+// edit_satellite_input :: proc() {}
+// edit_bodies_input :: proc() {}
+// edit_camera_input :: proc() {}

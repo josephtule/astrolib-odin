@@ -119,7 +119,7 @@
 ## UI/Controls
 
 - [ ] Figure out how to do UI lol
-  - [ ] use clay?
+  - [ ] use clay? **add microui on top of clay? i really have no idea how this works lol**
   - [ ] 3D camera as a viewport
 - [ ] Add UI to be able to spawn new bodies (both celestial and satellite)
   - [ ] Adding new body should pause simulation
@@ -133,6 +133,7 @@
 - [ ] Add warning and confirmation to turn off attitude if simulation delta time too high
 - [ ] Add left and right shift keys
 - [ ] Highlight currently selected entity (body, satellite, station)
+  
 
 ## Misc
 

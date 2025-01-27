@@ -51,6 +51,7 @@ COLOR_BLUE_DARK :: clay.Color{2, 32, 82, 255}
 SOFT_WHITE :: clay.Color({230, 230, 230, 255})
 DARK_GRAY :: clay.Color({24, 24, 24, 255})
 MEDIUM_GRAY :: clay.Color({45, 45, 45, 255})
+MEDIUM_GRAY2 :: clay.Color({55, 55, 55, 255})
 LIGHT_GRAY :: clay.Color({60, 60, 60, 255})
 
 // CONTAINER_BACKGROUND :: clay.Color{}
