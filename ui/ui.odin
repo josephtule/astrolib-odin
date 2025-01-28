@@ -1,4 +1,4 @@
-package sandbox
+package ui
 
 import clay "../external/clay-odin"
 import "base:intrinsics"

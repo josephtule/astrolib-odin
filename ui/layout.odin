@@ -1,11 +1,11 @@
-package sandbox
+package ui
 
 import clay "../external/clay-odin"
 import "core:c"
 import "core:fmt"
-import rl "vendor:raylib"
 import "core:mem"
 import "core:mem/virtual"
+import rl "vendor:raylib"
 
 import ast "../astrolib"
 
@@ -17,36 +17,37 @@ Context_Status :: enum u8 {
 Context_Statuses :: bit_set[Context_Status]
 
 Context :: struct {
-	ui_ctx:          UI_Context,
-	// rule modification
-	active_line_buf: [1024]u8,
-	active_line_len: int,
-	active_line:     int,
-	volume:          f32,
+	ui_ctx:         UI_Context,
+	// active buffer
+	active_val_buf: [1024]u8,
+	active_val_len: int,
+	active_line:    int,
+	volume:         f32,
 	// rule creation
-	new_rule_buf:    [1024]u8,
-	new_rule_len:    int,
+	val_buf:        [1024]u8,
+	val_len:        int,
 	// config state
-	aux_rules:       [dynamic]string,
-	config_file:     string,
+	aux_rules:      [dynamic]string,
+	config_file:    string,
 	// inotify_fd:      linux.Fd,
 	// inotify_wd:      linux.Wd,
-	statuses:        Context_Statuses,
+	statuses:       Context_Statuses,
 	// ipc
 	// ipc:             IPC_Client_Context,
 	// allocations
-	arena:           virtual.Arena,
-	allocator:       mem.Allocator,
+	arena:          virtual.Arena,
+	allocator:      mem.Allocator,
 }
 
-clay_layout_grow := clay.Sizing {
+show_info := false
+show_sys := false
+
+layout_grow := clay.Sizing {
 	width  = clay.SizingGrow({}),
 	height = clay.SizingGrow({}),
 }
 
-clay_rectangle_rounded :: proc(
-	color: clay.Color,
-) -> clay.RectangleElementConfig {
+rectangle_rounded :: proc(color: clay.Color) -> clay.RectangleElementConfig {
 	rect := clay.RectangleElementConfig(
 		{color = color, cornerRadius = clay.CornerRadiusAll(8)},
 	)
@@ -55,18 +56,18 @@ clay_rectangle_rounded :: proc(
 }
 
 gaps :: 8
-show_info := false
 
 
 createLayout :: proc(
+	ctx: ^Context,
 	camera: ^rl.Camera,
 	camera_params: ^CameraParams,
 	system: ^ast.AstroSystem,
 	systems: ^[dynamic]ast.AstroSystem,
 ) -> clay.ClayArray(clay.RenderCommand) {
-    ctx := context
-	mobileScreen := windowWidth < 750
-    handle_clay_input_clay()
+	ui_ctx: UI_Context
+	mobileScreen := rl.GetScreenWidth() < 750
+	handle_input_clay()
 	clay.BeginLayout()
 
 	// :outer container
@@ -75,7 +76,7 @@ createLayout :: proc(
 		clay.Layout(
 			{
 				layoutDirection = .TOP_TO_BOTTOM,
-				sizing = clay_layout_grow,
+				sizing = layout_grow,
 				padding = clay.PaddingAll(gaps),
 				childGap = gaps,
 			},
@@ -96,36 +97,37 @@ createLayout :: proc(
 						top = gaps / 2,
 						bottom = gaps / 2,
 					},
-					childGap = gaps * 2,
+					childGap = gaps,
 					childAlignment = clay.ChildAlignment{y = .CENTER},
 				},
 			),
 		) {
-			clay.Text("AstroLib", &headerTextConfig)
-			header_button("Simulate")
-			header_button("Info")
+			clay.Text("AstroLib", &button_text_config)
 			if clay.UI(clay.Layout({sizing = {width = clay.SizingGrow({})}})) {} 	// spacer
 			if show_info {
-				header_button("Edit System")
-				header_button("Edit Satellites")
-				header_button("Edit Bodies")
-				header_button("Edit Camera")
+				header_button("System")
+				// header_button("Satellites")
+				// header_button("Bodies")
+				// header_button("Station")
+				// header_button("Camera")
 			}
+			header_vert_bar(DARK_GRAY)
+			header_button("Info")
+			header_button("Simulate")
 		}
 
 		// :lower content
-		// TODO: make infobar scrollable
 		lower_dir: clay.LayoutDirection
-		infobar_sizing: clay.Sizing
+		info_container_sizing: clay.Sizing
 		if mobileScreen {
 			lower_dir = .TOP_TO_BOTTOM
-			infobar_sizing = {
+			info_container_sizing = {
 				width  = clay.SizingGrow({}),
 				height = clay.SizingFixed(0.25 * f32(rl.GetScreenHeight())),
 			}
 		} else {
 			lower_dir = .LEFT_TO_RIGHT
-			infobar_sizing = {
+			info_container_sizing = {
 				width  = clay.SizingFixed(0.33 * f32(rl.GetScreenWidth())),
 				height = clay.SizingGrow({}),
 			}
@@ -133,26 +135,44 @@ createLayout :: proc(
 		if clay.UI(
 			clay.ID("lower_content"),
 			clay.Layout(
-				{sizing = clay_layout_grow, childGap = gaps, layoutDirection = lower_dir},
+				{sizing = layout_grow, childGap = gaps, layoutDirection = lower_dir},
 			),
 		) {
 			// :viewport on left/top (transparent to display raylib camera below)
 			if clay.UI(
 				clay.ID("viewport"),
-				clay.Layout({sizing = clay_layout_grow}),
-				// clay.Rectangle(clay_rectangle_rounded(clay.COLOR)),
+				clay.Layout({sizing = layout_grow}),
+				// clay.Rectangle(rectangle_rounded(clay.COLOR)),
 			) {
 				// empty here
 			}
-			// :infobar on right/bottom TODO: draw only when button pressed
+			// :info_container on right/bottom TODO: draw only when button pressed
 			if show_info {
 				if clay.UI(
-					clay.ID("infobar"),
+					clay.ID("info_container"),
 					clay.Scroll({vertical = true}),
-					clay.Layout({sizing = infobar_sizing, layoutDirection = .TOP_TO_BOTTOM}),
-					clay.Rectangle(clay_rectangle_rounded(MEDIUM_GRAY)),
+					clay.Layout(
+						{
+							padding = clay.Padding {
+								left = gaps,
+								right = gaps,
+								top = gaps,
+								bottom = gaps,
+							},
+							sizing = info_container_sizing,
+							layoutDirection = .TOP_TO_BOTTOM,
+							childGap = gaps,
+						},
+					),
+					clay.Rectangle(rectangle_rounded(MEDIUM_GRAY)),
 				) {
-                    // UI_textbox(ctx,)
+					// info container children
+					if show_sys {
+						// input_posvel(ctx)
+						sys_menu(ctx, camera, camera_params, system, systems)
+					}
+
+					// UI_textbox(ui_ctx)
 				}
 			}
 
@@ -164,13 +184,19 @@ createLayout :: proc(
 }
 
 
-handle_clay_input_clay :: proc() {
+handle_input_clay :: proc() {
 	if clay.PointerOver(clay.GetElementId(clay.MakeString("Info"))) &&
 	   rl.IsMouseButtonPressed(.LEFT) {
 		show_info = !show_info
 	}
+	if clay.PointerOver(clay.GetElementId(clay.MakeString("System"))) &&
+	   rl.IsMouseButtonPressed(.LEFT) {
+		show_sys = !show_sys
+	}
 }
-handle_clay_input_simulation :: proc(
+
+
+handle_input_simulation :: proc(
 	camera: ^rl.Camera,
 	camera_params: ^CameraParams,
 	system: ^ast.AstroSystem,

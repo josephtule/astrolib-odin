@@ -137,6 +137,8 @@
   - [ ] may have to copy implementation from microui (use core:text/edit package)
 - [ ] Save/load functionality for individual systems
   - [ ] save current state and reset state
+- [ ] clipboard for copying one/multiple entities from one system to another
+- [ ] 
 
 
 ## Misc

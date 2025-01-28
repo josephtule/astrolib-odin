@@ -1,3 +1,7 @@
+---
+header_includes: -\newcommand{\vecb}[1]{\boldsymbol{#1}}
+---
+
 # astrolib-odin
 
 ## Library for orbital mechanics and attitude dynamics for spacecraft
@@ -30,25 +34,69 @@
 - Print FPS to Console: f
 - Print Simulation Delta Time to Console: g
 
-## Dynamics
+## Math and Equations of Motion
 
 ### Translational
-   $$ \vecb a_i = \sum_j \frac{G m_i m_j}{\norm{\vecb r}{2}^3} \vecb r$$
+
+$$
+\boldsymbol a_i = \sum_j \frac{G m_i m_j}{||\boldsymbol r||_2^3} \boldsymbol r
+$$
 
 ### Rotational
+
+#### Kinematics
+
+$$
+\dot{\boldsymbol{q}} = \frac{1}{2}  \boldsymbol{\Omega}  \boldsymbol{q}
+$$
+
+where
+
+$$
+\boldsymbol{\Omega} =
+\begin{bmatrix}
+0 & -\omega_x & -\omega_y & -\omega_z \\
+\omega_x & 0 & \omega_z & -\omega_y \\
+\omega_y & -\omega_z & 0 & \omega_x \\
+\omega_z & \omega_y & -\omega_x & 0
+\end{bmatrix}
+$$
+
+#### Dynamics
+
+$$
+\dot{\boldsymbol{\omega}} = \boldsymbol{I}^{-1} \left( \boldsymbol{\tau} - \boldsymbol{\omega} \times (\boldsymbol{I} \boldsymbol{\omega}) \right)
+$$
+
+### Integration
+
+#### Ralston Integrator
+
+#### Runge-Kutta 4th Order
+
+$$
+\begin{aligned}
+    k_1 &= f\left(t,x \right) \\
+    k_2 &= f\left(t+\frac{\Delta t}{2},x + \frac{\Delta t}{2} k_1 \right) \\
+    k_3 &= f\left(t+\frac{\Delta t}{2},x + \frac{\Delta t}{2} k_2 \right) \\
+    k_4 &= f\left(t+ \Delta t, x + \Delta t k_3 \right) \\
+    t^+ &= t + \Delta t \\
+    x^+ &= x + \frac{\Delta t}{6} \left(k_1 + 2 k_2 + 2 k_3 + k_4 \right)
+\end{aligned}
+$$
 
 ## How to Build
 
 1. Install [Odin-lang](https://odin-lang.org/docs/install/)
 2. Copy myrlgl.odin into `<path_to_odin>/vendor/raylib/rlgl`
 3. Download [clay](https://github.com/nicbarker/clay)
-   1. Create an `external` directory
-   2. Copy clay-odin bindings into external or
-   3. Simlink into external with `ln -s  <path_to_clay_odin> <path_to_external>`
-4. Create a `build` directory in the project root
-5. Build and run with
-   1. Mac/Linux: `<path_to_odin_binary> run . -out:build/out -o:speed`
-   2. Windows: `<path_to_odin_binary> run . -out:build/out.exe -o:speed`
+4. Create an `external` directory
+5. Copy clay-odin bindings into external or
+6. Simlink into external with `ln -s  <path_to_clay_odin> <path_to_external>`
+7. Create a `build` directory in the project root
+8. Build and run with
+9. Mac/Linux: `<path_to_odin_binary> run . -out:build/out -o:speed`
+10. Windows: `<path_to_odin_binary> run . -out:build/out.exe -o:speed`
 
 ## Sources
 

@@ -1,4 +1,4 @@
-package sandbox
+package ui
 
 import clay "../external/clay-odin"
 import "core:c"
@@ -6,17 +6,23 @@ import "core:fmt"
 import rl "vendor:raylib"
 
 
-headerTextConfig := clay.TextElementConfig {
+button_text_config := clay.TextElementConfig {
 	fontId    = FONT_ID_BODY_18,
 	fontSize  = 18,
 	textColor = SOFT_WHITE,
 }
+
+head_text_config := clay.TextElementConfig {
+	fontId    = FONT_ID_BODY_20,
+	fontSize  = 20,
+	textColor = SOFT_WHITE,
+}
+
 errorHandler :: proc "c" (errorData: clay.ErrorData) {
 	if (errorData.errorType == clay.ErrorType.DUPLICATE_ID) {
 
 	}
 }
-
 
 
 FONT_ID_BODY_12 :: 0

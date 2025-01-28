@@ -1,8 +1,9 @@
-package sandbox
+package ui
 
 import "core:c"
 import "core:fmt"
 import "core:math"
+import str "core:strings"
 import rl "vendor:raylib"
 
 import ast "../astrolib"
@@ -49,13 +50,50 @@ loadFont :: proc(fontId: u16, fontSize: u16, path: cstring) {
 	)
 }
 
+clay_textinput_box :: proc(
+	ctx: ^Context,
+	fieldname: string,
+	$T: typeid,
+) -> (
+	val: T,
+) {
+	if clay.UI(
+		clay.ID(fieldname),
+		clay.Rectangle(
+			{color = MEDIUM_GRAY, cornerRadius = clay.CornerRadiusAll(4)},
+		),
+		clay.Layout(
+			{
+				padding = clay.Padding {
+					left = gaps,
+					right = gaps,
+					top = gaps,
+					bottom = gaps,
+				},
+				sizing = {width = clay.SizingGrow({})},
+			},
+		),
+	) {
+		clay.Text("Enter value...", &button_text_config)
+	}
+	return val
+}
+
+
+back_button :: proc(name: string) {}
+
+
 header_button :: proc(text: string) {
 	if clay.UI(
 		clay.ID(text),
-		clay.Layout({padding = {8, 8, 1, 1}}),
+		clay.Layout({padding = {gaps, gaps, 2, 2}}),
 		// clay.BorderOutsideRadius({2, COLOR_RED}, 10),
-		clay.Rectangle({color = clay.PointerOver(clay.GetElementId(clay.MakeString(text))) ? LIGHT_GRAY : MEDIUM_GRAY2, cornerRadius = clay.CornerRadiusAll(4)}),
-        
+		clay.Rectangle(
+			{
+				color = clay.PointerOver(clay.GetElementId(clay.MakeString(text))) ? LIGHT_GRAY : MEDIUM_GRAY2,
+				cornerRadius = clay.CornerRadiusAll(4),
+			},
+		),
 	) {
 		clay.Text(
 			text,
@@ -64,6 +102,15 @@ header_button :: proc(text: string) {
 			),
 		)
 	}
+}
+
+header_vert_bar :: proc(color: clay.Color) {
+	if clay.UI(
+		clay.Layout(
+			{sizing = {width = clay.SizingFixed(1), height = clay.SizingGrow({})}},
+		),
+		clay.Rectangle({color = color}),
+	) {}
 }
 
 

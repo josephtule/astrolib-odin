@@ -1,6 +1,7 @@
 package sandbox
 
 import clay "../external/clay-odin"
+import "../ui"
 import "core:c"
 import "core:fmt"
 import "core:math"
@@ -25,9 +26,9 @@ main :: proc() {
 	clay.Initialize(
 		arena,
 		{cast(f32)rl.GetScreenWidth(), cast(f32)rl.GetScreenHeight()},
-		{handler = errorHandler},
+		{handler = ui.errorHandler},
 	)
-	clay.SetMeasureTextFunction(measureText, 0)
+	clay.SetMeasureTextFunction(ui.measureText, 0)
 
 	rl.SetConfigFlags(
 		{.VSYNC_HINT, .WINDOW_RESIZABLE, .WINDOW_HIGHDPI, .MSAA_4X_HINT},
@@ -35,16 +36,18 @@ main :: proc() {
 	rl.InitWindow(windowWidth, windowHeight, "AstroLib")
 	rl.SetTargetFPS(rl.GetMonitorRefreshRate(0))
 
-	loadFont(FONT_ID_BODY_12, 12, "assets/CascadiaMono.ttf")
-    loadFont(FONT_ID_BODY_14, 14, "assets/CascadiaMono.ttf") 
-    loadFont(FONT_ID_BODY_16, 16, "assets/CascadiaMono.ttf")
-    loadFont(FONT_ID_BODY_18, 18, "assets/CascadiaMono.ttf")
-    loadFont(FONT_ID_BODY_20, 20, "assets/CascadiaMono.ttf")
-    loadFont(FONT_ID_BODY_24, 24, "assets/CascadiaMono.ttf")
-    loadFont(FONT_ID_BODY_28, 28, "assets/CascadiaMono.ttf")
-    loadFont(FONT_ID_BODY_30, 30, "assets/CascadiaMono.ttf")
-    loadFont(FONT_ID_BODY_32, 32, "assets/CascadiaMono.ttf")
-    loadFont(FONT_ID_BODY_36, 36, "assets/CascadiaMono.ttf")
+	ui.loadFont(ui.FONT_ID_BODY_12, 12, "assets/CascadiaMono.ttf")
+	ui.loadFont(ui.FONT_ID_BODY_14, 14, "assets/CascadiaMono.ttf")
+	ui.loadFont(ui.FONT_ID_BODY_16, 16, "assets/CascadiaMono.ttf")
+	ui.loadFont(ui.FONT_ID_BODY_18, 18, "assets/CascadiaMono.ttf")
+	ui.loadFont(ui.FONT_ID_BODY_20, 20, "assets/CascadiaMono.ttf")
+	ui.loadFont(ui.FONT_ID_BODY_24, 24, "assets/CascadiaMono.ttf")
+	ui.loadFont(ui.FONT_ID_BODY_28, 28, "assets/CascadiaMono.ttf")
+	ui.loadFont(ui.FONT_ID_BODY_30, 30, "assets/CascadiaMono.ttf")
+	ui.loadFont(ui.FONT_ID_BODY_32, 32, "assets/CascadiaMono.ttf")
+	ui.loadFont(ui.FONT_ID_BODY_36, 36, "assets/CascadiaMono.ttf")
+
+	ctx: ui.Context
 
 	// raylib 3d camera default
 	camera: rl.Camera3D
@@ -56,7 +59,7 @@ main :: proc() {
 	camera.up = {0.0, 0.0, 1.0}
 	camera.fovy = 90
 	camera.projection = .PERSPECTIVE
-	camera_params := CameraParams {
+	camera_params := ui.CameraParams {
 		azel  = ast.cart_to_azel(ast.cast_f64(camera.position), .RADIANS),
 		frame = .origin,
 	}
@@ -96,7 +99,8 @@ main :: proc() {
 		)
 
 
-		renderCommands: clay.ClayArray(clay.RenderCommand) = createLayout(
+		renderCommands: clay.ClayArray(clay.RenderCommand) = ui.createLayout(
+			&ctx,
 			&camera,
 			&camera_params,
 			&system,
@@ -113,7 +117,7 @@ main :: proc() {
 		rl.DrawLine3D(origin, y_axis * 25, rl.GREEN)
 		rl.DrawLine3D(origin, z_axis * 25, rl.DARKBLUE)
 		rl.EndMode3D()
-		clayRaylibRender(&renderCommands)
+		ui.clayRaylibRender(&renderCommands)
 		rl.EndDrawing()
 	}
 }
