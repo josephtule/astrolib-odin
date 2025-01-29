@@ -150,6 +150,7 @@ draw_system :: #force_inline proc(
 	// celestial body models
 	for &model, i in body_models {
 		draw_body(&model, bodies[i])
+		draw_vectors(&model.posvel, system^, bodies[i].pos, bodies[i].vel)
 	}
 
 	// station models 

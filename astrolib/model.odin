@@ -175,8 +175,10 @@ draw_vectors :: #force_inline proc(
 	system: AstroSystem,
 	pos, vel: [3]f64,
 ) {
-	update_posvel(pv, pos, vel)
-	set_pos_origin(pv, system)
+	if pv.draw_pos || pv.draw_vel {
+		update_posvel(pv, pos, vel)
+		set_pos_origin(pv, system)
+	}
 	if pv.draw_pos {
 		rl.DrawLine3D(pv.pos_origin, pv.pos, pv.pos_tint)
 	}

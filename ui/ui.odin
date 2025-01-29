@@ -139,12 +139,12 @@ UI_tick :: proc(
 
 	window_size := [2]c.int{rl.GetScreenWidth(), rl.GetScreenHeight()}
 	clay.SetPointerState(
-		transmute(clay.Vector2)rl.GetMousePosition(),
+		rl.GetMousePosition(),
 		rl.IsMouseButtonDown(.LEFT),
 	)
 	clay.UpdateScrollContainers(
 		false,
-		transmute(clay.Vector2)rl.GetMouseWheelMoveV() * 5,
+		rl.GetMouseWheelMoveV() * 5,
 		rl.GetFrameTime(),
 	)
 	clay.SetLayoutDimensions(

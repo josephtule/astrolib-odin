@@ -123,12 +123,12 @@ createLayout :: proc(
 			lower_dir = .TOP_TO_BOTTOM
 			info_menu_sizing = {
 				width  = clay.SizingGrow({}),
-				height = clay.SizingFixed(0.25 * f32(rl.GetScreenHeight())),
+				height = clay.SizingFixed(0.3333 * f32(rl.GetScreenHeight())),
 			}
 		} else { 	// desktop width
 			lower_dir = .LEFT_TO_RIGHT
 			info_menu_sizing = {
-				width  = clay.SizingFixed(0.33 * f32(rl.GetScreenWidth())),
+				width  = clay.SizingFixed(0.3333 * f32(rl.GetScreenWidth())),
 				// height = clay.SizingFixed(0.90 * f32(rl.GetScreenHeight())),
 				height = clay.SizingGrow({}),
 			}

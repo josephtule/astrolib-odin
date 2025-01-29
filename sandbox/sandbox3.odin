@@ -54,7 +54,7 @@ main :: proc() {
 	camera: rl.Camera3D
 	camera.target = ast.origin_f32
 	camera.position = ast.azel_to_cart(
-		[3]f32{math.PI / 4, math.PI / 4, 15000 * u_to_rl},
+		[3]f32{math.PI / 4, math.PI / 4, 20000 * u_to_rl},
 		.RADIANS,
 	)
 	camera.up = {0.0, 0.0, 1.0}
@@ -141,12 +141,12 @@ show_fps := false
 		}
 
 		clay.SetPointerState(
-			transmute(clay.Vector2)rl.GetMousePosition(),
+			rl.GetMousePosition(),
 			rl.IsMouseButtonDown(.LEFT),
 		)
 		clay.UpdateScrollContainers(
 			false,
-			transmute(clay.Vector2)rl.GetMouseWheelMoveV(),
+			rl.GetMouseWheelMoveV(),
 			rl.GetFrameTime(),
 		)
 		clay.SetLayoutDimensions(

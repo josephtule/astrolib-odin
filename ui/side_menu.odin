@@ -181,7 +181,8 @@ edit_sat_menu :: proc(system: ^ast.AstroSystem) {
 
 	// apply button pressed
 	if button_clicked("apply_edit_sat") {
-		sys_state = .disp_sats
+		// only apply changes
+		// sys_state = .disp_sats
 	}
 
 	// back button pressed
@@ -405,7 +406,8 @@ edit_sys_menu :: proc(system: ^ast.AstroSystem) {
 
 	// apply button pressed
 	if button_clicked("apply_edit_sys") {
-		sys_state = .disp_sys
+		// only apply changes
+		// sys_state = .disp_sys
 	}
 
 	// back button pressed
@@ -456,6 +458,20 @@ add_sys_menu :: proc(
 	// sys_button_medium("add_sat", "Add Satellite")
 	// sys_button_medium("add_body", "Add Celestial Body")
 	// sys_button_medium("add_station", "Add Observation Station")
+	// name
+	// substeps
+	// time scale
+	// pre-defined systems -> input time for certain systems
+	//     solar system
+	//     earth-moon system
+	//     cr3bp?
+	sys_button_medium("add_earth_moon", "Create Earth-Moon System")
+	if button_clicked("add_earth_moon") {
+		ast.add_system(systems, systems_reset, ast.earth_moon_system())
+		sys_state = .disp_sys
+	}
+
+
 	horizontal_bar(DARK_GRAY)
 
 	ui_spacer()
