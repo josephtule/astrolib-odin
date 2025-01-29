@@ -46,7 +46,8 @@ earth_moon_system :: proc(
 	// moon
 	moon := luna_params()
 	// NOTE: this is an inaccurate way to get position/velocity, use SPICE for high accuracy
-	moon.pos, moon.vel = moon_location(JD, earth)
+	moon.pos = moon_pos(JD, earth)
+	moon.vel = moon_vel(JD, earth)
 	model_size =
 		[3]f32 {
 			f32(moon.semimajor_axis),
@@ -59,7 +60,7 @@ earth_moon_system :: proc(
 		model_size,
 		tint = rl.Color{150, 150, 150, 255},
 	)
-	
+
 	moon_model.posvel.draw_pos = true
 	moon_model.posvel.draw_vel = true
 	moon_model.posvel.target_id = earth.id

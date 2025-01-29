@@ -31,9 +31,7 @@ main :: proc() {
 	)
 	clay.SetMeasureTextFunction(ui.measureText, 0)
 
-	rl.SetConfigFlags(
-		{ .WINDOW_RESIZABLE, .WINDOW_HIGHDPI, .MSAA_4X_HINT},
-	)
+	rl.SetConfigFlags({.WINDOW_RESIZABLE, .WINDOW_HIGHDPI, .MSAA_4X_HINT})
 	rl.InitWindow(windowWidth, windowHeight, "AstroLib")
 	// rl.SetTargetFPS(rl.GetMonitorRefreshRate(0))
 
@@ -102,7 +100,7 @@ main :: proc() {
 	fps: f64
 	dt_max: f64 : 1. / 30.
 
-show_fps := false
+	show_fps := false
 
 	for !rl.WindowShouldClose() {
 
@@ -140,10 +138,7 @@ show_fps := false
 			clay.SetDebugModeEnabled(debugModeEnabled)
 		}
 
-		clay.SetPointerState(
-			rl.GetMousePosition(),
-			rl.IsMouseButtonDown(.LEFT),
-		)
+		clay.SetPointerState(rl.GetMousePosition(), rl.IsMouseButtonDown(.LEFT))
 		clay.UpdateScrollContainers(
 			false,
 			rl.GetMouseWheelMoveV(),
@@ -163,6 +158,9 @@ show_fps := false
 			&systems_reset,
 		)
 
+
+		ui.update_camera(&camera, &camera_params, system, dt)
+		ui.update_simulation(&system, &systems, &systems_reset, dt)
 
 		rl.BeginDrawing()
 		rl.ClearBackground(rl.Color({35, 35, 35, 255}))

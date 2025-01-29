@@ -126,12 +126,7 @@ luna_params :: #force_inline proc(
 	return moon
 }
 
-moon_location :: proc(
-	JD: f64 = 2451545.0,
-	earth: CelestialBody,
-) -> (
-	pos, vel: [3]f64,
-) {
+moon_pos :: proc(JD: f64 = 2451545.0, earth: CelestialBody) -> (pos: [3]f64) {
 	deg_to_rad :: math.PI / 180.0
 	rad_to_deg :: 180.0 / math.PI
 	century_to_day :: 36525.0
@@ -236,7 +231,7 @@ moon_location :: proc(
 	magr := (1.0 / math.sin(hzparal)) * earth.semimajor_axis
 	pos = {magr * l, magr * m, magr * n}
 
-	// Velocity calculation
+	// Velocity calculation, TODO: this is not working right
 	dl_dt :=
 		-math.sin(eclplat) * math.cos(eclplong) * declplat_dt -
 		math.cos(eclplat) * math.sin(eclplong) * declplong_dt
@@ -261,11 +256,30 @@ moon_location :: proc(
 	}
 
 	// Convert from km/day to km/s
-	vel = vel_kmday / 86400.0
+	vel := vel_kmday / 86400.0
 
-	return pos, vel
+	return pos
 }
 
+moon_vel :: proc(
+	JD: f64 = 2451545.0,
+	earth: CelestialBody,
+	delta_sec: f64 = 0,
+) -> (
+	vel: [3]f64,
+) {
+	delta_JD: f64
+	if delta_sec == 0 {
+		delta_JD = eps_f64(JD) * 100
+	} else {
+		delta_JD = delta_sec / 86400.
+	}
+	pos_prev := moon_pos(JD - delta_JD, earth)
+	pos_next := moon_pos(JD + delta_JD, earth)
+	vel = (pos_next - pos_prev) / (2 * delta_JD * 86400.0)
+
+	return vel
+}
 
 sun_location :: proc(JD: f64 = 2451545.0) -> (pos, vel: [3]f64) {
 	deg_to_rad :: math.PI / 180.0
