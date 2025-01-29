@@ -14,7 +14,7 @@ clayColorToRaylibColor :: proc(color: clay.Color) -> raylib.Color {
     return raylib.Color{cast(u8)color.r, cast(u8)color.g, cast(u8)color.b, cast(u8)color.a}
 }
 
-raylibFonts := [10]RaylibFont{}
+raylibFonts := [20]RaylibFont{}
 
 measureText :: proc "c" (text: clay.StringSlice, config: ^clay.TextElementConfig, userData: uintptr) -> clay.Dimensions {
     // Measure string size for Font

@@ -91,6 +91,10 @@ gen_station_model :: #force_inline proc(
 ) -> (
 	model: Model,
 ) #no_bounds_check {
+
+	model.id = station.id
+	model.type = .station
+
 	model.draw_model = true
 	model.tint = tint
 	model.scale = scale

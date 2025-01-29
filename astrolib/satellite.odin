@@ -128,7 +128,7 @@ gen_sat :: #force_inline proc(
 	// defaults to kilometers and radians
 	// default zero mass and radius
 	info: SatelliteInfo
-	name_str: string = "SATID"
+	name_str: string = "SAT"
 	id_buf: [8]byte
 	id_str: string = strconv.itoa(id_buf[:], id)
 	name, err := str.join([]string{name_str, id_str}, " ")
@@ -164,6 +164,8 @@ gen_sat_model :: #force_inline proc(
 	m: Model,
 ) {
 	m.id = sat.id
+	m.type = .satellite
+
 	sat.radius =
 		f64(max(model_size[0], min(model_size[1], model_size[2]))) / u_to_rl
 
@@ -207,6 +209,7 @@ gen_sat_model :: #force_inline proc(
 	texture := rl.LoadTextureFromImage(image_checker)
 	rl.UnloadImage(image_checker)
 	m.model.materials[0].maps[rl.MaterialMapIndex.ALBEDO].texture = texture
+
 	return m
 }
 

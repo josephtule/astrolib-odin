@@ -74,7 +74,7 @@ clay_textinput_box :: proc(
 			},
 		),
 	) {
-		clay.Text("Enter value...", &button_text_config)
+		clay.Text("Enter value...", &text_config_16)
 	}
 	return val
 }
@@ -83,25 +83,50 @@ clay_textinput_box :: proc(
 back_button :: proc(name: string) {}
 
 
-header_button :: proc(text: string) {
+header_button :: proc(name, display_text: string) {
 	if clay.UI(
-		clay.ID(text),
+		clay.ID(name),
 		clay.Layout({padding = {gaps, gaps, 2, 2}}),
 		// clay.BorderOutsideRadius({2, COLOR_RED}, 10),
 		clay.Rectangle(
 			{
-				color = clay.PointerOver(clay.GetElementId(clay.MakeString(text))) ? LIGHT_GRAY : MEDIUM_GRAY2,
+				color = clay.PointerOver(clay.GetElementId(clay.MakeString(name))) ? LIGHT_GRAY : MEDIUM_GRAY2,
 				cornerRadius = clay.CornerRadiusAll(4),
 			},
 		),
 	) {
 		clay.Text(
-			text,
+			display_text,
 			clay.TextConfig(
 				{fontId = FONT_ID_BODY_18, fontSize = 18, textColor = SOFT_WHITE},
 			),
 		)
 	}
+}
+
+side_by_side_buttons :: proc(
+	block_name, id1, display1, id2, display2: string,
+) {
+	if clay.UI(
+		clay.ID(block_name),
+		clay.Layout(
+			{
+				childGap = gaps,
+				layoutDirection = clay.LayoutDirection.LEFT_TO_RIGHT,
+				sizing = {width = clay.SizingGrow({})},
+			},
+		),
+	) {
+		sys_button_medium(id1, display1)
+		sys_button_medium(id2, display2)
+	}
+}
+
+button_clicked :: proc(id: string) -> bool {
+	return(
+		clay.PointerOver(clay.GetElementId(clay.MakeString(id))) &&
+		rl.IsMouseButtonPressed(.LEFT) \
+	)
 }
 
 vertical_bar :: proc(color: clay.Color, thickness: f32 = 1) {
@@ -121,7 +146,12 @@ vertical_bar :: proc(color: clay.Color, thickness: f32 = 1) {
 horizontal_bar :: proc(color: clay.Color, thickness: f32 = 1) {
 	if clay.UI(
 		clay.Layout(
-			{sizing = {height= clay.SizingFixed(thickness), width = clay.SizingGrow({})}},
+			{
+				sizing = {
+					height = clay.SizingFixed(thickness),
+					width = clay.SizingGrow({}),
+				},
+			},
 		),
 		clay.Rectangle({color = color}),
 	) {}

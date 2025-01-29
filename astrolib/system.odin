@@ -1,10 +1,10 @@
 package astrolib
 
+import "core:fmt"
 import "core:slice"
 import "core:strconv"
 import "core:strings"
 import rl "vendor:raylib"
-import "core:fmt"
 
 g_sys_id_base: int : 0
 g_sys_id: int = g_sys_id_base
@@ -194,7 +194,7 @@ create_system_empty :: #force_inline proc(
 
 	if len(name) == 0 {
 		name_builder := strings.builder_make()
-		strings.write_string(&name_builder, "SYSID: ")
+		strings.write_string(&name_builder, "SYS: ")
 		strings.write_int(&name_builder, system.id)
 		system.name = strings.to_string(name_builder)
 	} else {
@@ -252,7 +252,7 @@ create_system_full :: #force_inline proc(
 
 	if len(name) == 0 {
 		name_builder := strings.builder_make()
-		strings.write_string(&name_builder, "SYSID: ")
+		strings.write_string(&name_builder, "SYS: ")
 		strings.write_int(&name_builder, system.id)
 		system.name = strings.to_string(name_builder)
 	} else {
@@ -276,7 +276,9 @@ copy_system :: #force_inline proc(system_dst, system_src: ^AstroSystem) {
 	system_dst.num_bodies = len(system_src.bodies)
 
 	system_dst.stations = slice.clone_to_dynamic(system_src.stations[:])
-	system_dst.station_models = slice.clone_to_dynamic(system_src.station_models[:])
+	system_dst.station_models = slice.clone_to_dynamic(
+		system_src.station_models[:],
+	)
 	system_dst.num_stations = len(system_src.stations)
 
 	system_dst.integrator = system_src.integrator
@@ -288,7 +290,7 @@ copy_system :: #force_inline proc(system_dst, system_src: ^AstroSystem) {
 	system_dst.name = strings.clone(system_src.name)
 	system_dst.JD0 = system_src.JD0
 	system_dst.entity = system_src.entity
-	
+
 }
 
 
@@ -361,7 +363,14 @@ add_stations_to_system :: #force_inline proc(
 }
 add_model_to_system :: #force_inline proc(system: ^AstroSystem, model: Model) {
 	using system
-	add_model_to_array(&satellite_models, model)
+	switch model.type {
+	case .satellite:
+		add_model_to_array(&satellite_models, model)
+	case .celestialbody:
+		add_model_to_array(&body_models, model)
+	case .station:
+		add_model_to_array(&station_models, model)
+	}
 }
 add_models_to_system :: #force_inline proc(
 	system: ^AstroSystem,
@@ -369,6 +378,13 @@ add_models_to_system :: #force_inline proc(
 ) {
 	using system
 	for model in models {
-		add_model_to_array(&satellite_models, model)
+		switch model.type {
+		case .satellite:
+			add_model_to_array(&satellite_models, model)
+		case .celestialbody:
+			add_model_to_array(&body_models, model)
+		case .station:
+			add_model_to_array(&station_models, model)
+		}
 	}
 }

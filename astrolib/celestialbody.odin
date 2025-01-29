@@ -176,6 +176,8 @@ gen_celestialbody_model :: #force_inline proc(
 	model: Model
 
 	model.id = body.id
+	model.type = .celestialbody
+
 	model.draw_model = true
 	model.trail.draw = false
 	model.tint = tint

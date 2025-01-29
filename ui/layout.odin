@@ -42,7 +42,7 @@ Context :: struct {
 show_info := false
 show_sys := false
 
-layout_grow := clay.Sizing {
+grow := clay.Sizing {
 	width  = clay.SizingGrow({}),
 	height = clay.SizingGrow({}),
 }
@@ -51,7 +51,6 @@ rectangle_rounded :: proc(color: clay.Color) -> clay.RectangleElementConfig {
 	rect := clay.RectangleElementConfig(
 		{color = color, cornerRadius = clay.CornerRadiusAll(8)},
 	)
-
 	return rect
 }
 
@@ -68,7 +67,7 @@ createLayout :: proc(
 ) -> clay.ClayArray(clay.RenderCommand) {
 	ui_ctx: UI_Context
 	mobileScreen := rl.GetScreenWidth() < 750
-	handle_input_clay()
+	handle_input_header(camera, camera_params, system, systems)
 	clay.BeginLayout()
 
 	// :outer container
@@ -77,7 +76,7 @@ createLayout :: proc(
 		clay.Layout(
 			{
 				layoutDirection = .TOP_TO_BOTTOM,
-				sizing = layout_grow,
+				sizing = grow,
 				padding = clay.PaddingAll(gaps),
 				childGap = gaps,
 			},
@@ -103,54 +102,60 @@ createLayout :: proc(
 				},
 			),
 		) {
-			clay.Text("AstroLib", &button_text_config)
+			clay.Text("AstroLib", &text_config_16)
 			if clay.UI(clay.Layout({sizing = {width = clay.SizingGrow({})}})) {} 	// spacer
 			if show_info {
-				header_button("System")
+				header_button("header_system", "System")
 				// header_button("Satellites")
 				// header_button("Bodies")
 				// header_button("Station")
 				// header_button("Camera")
 			}
 			vertical_bar(DARK_GRAY)
-			header_button("Info")
-			header_button("Simulate")
+			header_button("header_info", "Info")
+			header_button("header_simulate", "Simulate")
 		}
 
 		// :lower content
 		lower_dir: clay.LayoutDirection
-		info_container_sizing: clay.Sizing
+		info_menu_sizing: clay.Sizing
 		if mobileScreen {
 			lower_dir = .TOP_TO_BOTTOM
-			info_container_sizing = {
+			info_menu_sizing = {
 				width  = clay.SizingGrow({}),
 				height = clay.SizingFixed(0.25 * f32(rl.GetScreenHeight())),
 			}
-		} else {
+		} else { 	// desktop width
 			lower_dir = .LEFT_TO_RIGHT
-			info_container_sizing = {
+			info_menu_sizing = {
 				width  = clay.SizingFixed(0.33 * f32(rl.GetScreenWidth())),
+				// height = clay.SizingFixed(0.90 * f32(rl.GetScreenHeight())),
 				height = clay.SizingGrow({}),
 			}
 		}
 		if clay.UI(
 			clay.ID("lower_content"),
 			clay.Layout(
-				{sizing = layout_grow, childGap = gaps, layoutDirection = lower_dir},
+				{
+					sizing = grow,
+					childGap = gaps,
+					layoutDirection = lower_dir,
+
+				},
 			),
 		) {
 			// :viewport on left/top (transparent to display raylib camera below)
 			if clay.UI(
 				clay.ID("viewport"),
-				clay.Layout({sizing = layout_grow}),
+				clay.Layout({sizing = grow}),
 				// clay.Rectangle(rectangle_rounded(clay.COLOR)),
 			) {
 				// empty here
 			}
-			// :info_container on right/bottom TODO: draw only when button pressed
+			// :info_menu on right/bottom TODO: draw only when button pressed
 			if show_info {
 				if clay.UI(
-					clay.ID("info_container"),
+					clay.ID("info_menu"),
 					clay.Scroll({vertical = true}),
 					clay.Layout(
 						{
@@ -160,7 +165,7 @@ createLayout :: proc(
 								top = gaps,
 								bottom = gaps,
 							},
-							sizing = info_container_sizing,
+							sizing = info_menu_sizing,
 							layoutDirection = .TOP_TO_BOTTOM,
 							childGap = gaps,
 						},
@@ -170,7 +175,7 @@ createLayout :: proc(
 					// info container children
 					if show_sys {
 						// input_posvel(ctx)
-						sys_menu(ctx, camera, camera_params, system, systems, systems_reset)
+						disp_sys_menu(ctx, camera, camera_params, system, systems, systems_reset)
 					}
 
 					// UI_textbox(ui_ctx)
@@ -185,15 +190,24 @@ createLayout :: proc(
 }
 
 
-handle_input_clay :: proc() {
-	if clay.PointerOver(clay.GetElementId(clay.MakeString("Info"))) &&
+handle_input_header :: proc(
+	camera: ^rl.Camera,
+	camera_params: ^CameraParams,
+	system: ^ast.AstroSystem,
+	systems: ^ast.Systems,
+) {
+	if clay.PointerOver(clay.GetElementId(clay.MakeString("header_info"))) &&
 	   rl.IsMouseButtonPressed(.LEFT) {
 		show_info = !show_info
 	}
-	if clay.PointerOver(clay.GetElementId(clay.MakeString("System"))) &&
+	if clay.PointerOver(clay.GetElementId(clay.MakeString("header_system"))) &&
 	   rl.IsMouseButtonPressed(.LEFT) {
 		show_sys = !show_sys
 	}
+	if button_clicked("header_simulate") || rl.IsKeyPressed(.SPACE) {
+		system.simulate = !system.simulate
+	}
+
 }
 
 
@@ -204,7 +218,9 @@ handle_input_simulation :: proc(
 	systems: ^[dynamic]ast.AstroSystem,
 ) {
 
-	// if 
+	if clay.PointerOver(clay.GetElementId(clay.MakeString(""))) {
+
+	}
 
 }
 

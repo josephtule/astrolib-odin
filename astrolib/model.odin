@@ -16,6 +16,13 @@ Model :: struct {
 	trail:      Trail,
 	axes:       Axes,
 	posvel:     PosVel,
+	type:       ModelType,
+}
+
+ModelType :: enum {
+	satellite,
+	celestialbody,
+	station,
 }
 
 add_model_to_array :: proc {

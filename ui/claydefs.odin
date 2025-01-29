@@ -6,15 +6,24 @@ import "core:fmt"
 import rl "vendor:raylib"
 
 
-button_text_config := clay.TextElementConfig {
-	fontId    = FONT_ID_BODY_18,
-	fontSize  = 18,
+text_config_12 := clay.TextElementConfig {
+	fontId    = FONT_ID_BODY_12,
+	fontSize  = 12,
 	textColor = SOFT_WHITE,
 }
-
-header_text_config := clay.TextElementConfig {
-	fontId    = FONT_ID_BODY_20,
-	fontSize  = 20,
+text_config_14 := clay.TextElementConfig {
+	fontId    = FONT_ID_BODY_14,
+	fontSize  = 14,
+	textColor = SOFT_WHITE,
+}
+text_config_16 := clay.TextElementConfig {
+	fontId    = FONT_ID_BODY_16,
+	fontSize  = 16,
+	textColor = SOFT_WHITE,
+}
+text_config_18 := clay.TextElementConfig {
+	fontId    = FONT_ID_BODY_18,
+	fontSize  = 18,
 	textColor = SOFT_WHITE,
 }
 
