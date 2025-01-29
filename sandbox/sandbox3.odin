@@ -65,8 +65,9 @@ main :: proc() {
 	}
 
 	// set up system/systems
-	system := ast.create_system() // current system
-	systems: [dynamic]ast.AstroSystem // dynamic array of system (used to copy system config to current)
+	systems, systems_reset := ast.create_systems()
+	system := ast.create_system()
+	ast.add_system(&systems, &systems_reset, system)
 
 	debugModeEnabled: bool = false
 
@@ -105,6 +106,7 @@ main :: proc() {
 			&camera_params,
 			&system,
 			&systems,
+			&systems_reset
 		)
 
 

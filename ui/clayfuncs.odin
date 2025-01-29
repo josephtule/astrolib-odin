@@ -104,15 +104,28 @@ header_button :: proc(text: string) {
 	}
 }
 
-header_vert_bar :: proc(color: clay.Color) {
+vertical_bar :: proc(color: clay.Color, thickness: f32 = 1) {
 	if clay.UI(
 		clay.Layout(
-			{sizing = {width = clay.SizingFixed(1), height = clay.SizingGrow({})}},
+			{
+				sizing = {
+					width = clay.SizingFixed(thickness),
+					height = clay.SizingGrow({}),
+				},
+			},
 		),
 		clay.Rectangle({color = color}),
 	) {}
 }
 
+horizontal_bar :: proc(color: clay.Color, thickness: f32 = 1) {
+	if clay.UI(
+		clay.Layout(
+			{sizing = {height= clay.SizingFixed(thickness), width = clay.SizingGrow({})}},
+		),
+		clay.Rectangle({color = color}),
+	) {}
+}
 
 // :SYSTEM
 system_new :: proc() -> (system: ast.AstroSystem) {

@@ -12,7 +12,7 @@ button_text_config := clay.TextElementConfig {
 	textColor = SOFT_WHITE,
 }
 
-head_text_config := clay.TextElementConfig {
+header_text_config := clay.TextElementConfig {
 	fontId    = FONT_ID_BODY_20,
 	fontSize  = 20,
 	textColor = SOFT_WHITE,

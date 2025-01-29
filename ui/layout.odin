@@ -63,7 +63,8 @@ createLayout :: proc(
 	camera: ^rl.Camera,
 	camera_params: ^CameraParams,
 	system: ^ast.AstroSystem,
-	systems: ^[dynamic]ast.AstroSystem,
+	systems: ^ast.Systems,
+	systems_reset: ^ast.Systems,
 ) -> clay.ClayArray(clay.RenderCommand) {
 	ui_ctx: UI_Context
 	mobileScreen := rl.GetScreenWidth() < 750
@@ -111,7 +112,7 @@ createLayout :: proc(
 				// header_button("Station")
 				// header_button("Camera")
 			}
-			header_vert_bar(DARK_GRAY)
+			vertical_bar(DARK_GRAY)
 			header_button("Info")
 			header_button("Simulate")
 		}
@@ -169,7 +170,7 @@ createLayout :: proc(
 					// info container children
 					if show_sys {
 						// input_posvel(ctx)
-						sys_menu(ctx, camera, camera_params, system, systems)
+						sys_menu(ctx, camera, camera_params, system, systems, systems_reset)
 					}
 
 					// UI_textbox(ui_ctx)

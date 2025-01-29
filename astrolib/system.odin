@@ -1,7 +1,10 @@
 package astrolib
 
 import "core:slice"
+import "core:strconv"
+import "core:strings"
 import rl "vendor:raylib"
+import "core:fmt"
 
 g_sys_id_base: int : 0
 g_sys_id: int = g_sys_id_base
@@ -28,14 +31,49 @@ AstroSystem :: struct {
 	substeps:         int,
 	simulate:         bool,
 	JD0:              f64,
+	// info 
+	name:             string,
 }
 
+Systems :: struct {
+	id:          map[int]int,
+	systems:     [dynamic]AstroSystem,
+	num_systems: int,
+}
+
+add_system :: proc(
+	systems: ^Systems,
+	systems_reset: ^Systems,
+	system: AstroSystem,
+) {
+	append(&systems.systems, system)
+	append(&systems_reset.systems, system)
+	systems.id[system.id] = g_sys_id
+	systems_reset.id[system.id] = g_sys_id
+	systems.num_systems += 1
+	systems_reset.num_systems += 1
+}
+
+create_systems :: proc() -> (systems: Systems, systems_reset: Systems) {
+	systems.systems = make([dynamic]AstroSystem)
+	systems.id = make(map[int]int)
+	systems.num_systems = 0
+
+	systems_reset.systems = make([dynamic]AstroSystem)
+	systems_reset.id = make(map[int]int)
+	systems_reset.num_systems = 0
+
+	return systems, systems_reset
+}
 
 update_system :: #force_inline proc(system: ^AstroSystem, dt, time: f64) {
 	using system
 	N_sats := len(satellites)
 	N_bodies := len(bodies)
-
+	params_translate := Params_Gravity_Nbody {
+		bodies = &system.bodies,
+		idx    = -1,
+	}
 	// update satellites first
 	for &sat, i in satellites {
 		// gen params
@@ -44,13 +82,10 @@ update_system :: #force_inline proc(system: ^AstroSystem, dt, time: f64) {
 			inertia_inv = sat.inertia_inv,
 			torque      = {0, 0, 0}, // NOTE: no control for now
 		}
-		params_translate := Params_Gravity_Nbody {
-			bodies        = &system.bodies,
-			self_mass     = sat.mass,
-			self_radius   = sat.radius,
-			gravity_model = sat.gravity_model,
-			idx           = -1,
-		}
+		params_translate.self_mass = sat.mass
+		params_translate.self_radius = sat.radius
+		params_translate.gravity_model = sat.gravity_model
+
 		update_satellite(
 			&sat,
 			&satellite_models[i],
@@ -68,14 +103,13 @@ update_system :: #force_inline proc(system: ^AstroSystem, dt, time: f64) {
 	// rk4 based on old positions
 	state_new_body := make([dynamic][6]f64, len(bodies))
 	for &body, i in bodies {
-		params_translate := Params_Gravity_Nbody {
-			bodies        = &system.bodies,
-			gravity_model = body.gravity_model,
-			idx           = i,
-			self_radius   = body.semimajor_axis,
-			self_mass     = body.mass,
-		}
+		params_translate.self_mass = body.mass
+		params_translate.self_radius = body.semimajor_axis
+		params_translate.gravity_model = body.gravity_model
+		params_translate.idx = i
+
 		params_attitude := Params_BodyAttitude{}
+
 		update_body(
 			&body,
 			&body_models[i],
@@ -134,6 +168,7 @@ create_system_empty :: #force_inline proc(
 	integrator: IntegratorType = .rk4,
 	time_scale: f64 = 8,
 	substeps: int = 8,
+	name: string = "",
 ) -> AstroSystem {
 	system: AstroSystem
 
@@ -157,6 +192,15 @@ create_system_empty :: #force_inline proc(
 	system.id = g_sys_id
 	g_sys_id += 1
 
+	if len(name) == 0 {
+		name_builder := strings.builder_make()
+		strings.write_string(&name_builder, "SYSID: ")
+		strings.write_int(&name_builder, system.id)
+		system.name = strings.to_string(name_builder)
+	} else {
+		system.name = name
+	}
+
 	return system
 }
 
@@ -172,6 +216,7 @@ create_system_full :: #force_inline proc(
 	integrator: IntegratorType = .rk4,
 	time_scale: f64 = 8,
 	substeps: int = 8,
+	name: string = "",
 ) -> AstroSystem {
 	system: AstroSystem
 	// system0: AstroSystem
@@ -205,11 +250,21 @@ create_system_full :: #force_inline proc(
 	system.id = g_sys_id
 	g_sys_id += 1
 
+	if len(name) == 0 {
+		name_builder := strings.builder_make()
+		strings.write_string(&name_builder, "SYSID: ")
+		strings.write_int(&name_builder, system.id)
+		system.name = strings.to_string(name_builder)
+	} else {
+		system.name = name
+	}
+
 	return system
 }
 
 
 copy_system :: #force_inline proc(system_dst, system_src: ^AstroSystem) {
+
 	system_dst.satellites = slice.clone_to_dynamic(system_src.satellites[:])
 	system_dst.satellite_models = slice.clone_to_dynamic(
 		system_src.satellite_models[:],
@@ -220,11 +275,20 @@ copy_system :: #force_inline proc(system_dst, system_src: ^AstroSystem) {
 	system_dst.body_models = slice.clone_to_dynamic(system_src.body_models[:])
 	system_dst.num_bodies = len(system_src.bodies)
 
+	system_dst.stations = slice.clone_to_dynamic(system_src.stations[:])
+	system_dst.station_models = slice.clone_to_dynamic(system_src.station_models[:])
+	system_dst.num_stations = len(system_src.stations)
+
 	system_dst.integrator = system_src.integrator
 	system_dst.time_scale = system_src.time_scale
 	system_dst.substeps = system_src.substeps
 	system_dst.simulate = system_src.simulate
 
+	system_dst.id = system_src.id
+	system_dst.name = strings.clone(system_src.name)
+	system_dst.JD0 = system_src.JD0
+	system_dst.entity = system_src.entity
+	
 }
 
 

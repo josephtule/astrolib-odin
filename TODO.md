@@ -33,6 +33,7 @@
 - [x] Separate body/sat update and drawing from system
   - [x] separate updates
   - [x] separate drawing
+- [ ] Separate entity and their models further (allow for creation, and simulation without touching raylib)
 
 ## Physics/Astrodynamics
 
@@ -138,11 +139,9 @@
 - [ ] Save/load functionality for individual systems
   - [ ] save current state and reset state
 - [ ] clipboard for copying one/multiple entities from one system to another
-- [ ] 
-
+- [ ]
 
 ## Misc
 
 - [x] Organize TODO
 - [ ] port to web????
-

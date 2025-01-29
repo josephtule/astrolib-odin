@@ -1,7 +1,3 @@
----
-header_includes: -\newcommand{\vecb}[1]{\boldsymbol{#1}}
----
-
 # astrolib-odin
 
 ## Library for orbital mechanics and attitude dynamics for spacecraft
