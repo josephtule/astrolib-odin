@@ -87,7 +87,7 @@ Trail :: struct {
 
 N_trail_MAX :: 1000
 N_trail_sat: int = 200
-div_trail_sat: int = 4
+div_trail_sat: int = 8
 mod_trail_sat: int = N_trail_sat / div_trail_sat
 
 create_trail :: #force_inline proc(

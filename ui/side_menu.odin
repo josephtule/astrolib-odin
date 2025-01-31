@@ -125,7 +125,7 @@ add_sat_menu :: proc(system: ^ast.AstroSystem, systems_reset: ^ast.Systems) {
 	if button_clicked("apply_add_sat") {
 		// TODO: remove this later
 		// TODO: also when doing coe stuff and selecting bodies, camera should switch to said body
-		#unroll for i in 0 ..< 100 {
+		 for i in 0 ..< 500 {
 			// orbittype := rand.choice_enum(ast.EarthOrbitType)
 			orbittype := rand.choice(
 				[]ast.EarthOrbitType{.LEO, .LEO, .LEO, .LEO, .MEO, .GEO, .GSO},
@@ -468,7 +468,7 @@ edit_sys_menu :: proc(system: ^ast.AstroSystem, systems_reset: ^ast.Systems) {
 
 	// save/states
 	if button_clicked("reset_sys_state") {
-		ast.reset_system(system, &systems_reset.systems[0])
+		ast.reset_system(system, &systems_reset.systems[system.id])
 
 	}
 
