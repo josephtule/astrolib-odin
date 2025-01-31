@@ -24,7 +24,7 @@ tle_parse :: proc {
 tle_propagate :: #force_inline proc(
 	JD: f64,
 	sat: ^Satellite,
-	cb: CelestialBody,
+	cb: ^CelestialBody,
 	system: ^AstroSystem,
 ) {
 	lowest_model: GravityModel = min(sat.gravity_model, cb.gravity_model)
@@ -75,7 +75,7 @@ tle_read :: #force_inline proc(file: string) -> []string {
 
 tle_parse_to_sat :: #force_inline proc(
 	file: string,
-	cb: CelestialBody,
+	cb: ^CelestialBody,
 	millenium: Millenium = .two_thousand,
 	num_to_read: int = -1,
 	start_sat: int = 0,
@@ -118,7 +118,7 @@ tle_parse_to_sat :: #force_inline proc(
 
 tle_parse_to_sat_model :: #force_inline proc(
 	file: string,
-	cb: CelestialBody,
+	cb: ^CelestialBody,
 	millenium: Millenium = .two_thousand,
 	num_to_read: int = -1,
 	start_sat: int = 0,
@@ -167,7 +167,7 @@ tle_parse_to_sat_model :: #force_inline proc(
 
 tle_parse_to_sys :: #force_inline proc(
 	file: string,
-	cb: CelestialBody,
+	cb: ^CelestialBody,
 	system: ^AstroSystem,
 	millenium: Millenium = .two_thousand,
 	time_only: bool = false,
@@ -235,7 +235,7 @@ tle_parse_to_sys :: #force_inline proc(
 
 extract_tle :: #force_inline proc(
 	lines: []string,
-	cb: CelestialBody,
+	cb: ^CelestialBody,
 	millenium: Millenium = .two_thousand,
 ) -> (
 	sat: Satellite,
@@ -291,7 +291,7 @@ extract_tle :: #force_inline proc(
 	)
 
 
-	pos, vel := coe_to_rv(semimajor_axis, ecc, inc, raan, aop, true_anom, cb)
+	pos, vel := coe_to_rv(semimajor_axis, ecc, inc, raan, aop, true_anom, cb^)
 	ep: [4]f64 = {0., 0., 0., 1.}
 	omega: [3]f64 = {0., 0., 0.}
 	// TODO: change this later

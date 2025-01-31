@@ -1,0 +1,114 @@
+package sandbox
+
+import "base:runtime"
+import "core:fmt"
+import "core:mem"
+import "core:mem/virtual"
+import "core:os"
+import "core:prof/spall"
+import "core:sync"
+import "core:thread"
+import "core:time"
+
+NUM_THREADS_TOTAL := os.processor_core_count()
+NUM_THREADS := NUM_THREADS_TOTAL - 1
+
+threadPool :: struct {
+	threads: [dynamic]^thread.Thread,
+	spawned: [dynamic]bool,
+}
+
+
+main :: proc() {
+	// pool := make_threadpool()
+	// fmt.println(len(pool.threads))
+	// ind := pool.threads[0].user_index
+	// fmt.println(pool.threads[0].user_index)
+	// t1 := thread.create(worker1)
+	// t2 := pool.threads[1]
+
+	// // t1.procedure = worker1
+	// wd1 := wData1 {
+	// 	val    = 231,
+	// 	thread = t1,
+	// }
+	// t1.data = &wd1
+	// t2.procedure = worker2
+	// wd2 := wData2 {
+	// 	val    = 12,
+	// 	thread = t2,
+	// }
+	// t2.data = &wd2
+	// thread.start(t1)
+	// thread.start(t2)
+
+	t1 := thread.create(worker1)
+	t2 := thread.create(worker2)
+
+	for i in 0 ..< 100 {
+		data1 := wData1 {
+			val    = i,
+			thread = t1,
+		}
+		t1.data = &data1
+
+		data2 := wData2 {
+			val    = f32(i) + 0.5,
+			thread = t2,
+		}
+		t2.data = &data2
+		thread.start(t1)
+		thread.start(t2)
+	}
+	thread.join(t1)
+	thread.join(t2)
+}
+
+make_threadpool :: proc(num_threads: int = NUM_THREADS) -> (pool: threadPool) {
+	pool.threads = make([dynamic]^thread.Thread, 0, NUM_THREADS)
+
+	for i in 0 ..< NUM_THREADS {
+		t := thread.create(worker1)
+		if t != nil {
+			t.init_context = context
+			t.user_index = i
+			append(&pool.spawned, true)
+			append(&pool.threads, t)
+		} else {
+			append(&pool.spawned, false)
+		}
+	}
+	return pool
+}
+
+wData1 :: struct {
+	// data
+	val:    int,
+
+	// thread
+	thread: ^thread.Thread,
+	wg:     ^sync.Wait_Group,
+}
+
+wData2 :: struct {
+	// data
+	val:    f32,
+
+	// thread
+	thread: ^thread.Thread,
+}
+
+worker_temp :: proc(t: ^thread.Thread) {}
+worker1 :: proc(t: ^thread.Thread) {
+	data := cast(^wData1)t.data
+	// time.sleep(1000 * time.Millisecond)
+	a: int = 10032
+	fmt.println(data.val + a)
+}
+
+worker2 :: proc(t: ^thread.Thread) {
+	data := cast(^wData2)t.data
+	a: f32 = 2
+	fmt.println(data.val / 2)
+}
+

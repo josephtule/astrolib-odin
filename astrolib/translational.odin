@@ -32,7 +32,8 @@ gravity_nbody :: #force_inline proc(
 	// set_vector_slice_1(&v, x, s1 = 3, l1 = 3)
 
 	a: [3]f64
-	for &body, i in params.bodies {
+	bodies := params.bodies
+	for &body, i in bodies {
 		if params.idx == -1 || params.idx != i {
 			r_rel := r - body.pos
 
@@ -62,7 +63,7 @@ gravity_nbody :: #force_inline proc(
 }
 
 Params_Gravity_Onebody :: struct {
-	body:          CelestialBody,
+	body:          ^CelestialBody,
 	self_radius:   f64,
 	self_mass:     f64,
 	gravity_model: GravityModel,

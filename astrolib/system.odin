@@ -101,7 +101,7 @@ update_system :: #force_inline proc(system: ^AstroSystem, dt, time: f64) {
 	// update celestial bodies
 	// store celestial body current positions
 	// rk4 based on old positions
-	state_new_body := make([dynamic][6]f64, len(bodies))
+	state_new_body := make([dynamic][6]f64, len(bodies)) // TODO: remove allocation, add to sys to prevent having to make this every time
 	for &body, i in bodies {
 		params_translate.self_mass = body.mass
 		params_translate.self_radius = body.semimajor_axis

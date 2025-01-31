@@ -15,6 +15,32 @@ import ast "astrolib"
 import rl "vendor:raylib"
 import "vendor:raylib/rlgl"
 
+import "base:runtime"
+import "core:mem/virtual"
+import "core:prof/spall"
+import "core:sync"
+import "core:thread"
+
+spall_ctx: spall.Context
+@(thread_local)
+spall_buffer: spall.Buffer
+
+@(instrumentation_enter)
+spall_enter :: proc "contextless" (
+	proc_address, call_site_return_address: rawptr,
+	loc: runtime.Source_Code_Location,
+) {
+	spall._buffer_begin(&spall_ctx, &spall_buffer, "", "", loc)
+}
+
+@(instrumentation_exit)
+spall_exit :: proc "contextless" (
+	proc_address, call_site_return_address: rawptr,
+	loc: runtime.Source_Code_Location,
+) {
+	spall._buffer_end(&spall_ctx, &spall_buffer)
+}
+
 
 u_to_rl :: ast.u_to_rl
 rl_to_u :: ast.rl_to_u
@@ -24,7 +50,27 @@ print_dtsim: bool
 
 dt_max: f64 : 1. / 30.
 
+
+
 main :: proc() {
+
+	// -------------------------------------------------------------------------
+
+	spall_ctx = spall.context_create("main.spall")
+	defer spall.context_destroy(&spall_ctx)
+
+	buffer_backing := make([]u8, spall.BUFFER_DEFAULT_SIZE)
+	defer delete(buffer_backing)
+
+	spall_buffer = spall.buffer_create(
+		buffer_backing,
+		u32(sync.current_thread_id()),
+	)
+	defer spall.buffer_destroy(&spall_ctx, &spall_buffer)
+
+	spall.SCOPED_EVENT(&spall_ctx, &spall_buffer, #procedure)
+
+
 	// raylib init
 	window_width: i32 = 1024 / 2
 	window_height: i32 = 1024 / 2
@@ -218,7 +264,7 @@ main :: proc() {
 
 	// create empty array of stations
 	stations: [dynamic]ast.Station
-	station_models : [dynamic]ast.Model
+	station_models: [dynamic]ast.Model
 
 	// set up system
 	asystem := new(ast.AstroSystem)
@@ -237,11 +283,11 @@ main :: proc() {
 
 	// gen satellites from tle
 	filename := "assets/TLE_data.txt"
-	ast.tle_parse(filename, earth, asystem, start_sat = 0, num_to_read = 20)
+	ast.tle_parse(filename, &earth, asystem, start_sat = 0, num_to_read = 2000)
 	// ast.tle_read_extract(filename, earth.id, asystem)
 
 	filename = "assets/ISS_TLE_HW7.txt"
-	ast.tle_parse(filename, asystem.bodies[asystem.entity[earth.id]], asystem)
+	ast.tle_parse(filename, &asystem.bodies[asystem.entity[earth.id]], asystem)
 
 
 	for &model, i in asystem.satellite_models {
@@ -256,6 +302,7 @@ main :: proc() {
 	// create system copy for resetting
 	asystem0 := new(ast.AstroSystem)
 	ast.copy_system(asystem0, asystem)
+	asystem.simulate = true
 
 	// 3D camera
 	target_sat := num_sats / 8
@@ -283,7 +330,10 @@ main :: proc() {
 		update_simulation(asystem, asystem0, dt)
 		fps = 1. / dt
 		cum_time += dt
-		sim_time += dt * asystem.time_scale
+
+		if cum_time > .5 {
+			break
+		}
 
 		if print_fps {
 			fmt.println(fps)
@@ -294,7 +344,7 @@ main :: proc() {
 
 		if asystem.simulate {
 			for k := 0; k < asystem.substeps; k += 1 {
-				sim_time += dt
+				sim_time += dt * asystem.time_scale
 				ast.update_system(asystem, dt, sim_time)
 			}
 		}

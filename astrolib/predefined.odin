@@ -25,9 +25,9 @@ earth_moon_system :: proc(
 
 	model_size: [3]f32
 
-	// earth (fixed at origin)
+	// earth 
 	earth := wgs84()
-	earth.fixed = true
+	earth.fixed = false
 	earth.update_attitude = true
 	model_size =
 		[3]f32 {

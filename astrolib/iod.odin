@@ -10,17 +10,17 @@ pos_iod_topoeq :: #force_inline proc(
 	latlonh: [3]f64, // geodetic coordinates of the observation origin
 	units_station: UnitsAngle = .DEGREES, // units for the station coordinates
 	time_ind: int = 1,
-	cb: CelestialBody,
+	cb: ^CelestialBody,
 	tol: f64 = 1.0e-6,
 ) -> (
 	pos, vel: [3]f64,
 ) #no_bounds_check {
-	r_station_eq := geod_to_eqfixed(latlonh, cb, units_station) // equatorial coordinates, origin is cb.pos
+	r_station_eq := geod_to_eqfixed(latlonh, cb^, units_station) // equatorial coordinates, origin is cb.pos
 
 	// compute position vectors in inertial frame
-	r1_inertial := eq_to_inertial(r1 + r_station_eq, cb)
-	r2_inertial := eq_to_inertial(r2 + r_station_eq, cb)
-	r3_inertial := eq_to_inertial(r3 + r_station_eq, cb)
+	r1_inertial := eq_to_inertial(r1 + r_station_eq, cb^)
+	r2_inertial := eq_to_inertial(r2 + r_station_eq, cb^)
+	r3_inertial := eq_to_inertial(r3 + r_station_eq, cb^)
 
 	pos, vel = pos_iod_inertial(
 		r1_inertial,
@@ -40,7 +40,7 @@ pos_iod_inertial :: #force_inline proc(
 	r1, r2, r3: [3]f64, // positions are inertial
 	t1, t2, t3: f64, // times in JD
 	time_ind: int = 1,
-	cb: CelestialBody,
+	cb: ^CelestialBody,
 	tol: f64 = 1.0e-6,
 ) -> (
 	pos, vel: [3]f64,
@@ -63,7 +63,7 @@ iod_gibbs :: #force_inline proc(
 	r1, r2, r3: [3]f64, // positions in inertial frame
 	t1, t2, t3: f64, // times are in JD
 	time_ind: int = 1,
-	cb: CelestialBody,
+	cb: ^CelestialBody,
 	tol: f64 = 1.0e-6,
 ) -> (
 	pos, vel: [3]f64,
@@ -128,7 +128,7 @@ iod_herrickgibbs :: #force_inline proc(
 	r1, r2, r3: [3]f64, // positions in inertial frame
 	t1, t2, t3: f64, // times are in JD
 	time_ind: int = 1,
-	cb: CelestialBody,
+	cb: ^CelestialBody,
 	tol: f64 = 1.0e-6,
 ) -> (
 	pos, vel: [3]f64,

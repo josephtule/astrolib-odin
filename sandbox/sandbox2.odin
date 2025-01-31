@@ -55,7 +55,7 @@ main3 :: proc() {
 
 	// create satellite and add
 	filename := "assets/ISS_TLE_HW7.txt"
-	ast.tle_parse(filename, system.bodies[system.entity[earth.id]], system)
+	ast.tle_parse(filename, &system.bodies[system.entity[earth.id]], system)
 
 	time: f64 = 0.
 	total_time: f64 = (10) * 86400.
@@ -69,7 +69,7 @@ main3 :: proc() {
 	lowest_model: ast.GravityModel = min(sat.gravity_model, earth.gravity_model)
 
 	params := &ast.Params_Gravity_Onebody {
-		body = earth,
+		body = &earth,
 		self_mass = sat.mass,
 		self_radius = sat.radius,
 		gravity_model = sat.gravity_model,

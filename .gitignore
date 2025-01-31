@@ -3,3 +3,4 @@ build/*
 cpp/*
 .DS_Store
 external/clay-odin
+*.spall

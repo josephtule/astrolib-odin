@@ -8,6 +8,7 @@ import "core:math"
 import la "core:math/linalg"
 import rl "vendor:raylib"
 import "vendor:raylib/rlgl"
+import "core:thread"
 
 import ast "../astrolib"
 
@@ -16,7 +17,10 @@ windowHeight: i32 = 768
 
 u_to_rl :: ast.u_to_rl
 
-main :: proc() {
+main4 :: proc() {
+
+	// threadPool := make([dynamic]^thread.Thread, 0, 4)
+    // defer delete(threadPool)
 
 	minMemorySize: u32 = clay.MinMemorySize()
 	memory := make([^]u8, minMemorySize)
