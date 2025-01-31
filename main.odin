@@ -56,19 +56,19 @@ main :: proc() {
 
 	// -------------------------------------------------------------------------
 
-	spall_ctx = spall.context_create("main.spall")
-	defer spall.context_destroy(&spall_ctx)
+	// spall_ctx = spall.context_create("main.spall")
+	// defer spall.context_destroy(&spall_ctx)
 
-	buffer_backing := make([]u8, spall.BUFFER_DEFAULT_SIZE)
-	defer delete(buffer_backing)
+	// buffer_backing := make([]u8, spall.BUFFER_DEFAULT_SIZE)
+	// defer delete(buffer_backing)
 
-	spall_buffer = spall.buffer_create(
-		buffer_backing,
-		u32(sync.current_thread_id()),
-	)
-	defer spall.buffer_destroy(&spall_ctx, &spall_buffer)
+	// spall_buffer = spall.buffer_create(
+	// 	buffer_backing,
+	// 	u32(sync.current_thread_id()),
+	// )
+	// defer spall.buffer_destroy(&spall_ctx, &spall_buffer)
 
-	spall.SCOPED_EVENT(&spall_ctx, &spall_buffer, #procedure)
+	// spall.SCOPED_EVENT(&spall_ctx, &spall_buffer, #procedure)
 
 
 	// raylib init
@@ -283,7 +283,7 @@ main :: proc() {
 
 	// gen satellites from tle
 	filename := "assets/TLE_data.txt"
-	ast.tle_parse(filename, &earth, asystem, start_sat = 0, num_to_read = 2000)
+	ast.tle_parse(filename, &earth, asystem, start_sat = 0, num_to_read =20)
 	// ast.tle_read_extract(filename, earth.id, asystem)
 
 	filename = "assets/ISS_TLE_HW7.txt"
@@ -331,9 +331,9 @@ main :: proc() {
 		fps = 1. / dt
 		cum_time += dt
 
-		if cum_time > .5 {
-			break
-		}
+		// if cum_time > .5 {
+		// 	break
+		// }
 
 		if print_fps {
 			fmt.println(fps)

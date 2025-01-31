@@ -127,7 +127,7 @@ update_trail :: #force_inline proc(new_pos: [3]f64, model: ^Model) {
 		}
 	}
 }
-draw_trail :: #force_inline proc(model: Model) {
+draw_trail :: #force_inline proc(model: Model) #no_bounds_check {
 	using model.trail
 	if draw {
 		for i := 0; i < N_trail_sat - 1; i += 1 {

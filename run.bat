@@ -1,1 +1,1 @@
-odin run . -out:build/out.exe -o:aggressive -microarch:native
+odin run . -out:build/out.exe -o:aggressive -microarch:native -no-bounds-check
