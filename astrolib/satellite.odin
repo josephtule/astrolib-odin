@@ -109,7 +109,11 @@ update_satellite :: #force_inline proc(
 		integrator,
 	)
 	sat.pos, sat.vel = state_to_posvel(state_new)
-	update_trail(sat.pos, model)
+
+	// if model.trail.draw {
+	// TODO: not sure if i should have this conditional
+		update_trail(sat.pos, model)
+	// }
 }
 
 

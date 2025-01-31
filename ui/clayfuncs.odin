@@ -11,21 +11,6 @@ import clay "../external/clay-odin"
 
 u_to_rl :: ast.u_to_rl
 
-CameraType :: enum {
-	origin = 0,
-	satellite,
-	body,
-	locked,
-}
-
-CameraParams :: struct {
-	azel:           [3]f64, // TODO: change to degrees
-	target_sat:     ^ast.Satellite,
-	target_sat_id:  int,
-	target_body:    ^ast.CelestialBody,
-	target_body_id: int,
-	frame:          CameraType,
-}
 
 DisplayInfo :: enum {
 	satellite,
@@ -129,6 +114,10 @@ button_clicked :: proc(id: string) -> bool {
 	)
 }
 
+pointer_in :: proc(id: string) -> bool {
+	return clay.PointerOver(clay.GetElementId(clay.MakeString(id)))
+}
+
 vertical_bar :: proc(color: clay.Color, thickness: f32 = 1) {
 	if clay.UI(
 		clay.Layout(
@@ -157,11 +146,3 @@ horizontal_bar :: proc(color: clay.Color, thickness: f32 = 1) {
 	) {}
 }
 
-// :SYSTEM
-system_new :: proc() -> (system: ast.AstroSystem) {
-	system = ast.create_system_empty()
-	return system
-}
-system_reset :: proc(dest, src: ^ast.AstroSystem) {ast.copy_system(dest, src)}
-system_swap :: proc() {}
-system_save :: proc() {}

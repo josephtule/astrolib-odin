@@ -48,3 +48,12 @@ copy_soa_array :: proc(orig: $T/#soa[dynamic]$E) -> T {
 	}
 	return out
 }
+
+
+map_clone :: proc(m: $M/map[$K]$V) -> M {
+    res := make(M, len(m))
+    for k, v in m {
+        res[k] = v
+    }
+    return res
+}

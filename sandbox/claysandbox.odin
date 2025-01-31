@@ -6,9 +6,9 @@ import "core:c"
 import "core:fmt"
 import "core:math"
 import la "core:math/linalg"
+import "core:thread"
 import rl "vendor:raylib"
 import "vendor:raylib/rlgl"
-import "core:thread"
 
 import ast "../astrolib"
 
@@ -17,10 +17,10 @@ windowHeight: i32 = 768
 
 u_to_rl :: ast.u_to_rl
 
-main4 :: proc() {
+main :: proc() {
 
 	// threadPool := make([dynamic]^thread.Thread, 0, 4)
-    // defer delete(threadPool)
+	// defer delete(threadPool)
 
 	minMemorySize: u32 = clay.MinMemorySize()
 	memory := make([^]u8, minMemorySize)
@@ -70,8 +70,7 @@ main4 :: proc() {
 	// set up system/systems
 	systems, systems_reset := ast.create_systems()
 	system := ast.create_system()
-	ast.add_system(&systems, &systems_reset, system)
-
+	
 	// TODO: remove this later
 	earth := ast.wgs84()
 	earth.gravity_model = .pointmass
@@ -81,12 +80,12 @@ main4 :: proc() {
 	earth.ep = ast.quaternion_to_euler_param(q)
 	earth.update_attitude = true
 	model_size :=
-		[3]f32 {
-			f32(earth.semimajor_axis),
-			f32(earth.semiminor_axis),
-			f32(earth.semiminor_axis),
-		} *
-		u_to_rl
+	[3]f32 {
+		f32(earth.semimajor_axis),
+		f32(earth.semiminor_axis),
+		f32(earth.semiminor_axis),
+	} *
+	u_to_rl
 	earth_model := ast.gen_celestialbody_model(
 		earth,
 		model_size = model_size,
@@ -95,6 +94,8 @@ main4 :: proc() {
 	earth_model.axes.draw = true
 	ast.add_to_system(&system, earth)
 	ast.add_to_system(&system, earth_model)
+
+	ast.add_system(&systems, &systems_reset, &system)
 
 	debugModeEnabled: bool = false
 	// :TIME
@@ -114,7 +115,7 @@ main4 :: proc() {
 		cum_time += dt
 		sim_time += dt * system.time_scale
 
-		if rl.IsKeyPressed(.F) {
+		if rl.IsKeyPressed(.F) && !ui.editing_text {
 			show_fps = !show_fps
 		}
 		if show_fps {
@@ -130,14 +131,10 @@ main4 :: proc() {
 
 		defer free_all(context.temp_allocator)
 
-		animationLerpValue := rl.GetFrameTime()
-		if animationLerpValue > 1 {
-			animationLerpValue = animationLerpValue - 2
-		}
 		windowWidth = rl.GetScreenWidth()
 		windowHeight = rl.GetScreenHeight()
 
-		if rl.IsKeyPressed(.GRAVE) {
+		if rl.IsKeyPressed(.GRAVE) && !ui.editing_text {
 			debugModeEnabled = !debugModeEnabled
 			clay.SetDebugModeEnabled(debugModeEnabled)
 		}

@@ -12,15 +12,20 @@ update_simulation :: proc(
 	dt: f64,
 ) {
 
-    if rl.IsKeyPressed(.UP) && (f64(system.substeps) * system.time_scale < 25000) {
+    if rl.IsKeyPressed(.UP) && (f64(system.substeps) * system.time_scale < 25000) && !editing_text{
 		system.substeps *= 2
 	} else if rl.IsKeyPressed(.DOWN) && system.substeps > 1 {
 		system.substeps /= 2
 	}
-	if rl.IsKeyPressed(.RIGHT) && (f64(system.substeps) * system.time_scale < 25000) {
+	if rl.IsKeyPressed(.RIGHT) && (f64(system.substeps) * system.time_scale < 25000) && !editing_text {
 		system.time_scale *= 2
 	} else if rl.IsKeyPressed(.LEFT) {
 		system.time_scale /= 2
 	}
+	if rl.IsKeyPressed(.R) && !editing_text {
+		system.substeps = 8
+		system.time_scale = 8
+	}
+
 
 }

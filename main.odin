@@ -283,7 +283,7 @@ main :: proc() {
 
 	// gen satellites from tle
 	filename := "assets/TLE_data.txt"
-	ast.tle_parse(filename, &earth, asystem, start_sat = 0, num_to_read =20)
+	ast.tle_parse(filename, &earth, asystem, start_sat = 0, num_to_read =25)
 	// ast.tle_read_extract(filename, earth.id, asystem)
 
 	filename = "assets/ISS_TLE_HW7.txt"

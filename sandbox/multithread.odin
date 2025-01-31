@@ -14,7 +14,7 @@ Point :: struct {
 	y: f32,
 }
 
-main :: proc() {
+main_mt :: proc() {
 	numPoints := 10
 	numIterations := 100
 	fmt.println("Mutli-threaded:")

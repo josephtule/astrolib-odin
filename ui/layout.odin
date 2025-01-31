@@ -55,7 +55,7 @@ rectangle_rounded :: proc(color: clay.Color) -> clay.RectangleElementConfig {
 }
 
 gaps :: 8
-
+header_size :: 32
 
 createLayout :: proc(
 	ctx: ^Context,
@@ -90,7 +90,7 @@ createLayout :: proc(
 			),
 			clay.Layout(
 				{
-					sizing = {clay.SizingGrow({}), clay.SizingFixed(32)},
+					sizing = {clay.SizingGrow({}), clay.SizingFixed(header_size)},
 					padding = clay.Padding {
 						left = gaps,
 						right = gaps,
@@ -120,29 +120,25 @@ createLayout :: proc(
 		lower_dir: clay.LayoutDirection
 		info_menu_sizing: clay.Sizing
 		if mobileScreen {
+			// mobile width
 			lower_dir = .TOP_TO_BOTTOM
 			info_menu_sizing = {
 				width  = clay.SizingGrow({}),
 				height = clay.SizingFixed(0.3333 * f32(rl.GetScreenHeight())),
 			}
-		} else { 	// desktop width
+		} else {
+			// desktop width
+			height := f32(rl.GetScreenHeight() - gaps * 3) - header_size
+			width: f32 = min(0.3333 * f32(rl.GetScreenWidth()), 450.)
 			lower_dir = .LEFT_TO_RIGHT
 			info_menu_sizing = {
-				width  = clay.SizingFixed(0.3333 * f32(rl.GetScreenWidth())),
-				// height = clay.SizingFixed(0.90 * f32(rl.GetScreenHeight())),
-				height = clay.SizingGrow({}),
+				width  = clay.SizingFixed(width),
+				height = clay.SizingFixed(height),
 			}
 		}
 		if clay.UI(
 			clay.ID("lower_content"),
-			clay.Layout(
-				{
-					sizing = grow,
-					childGap = gaps,
-					layoutDirection = lower_dir,
-
-				},
-			),
+			clay.Layout({sizing = grow, childGap = gaps, layoutDirection = lower_dir}),
 		) {
 			// :viewport on left/top (transparent to display raylib camera below)
 			if clay.UI(
@@ -204,7 +200,8 @@ handle_input_header :: proc(
 	   rl.IsMouseButtonPressed(.LEFT) {
 		show_sys = !show_sys
 	}
-	if button_clicked("header_simulate") || rl.IsKeyPressed(.SPACE) {
+	if button_clicked("header_simulate") ||
+	   (rl.IsKeyPressed(.SPACE) && !editing_text) {
 		system.simulate = !system.simulate
 	}
 

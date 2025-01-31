@@ -17,6 +17,8 @@ sat_index: int = 0
 body_index: int = 0
 stat_index: int = 0
 
+editing_text := false
+
 sys_menu_state :: enum {
 	disp_sys,
 	add_sys,
@@ -74,11 +76,11 @@ disp_sys_menu :: proc(
 		case .add_sys:
 			add_sys_menu(system, systems, systems_reset)
 		case .edit_sys:
-			edit_sys_menu(system)
+			edit_sys_menu(system, systems_reset)
 		case .disp_sats:
 			disp_sats_menu(system)
 		case .add_sat:
-			add_sat_menu(system)
+			add_sat_menu(system, systems_reset)
 		case .edit_sat:
 			if system.num_satellites > 0 {
 				edit_sat_menu(system)
@@ -109,7 +111,7 @@ disp_sys_menu :: proc(
 }
 
 
-add_sat_menu :: proc(system: ^ast.AstroSystem) {
+add_sat_menu :: proc(system: ^ast.AstroSystem, systems_reset: ^ast.Systems) {
 	ui_spacer()
 	side_by_side_buttons(
 		"apply_back_add_sat",
@@ -123,7 +125,7 @@ add_sat_menu :: proc(system: ^ast.AstroSystem) {
 	if button_clicked("apply_add_sat") {
 		// TODO: remove this later
 		// TODO: also when doing coe stuff and selecting bodies, camera should switch to said body
-		#unroll for i in 0 ..= 200 {
+		#unroll for i in 0 ..< 100 {
 			// orbittype := rand.choice_enum(ast.EarthOrbitType)
 			orbittype := rand.choice(
 				[]ast.EarthOrbitType{.LEO, .LEO, .LEO, .LEO, .MEO, .GEO, .GSO},
@@ -134,11 +136,9 @@ add_sat_menu :: proc(system: ^ast.AstroSystem) {
 			cube_size: f32 = 50 / 1000. * u_to_rl
 			model_size := [3]f32{cube_size, cube_size * 2, cube_size * 3}
 			sat, sat_model := ast.gen_sat_and_model(pos, vel, ep, omega, model_size)
-
 			ast.add_to_system(system, sat)
 			ast.add_to_system(system, sat_model)
 		}
-
 		sys_state = .edit_sys
 	}
 
@@ -309,17 +309,8 @@ disp_sats_menu :: proc(system: ^ast.AstroSystem) {
 }
 
 sat_page: int = 0
-max_entities_per_page := 25
+max_entities_per_page := 50
 display_satellites :: proc(system: ^ast.AstroSystem, num_pages: int) {
-	// FIXME: if there are a lot of satellites being shown the 
-	// side menu doesn't show everything (even when scrolling)
-
-	// allow cycling
-	// if sat_page < 0 {
-	// 	sat_page = num_pages - 1
-	// } else if sat_page >= num_pages {
-	// 	sat_page = 0
-	// }
 	sat_page = (sat_page + num_pages) % num_pages
 
 	start_index := sat_page * max_entities_per_page
@@ -343,7 +334,7 @@ display_satellites :: proc(system: ^ast.AstroSystem, num_pages: int) {
 	}
 }
 
-edit_sys_menu :: proc(system: ^ast.AstroSystem) {
+edit_sys_menu :: proc(system: ^ast.AstroSystem, systems_reset: ^ast.Systems) {
 	if clay.UI(
 		clay.Layout(
 			{
@@ -384,6 +375,20 @@ edit_sys_menu :: proc(system: ^ast.AstroSystem) {
 	sys_button_medium("view_stats", "View Observation Station")
 
 	horizontal_bar(DARK_GRAY)
+	sys_button_medium("toggle_sat_posvel", "Toggle Satellite Vectors")
+	sys_button_medium("toggle_sat_trails", "Toggle Satellite Trails")
+	sys_button_medium("toggle_sat_attitude", "Toggle Satellite Attitude")
+	sys_button_medium("toggle_sat_axes", "Toggle Satellite Axes")
+
+	horizontal_bar(DARK_GRAY)
+	sys_button_medium("toggle_body_posvel", "Toggle Body Vectors")
+	sys_button_medium("toggle_body_trails", "Toggle Body Trails")
+	sys_button_medium("toggle_body_attitude", "Toggle Body Attitude")
+	sys_button_medium("toggle_body_axes", "Toggle Body Axes")
+
+	horizontal_bar(DARK_GRAY)
+	sys_button_medium("reset_sys_state", "Reset System to save state")
+	sys_button_medium("set_sys_state_save", "Set System save state")
 
 	ui_spacer()
 	side_by_side_buttons(
@@ -403,6 +408,41 @@ edit_sys_menu :: proc(system: ^ast.AstroSystem) {
 	if button_clicked("view_sats") {
 		sys_state = .disp_sats
 	}
+
+	// satellite toggles
+	if button_clicked("toggle_sat_posvel") {
+		for &sat in system.satellite_models {
+			sat.posvel.draw_pos = !sat.posvel.draw_pos
+			sat.posvel.draw_vel = !sat.posvel.draw_vel
+		}
+	}
+	if button_clicked("toggle_sat_trails") {
+		for &sat in system.satellite_models {
+			sat.trail.draw = !sat.trail.draw
+		}
+	}
+	if button_clicked("toggle_sat_attitude") {
+		for &sat in system.satellites {
+			sat.update_attitude = !sat.update_attitude
+		}
+	}
+	if button_clicked("toggle_sat_axes") {
+		for &sat in system.satellite_models {
+			sat.axes.draw = !sat.axes.draw
+		}
+	}
+	// body toggles
+
+
+	// save/states
+	if button_clicked("reset_sys_state") {
+		ast.copy_system(system, &systems_reset.systems[0])
+	}
+	if button_clicked("set_sys_state_save") {
+		// FIXME: right now resetting does not reset the trails completely
+		ast.copy_system(&systems_reset.systems[system.id], system)
+	}
+
 
 	// apply button pressed
 	if button_clicked("apply_edit_sys") {
@@ -467,7 +507,8 @@ add_sys_menu :: proc(
 	//     cr3bp?
 	sys_button_medium("add_earth_moon", "Create Earth-Moon System")
 	if button_clicked("add_earth_moon") {
-		ast.add_system(systems, systems_reset, ast.earth_moon_system())
+		temp_sys := ast.earth_moon_system()
+		ast.add_system(systems, systems_reset, &temp_sys)
 		sys_state = .disp_sys
 	}
 
@@ -486,7 +527,7 @@ add_sys_menu :: proc(
 	// apply button pressed
 	if button_clicked("apply_add_sys") {
 		system_temp := ast.create_system()
-		ast.add_system(systems, systems_reset, system_temp)
+		ast.add_system(systems, systems_reset, &system_temp)
 		sys_state = .disp_sys
 	}
 

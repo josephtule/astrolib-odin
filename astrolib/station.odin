@@ -5,8 +5,8 @@ import "core:strconv"
 import str "core:strings"
 import rl "vendor:raylib"
 
-g_station_id_base: int : 0
-g_station_id: int = g_station_id_base
+g_stat_id_base: int : 0
+g_stat_ad: int = g_stat_id_base
 
 
 Station :: struct {
@@ -24,7 +24,7 @@ gen_station :: proc(
 	pos_body: [3]f64,
 	body_id: int,
 	name: string = "",
-	id: int = g_station_id,
+	id: int = g_stat_ad,
 ) -> (
 	station: Station,
 ) {
@@ -45,8 +45,8 @@ gen_station :: proc(
 		body_id  = body_id,
 	}
 
-	if id == g_station_id {
-		g_station_id += 1
+	if id == g_stat_ad {
+		g_stat_ad += 1
 	}
 
 	return station

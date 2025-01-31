@@ -36,7 +36,6 @@ AstroSystem :: struct {
 }
 
 Systems :: struct {
-	id:          map[int]int,
 	systems:     [dynamic]AstroSystem,
 	num_systems: int,
 }
@@ -44,23 +43,19 @@ Systems :: struct {
 add_system :: proc(
 	systems: ^Systems,
 	systems_reset: ^Systems,
-	system: AstroSystem,
+	system: ^AstroSystem,
 ) {
-	append(&systems.systems, system)
-	append(&systems_reset.systems, system)
-	systems.id[system.id] = g_sys_id
-	systems_reset.id[system.id] = g_sys_id
+	append(&systems.systems, system^)
+	append(&systems_reset.systems, system^)
 	systems.num_systems += 1
 	systems_reset.num_systems += 1
 }
 
 create_systems :: proc() -> (systems: Systems, systems_reset: Systems) {
 	systems.systems = make([dynamic]AstroSystem)
-	systems.id = make(map[int]int)
 	systems.num_systems = 0
 
 	systems_reset.systems = make([dynamic]AstroSystem)
-	systems_reset.id = make(map[int]int)
 	systems_reset.num_systems = 0
 
 	return systems, systems_reset
@@ -190,6 +185,7 @@ create_system_empty :: #force_inline proc(
 	system.time_scale = time_scale
 	system.substeps = substeps
 
+	system.entity = make(map[int]int)
 	system.id = g_sys_id
 	g_sys_id += 1
 
@@ -230,9 +226,9 @@ create_system_full :: #force_inline proc(
 	system.body_models = slice.clone_to_dynamic(body_models[:])
 	system.num_bodies = len(system.bodies)
 
-	// system.stations = slice.clone_to_dynamic(stations[:])
-	// system.station_models = slice.clone_to_dynamic(station_models[:])
-	// system.num_stations = len(system.stations)
+	system.stations = slice.clone_to_dynamic(stations[:])
+	system.station_models = slice.clone_to_dynamic(station_models[:])
+	system.num_stations = len(system.stations)
 
 	system.JD0 = JD0
 	system.integrator = integrator
@@ -248,6 +244,7 @@ create_system_full :: #force_inline proc(
 		system.entity[body.id] = i
 	}
 
+	system.entity = make(map[int]int)
 	system.id = g_sys_id
 	g_sys_id += 1
 
@@ -264,7 +261,10 @@ create_system_full :: #force_inline proc(
 }
 
 
-copy_system :: #force_inline proc(system_dst, system_src: ^AstroSystem) {
+copy_system :: #force_inline proc(
+	system_dst: ^AstroSystem,
+	system_src: ^AstroSystem,
+) {
 
 	system_dst.satellites = slice.clone_to_dynamic(system_src.satellites[:])
 	system_dst.satellite_models = slice.clone_to_dynamic(
@@ -290,7 +290,7 @@ copy_system :: #force_inline proc(system_dst, system_src: ^AstroSystem) {
 	system_dst.id = system_src.id
 	system_dst.name = strings.clone(system_src.name)
 	system_dst.JD0 = system_src.JD0
-	system_dst.entity = system_src.entity
+	system_dst.entity = map_clone(system_src.entity)
 
 }
 
@@ -307,8 +307,8 @@ add_to_system :: proc {
 }
 add_sat_to_system :: #force_inline proc(system: ^AstroSystem, sat: Satellite) {
 	using system
-	add_satellite(&satellites, sat)
-	entity[sat.id] = num_satellites
+	add_satellite(&system.satellites, sat)
+	system.entity[sat.id] = num_satellites
 	num_satellites += 1
 }
 add_sats_to_system :: #force_inline proc(
