@@ -375,20 +375,52 @@ edit_sys_menu :: proc(system: ^ast.AstroSystem, systems_reset: ^ast.Systems) {
 	sys_button_medium("view_stats", "View Observation Station")
 
 	horizontal_bar(DARK_GRAY)
-	sys_button_medium("toggle_sat_posvel", "Toggle Satellite Vectors")
-	sys_button_medium("toggle_sat_trails", "Toggle Satellite Trails")
-	sys_button_medium("toggle_sat_attitude", "Toggle Satellite Attitude")
-	sys_button_medium("toggle_sat_axes", "Toggle Satellite Axes")
+	clay.Text("Satellite Toggles", &text_config_16)
+	if clay.UI(
+		clay.Layout(
+			{layoutDirection = .LEFT_TO_RIGHT, childGap = gaps, sizing = grow},
+		),
+	) {
+		sys_button_medium("toggle_sat_posvel", "Vectors")
+		sys_button_medium("toggle_sat_trails", "Trails")
+	}
+	if clay.UI(
+		clay.Layout(
+			{layoutDirection = .LEFT_TO_RIGHT, childGap = gaps, sizing = grow},
+		),
+	) {
+		sys_button_medium("toggle_sat_attitude", "Attitude")
+		sys_button_medium("toggle_sat_axes", "Axes")
+	}
 
 	horizontal_bar(DARK_GRAY)
-	sys_button_medium("toggle_body_posvel", "Toggle Body Vectors")
-	sys_button_medium("toggle_body_trails", "Toggle Body Trails")
-	sys_button_medium("toggle_body_attitude", "Toggle Body Attitude")
-	sys_button_medium("toggle_body_axes", "Toggle Body Axes")
+	clay.Text("Celestial Body Toggles", &text_config_16)
+	if clay.UI(
+		clay.Layout(
+			{layoutDirection = .LEFT_TO_RIGHT, childGap = gaps, sizing = grow},
+		),
+	) {
+		sys_button_medium("toggle_body_posvel", "Vectors")
+		sys_button_medium("toggle_body_trails", "Trails")
+	}
+	if clay.UI(
+		clay.Layout(
+			{layoutDirection = .LEFT_TO_RIGHT, childGap = gaps, sizing = grow},
+		),
+	) {
+		sys_button_medium("toggle_body_attitude", "Attitude")
+		sys_button_medium("toggle_body_axes", "Axes")
+	}
 
 	horizontal_bar(DARK_GRAY)
-	sys_button_medium("reset_sys_state", "Reset System to save state")
-	sys_button_medium("set_sys_state_save", "Set System save state")
+	if clay.UI(
+		clay.Layout(
+			{layoutDirection = .LEFT_TO_RIGHT, childGap = gaps, sizing = grow},
+		),
+	) {
+		sys_button_medium("reset_sys_state", "Reset System ")
+		sys_button_medium("set_sys_state_save", "Set Save State")
+	}
 
 	ui_spacer()
 	side_by_side_buttons(
@@ -409,7 +441,7 @@ edit_sys_menu :: proc(system: ^ast.AstroSystem, systems_reset: ^ast.Systems) {
 		sys_state = .disp_sats
 	}
 
-	// satellite toggles
+	// satellite toggles button pressed
 	if button_clicked("toggle_sat_posvel") {
 		for &sat in system.satellite_models {
 			sat.posvel.draw_pos = !sat.posvel.draw_pos
@@ -436,8 +468,11 @@ edit_sys_menu :: proc(system: ^ast.AstroSystem, systems_reset: ^ast.Systems) {
 
 	// save/states
 	if button_clicked("reset_sys_state") {
-		ast.copy_system(system, &systems_reset.systems[0])
+		ast.reset_system(system, &systems_reset.systems[0])
+
 	}
+
+
 	if button_clicked("set_sys_state_save") {
 		// FIXME: right now resetting does not reset the trails completely
 		ast.copy_system(&systems_reset.systems[system.id], system)

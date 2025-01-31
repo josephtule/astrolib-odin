@@ -61,6 +61,22 @@ create_systems :: proc() -> (systems: Systems, systems_reset: Systems) {
 	return systems, systems_reset
 }
 
+reset_system :: proc(dst, src: ^AstroSystem) {
+	copy_system(dst, src)
+
+	// TODO: figure out how to do a deep copy of the trails, maybe not needed though idk
+	for &model, i in dst.satellite_models {
+		if model.trail.draw {
+			reset_trail(&model.trail, dst.satellites[i].pos)
+		}
+	}
+	for &model, i in dst.body_models {
+		if model.trail.draw {
+			reset_trail(&model.trail, dst.bodies[i].pos)
+		}
+	}
+}
+
 update_system :: #force_inline proc(system: ^AstroSystem, dt, time: f64) {
 	using system
 	N_sats := len(satellites)
