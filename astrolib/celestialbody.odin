@@ -92,10 +92,7 @@ draw_body :: #force_inline proc(model: ^Model, body: CelestialBody) {
 
 }
 
-update_body_model :: #force_inline proc(
-	model: ^Model,
-	body: CelestialBody,
-) {
+update_body_model :: #force_inline proc(model: ^Model, body: CelestialBody) {
 	using model
 
 	// set rotation
@@ -191,9 +188,9 @@ gen_celestialbody_model :: #force_inline proc(
 	// local axes
 	model.axes.draw = true
 	model.axes.size = 2 * f32(body.semimajor_axis) * u_to_rl
-	model.axes.x = xaxis_f32 
-	model.axes.y = yaxis_f32 
-	model.axes.z = zaxis_f32 
+	model.axes.x = xaxis_f32
+	model.axes.y = yaxis_f32
+	model.axes.z = zaxis_f32
 
 	// // position/velocity vectors
 	// model.posvel.draw_pos = true
@@ -240,5 +237,3 @@ add_celestialbody_copy :: #force_inline proc(
 ) {
 	append_elem(bodies, body)
 }
-
-
