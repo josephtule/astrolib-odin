@@ -21,25 +21,25 @@ import "core:prof/spall"
 import "core:sync"
 import "core:thread"
 
-spall_ctx: spall.Context
-@(thread_local)
-spall_buffer: spall.Buffer
+// spall_ctx: spall.Context
+// @(thread_local)
+// spall_buffer: spall.Buffer
 
-@(instrumentation_enter)
-spall_enter :: proc "contextless" (
-	proc_address, call_site_return_address: rawptr,
-	loc: runtime.Source_Code_Location,
-) {
-	spall._buffer_begin(&spall_ctx, &spall_buffer, "", "", loc)
-}
+// @(instrumentation_enter)
+// spall_enter :: proc "contextless" (
+// 	proc_address, call_site_return_address: rawptr,
+// 	loc: runtime.Source_Code_Location,
+// ) {
+// 	spall._buffer_begin(&spall_ctx, &spall_buffer, "", "", loc)
+// }
 
-@(instrumentation_exit)
-spall_exit :: proc "contextless" (
-	proc_address, call_site_return_address: rawptr,
-	loc: runtime.Source_Code_Location,
-) {
-	spall._buffer_end(&spall_ctx, &spall_buffer)
-}
+// @(instrumentation_exit)
+// spall_exit :: proc "contextless" (
+// 	proc_address, call_site_return_address: rawptr,
+// 	loc: runtime.Source_Code_Location,
+// ) {
+// 	spall._buffer_end(&spall_ctx, &spall_buffer)
+// }
 
 
 u_to_rl :: ast.u_to_rl
