@@ -119,7 +119,7 @@ main :: proc() {
 			show_fps = !show_fps
 		}
 		if show_fps {
-			fmt.println(fps)
+			fmt.println(1/rl.GetFrameTime())
 		}
 
 		if system.simulate {

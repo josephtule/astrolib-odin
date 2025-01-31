@@ -41,8 +41,9 @@ SatelliteInfo :: struct {
 draw_satellite :: #force_inline proc(model: ^Model, sat: Satellite) {
 	update_satellite_model(model, sat)
 	sat_pos_f32 := cast_f32(sat.pos) * u_to_rl
-	rl.DrawModel(model.model, origin_f32, 1, model.tint)
-
+	if model.draw_model {
+		rl.DrawModel(model.model, origin_f32, 1, model.tint)
+	}
 	if model.axes.draw {
 		draw_axes(sat.update_attitude, &model.axes, model.model)
 	}
@@ -112,7 +113,7 @@ update_satellite :: #force_inline proc(
 
 	// if model.trail.draw {
 	// TODO: not sure if i should have this conditional
-		update_trail(sat.pos, model)
+	update_trail(sat.pos, model)
 	// }
 }
 
@@ -190,6 +191,7 @@ gen_sat_model :: #force_inline proc(
 	// local axes
 	m.axes.draw = true
 	m.axes.size = 5 * f32(sat.radius) * u_to_rl
+	m.axes.scale = 1
 	m.axes.x = xaxis_f32 * m.axes.size
 	m.axes.y = yaxis_f32 * m.axes.size
 	m.axes.z = zaxis_f32 * m.axes.size

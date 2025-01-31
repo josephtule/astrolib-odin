@@ -1,5 +1,6 @@
 package astrolib
 
+import "core:fmt"
 import "core:math"
 import la "core:math/linalg"
 import "core:math/rand"
@@ -70,7 +71,7 @@ coe_to_rv :: #force_inline proc(
 	}
 
 	// rotate into equatorial frame (body fixed)
-	seq := [3]RotAxis{.z,.x,.z}
+	seq := [3]RotAxis{.z, .x, .z}
 	R := ea_to_dcm([3]f64{-aop, -inc, -raan}, seq)
 	pos = R * r_pqw
 	vel = R * v_pqw
@@ -182,7 +183,7 @@ gen_rand_coe :: #force_inline proc(
 	ecc_max := ecc_max
 	rp_cond: bool = false
 	iter := 0
-	for !rp_cond && iter < max_iter_small {
+	for !rp_cond && iter < max_iter_vsmall {
 		if sma_max == -1 {
 			sma_max = 100 * cb.semimajor_axis
 		}
@@ -200,9 +201,13 @@ gen_rand_coe :: #force_inline proc(
 			}
 		}
 		rp := sma * (1 - ecc)
-		if rp > sma + 1 { 	// minimum altitude of 1km
+		if rp > cb.semimajor_axis + 1 { 	// minimum altitude of 1km
 			rp_cond = true
 		}
+		iter += 1
+	}
+	if iter >= 1000 {
+		fmt.println("WARNING: satellite may crash into the central body")
 	}
 
 	inc := rand.float64_uniform(0, 180)
@@ -228,79 +233,90 @@ gen_rand_coe_earth :: #force_inline proc(
 	aop: f64
 	ta: f64
 
-	switch orbit_type {
-	case .LEO:
-		sma = earth.semimajor_axis + rand.float64_uniform(100, 2000)
-		ecc = rand.float64_uniform(0, 0.25)
+	rp_cond: bool = false
+	iter := 0
+	for !rp_cond && iter < max_iter_vsmall {
+		switch orbit_type {
+		case .LEO:
+			sma = earth.semimajor_axis + rand.float64_uniform(250, 2000)
+			ecc = rand.float64_uniform(0, 0.25)
 
-		inc = rand.float64_uniform(0, 180)
-		raan = rand.float64_uniform(0, 180)
-		aop = rand.float64_uniform(0, 360)
-		ta = rand.float64_uniform(0, 360)
-	case .GEO:
-		sma = 35786
-		ecc = 0
+			inc = rand.float64_uniform(0, 180)
+			raan = rand.float64_uniform(0, 180)
+			aop = rand.float64_uniform(0, 360)
+			ta = rand.float64_uniform(0, 360)
+		case .GEO:
+			sma = 35786
+			ecc = 0
 
-		inc = rand.float64_uniform(0., 5.)
-		raan = 0
-		aop = 0
-		ta = rand.float64_uniform(0., 360.)
-	case .GSO:
-		sma = 35786
-		ecc = rand.float64_uniform(0., 0.05)
+			inc = rand.float64_uniform(0., 5.)
+			raan = 0
+			aop = 0
+			ta = rand.float64_uniform(0., 360.)
+		case .GSO:
+			sma = 35786
+			ecc = rand.float64_uniform(0., 0.05)
 
-		inc = rand.float64_uniform(0, 180)
-		raan = rand.float64_uniform(0, 180)
-		aop = rand.float64_uniform(0, 360)
-		ta = rand.float64_uniform(0, 360)
-	case .MEO:
-		sma = earth.semimajor_axis + rand.float64_uniform(2000, 35786)
-		ecc = rand.float64_uniform(0, 0.25)
+			inc = rand.float64_uniform(0, 180)
+			raan = rand.float64_uniform(0, 180)
+			aop = rand.float64_uniform(0, 360)
+			ta = rand.float64_uniform(0, 360)
+		case .MEO:
+			sma = earth.semimajor_axis + rand.float64_uniform(2000, 35786)
+			ecc = rand.float64_uniform(0, 0.25)
 
-		inc = rand.float64_uniform(0, 180)
-		raan = rand.float64_uniform(0, 360)
-		aop = rand.float64_uniform(0, 360)
-		ta = rand.float64_uniform(0, 360)
-	case .HEO:
-		sma = earth.semimajor_axis + rand.float64_uniform(35786, 384000)
-		ecc = rand.float64_uniform(0, 0.5)
+			inc = rand.float64_uniform(0, 180)
+			raan = rand.float64_uniform(0, 360)
+			aop = rand.float64_uniform(0, 360)
+			ta = rand.float64_uniform(0, 360)
+		case .HEO:
+			sma = earth.semimajor_axis + rand.float64_uniform(35786, 384000)
+			ecc = rand.float64_uniform(0, 0.5)
 
-		inc = rand.float64_uniform(0, 180)
-		raan = rand.float64_uniform(0, 360)
-		aop = rand.float64_uniform(0, 360)
-		ta = rand.float64_uniform(0, 360)
-	case .HECCO:
-		sma = earth.semimajor_axis + rand.float64_uniform(35786, 384000)
-		ecc = rand.float64_uniform(0.5, 0.85)
+			inc = rand.float64_uniform(0, 180)
+			raan = rand.float64_uniform(0, 360)
+			aop = rand.float64_uniform(0, 360)
+			ta = rand.float64_uniform(0, 360)
+		case .HECCO:
+			sma = earth.semimajor_axis + rand.float64_uniform(35786, 384000)
+			ecc = rand.float64_uniform(0.5, 0.85)
 
-		inc = rand.float64_uniform(0, 180)
-		raan = rand.float64_uniform(0, 360)
-		aop = rand.float64_uniform(0, 360)
-		ta = rand.float64_uniform(0, 360)
-	case .hyperbolic:
-		sma = -rand.float64_uniform(
-			earth.semimajor_axis + 10000,
-			earth.semimajor_axis + 100000,
-		)
-		ecc = rand.float64_uniform(1.01, 5.0)
+			inc = rand.float64_uniform(0, 180)
+			raan = rand.float64_uniform(0, 360)
+			aop = rand.float64_uniform(0, 360)
+			ta = rand.float64_uniform(0, 360)
+		case .hyperbolic:
+			sma = -rand.float64_uniform(
+				earth.semimajor_axis + 10000,
+				earth.semimajor_axis + 100000,
+			)
+			ecc = rand.float64_uniform(1.01, 5.0)
 
-		inc = rand.float64_uniform(0, 180)
-		raan = rand.float64_uniform(0, 360)
-		aop = rand.float64_uniform(0, 360)
-		ta = rand.float64_uniform(0, 360)
-	case .high_hyperbolic:
-		sma = -rand.float64_uniform(
-			earth.semimajor_axis + 100000,
-			earth.semimajor_axis + 1000000,
-		)
-		ecc = rand.float64_uniform(3.0, 10.0)
+			inc = rand.float64_uniform(0, 180)
+			raan = rand.float64_uniform(0, 360)
+			aop = rand.float64_uniform(0, 360)
+			ta = rand.float64_uniform(0, 360)
+		case .high_hyperbolic:
+			sma = -rand.float64_uniform(
+				earth.semimajor_axis + 100000,
+				earth.semimajor_axis + 1000000,
+			)
+			ecc = rand.float64_uniform(3.0, 10.0)
 
-		inc = rand.float64_uniform(0, 180)
-		raan = rand.float64_uniform(0, 360)
-		aop = rand.float64_uniform(0, 360)
-		ta = rand.float64_uniform(0, 360)
+			inc = rand.float64_uniform(0, 180)
+			raan = rand.float64_uniform(0, 360)
+			aop = rand.float64_uniform(0, 360)
+			ta = rand.float64_uniform(0, 360)
+		}
+		rp := sma * (1 - ecc)
+		if rp > earth.semimajor_axis + 1 { 	// minimum altitude of 1km
+			rp_cond = true
+		}
+		iter += 1
 	}
-
+	if iter >= 1000 {
+		fmt.println("WARNING: the satellite may crash into the Earth")
+	}
 	pos, vel = coe_to_rv(sma, ecc, inc, raan, aop, ta, earth)
 	return pos, vel
 }
@@ -323,5 +339,3 @@ orbital_energy_sma :: #force_inline proc(a, mu: f64) -> f64 {
 orbital_energy_angecc :: #force_inline proc(h: [3]f64, ecc, mu: f64) -> f64 {
 	return -0.5 * (mu * mu / mag2(h) * (1 - ecc * ecc))
 }
-
-

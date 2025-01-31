@@ -4,6 +4,7 @@ import clay "../external/clay-odin"
 import "core:c"
 import "core:fmt"
 import "core:math"
+import la "core:math/linalg"
 import "core:math/rand"
 import "core:mem"
 import "core:mem/virtual"
@@ -125,17 +126,28 @@ add_sat_menu :: proc(system: ^ast.AstroSystem, systems_reset: ^ast.Systems) {
 	if button_clicked("apply_add_sat") {
 		// TODO: remove this later
 		// TODO: also when doing coe stuff and selecting bodies, camera should switch to said body
-		 for i in 0 ..< 500 {
+		for i in 0 ..< 25 {
 			// orbittype := rand.choice_enum(ast.EarthOrbitType)
 			orbittype := rand.choice(
 				[]ast.EarthOrbitType{.LEO, .LEO, .LEO, .LEO, .MEO, .GEO, .GSO},
 			)
 			pos, vel := ast.gen_rand_coe_earth(system.bodies[0], orbittype)
-			ep: [4]f64 = {0, 0, 0, 1}
-			omega: [3]f64 = {0, 0, 0}
+			// ep: [4]f64 = {0, 0, 0, 1}
+			ep: [4]f64 = ast.randn_vf64(0, 1, 4)
+			ep = la.normalize0(ep)
+			omega: [3]f64 = {0.0001, .05, 0.0001}
 			cube_size: f32 = 50 / 1000. * u_to_rl
 			model_size := [3]f32{cube_size, cube_size * 2, cube_size * 3}
 			sat, sat_model := ast.gen_sat_and_model(pos, vel, ep, omega, model_size)
+			sat.update_attitude = true
+			ast.set_inertia(&sat, matrix[3, 3]f64{
+				100., 0., 0., 
+				0., 200., 0., 
+				0., 0., 300., 
+			})
+			sat_model.scale = 10
+			sat_model.axes.scale = 25
+			sat_model.draw_model = true
 			ast.add_to_system(system, sat)
 			ast.add_to_system(system, sat_model)
 		}
@@ -469,7 +481,7 @@ edit_sys_menu :: proc(system: ^ast.AstroSystem, systems_reset: ^ast.Systems) {
 	// save/states
 	if button_clicked("reset_sys_state") {
 		ast.reset_system(system, &systems_reset.systems[system.id])
-
+		system.simulate = false
 	}
 
 

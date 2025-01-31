@@ -49,9 +49,10 @@ add_model_to_array_copy :: #force_inline proc(
 // -----------------------------------------------------------------------------
 
 Axes :: struct {
-	x, y, z: [3]f32,
-	size:    f32,
-	draw:    bool,
+	x, y, z:      [3]f32,
+	size: f32,
+	scale:        f32,
+	draw:         bool,
 }
 
 
@@ -69,9 +70,13 @@ draw_axes :: #force_inline proc(
 
 	pos := GetTranslation(model.transform)
 	// cmy colors for axes
-	rl.DrawLine3D(pos, pos + axes.x * axes.size, rl.MAGENTA)
-	rl.DrawLine3D(pos, pos + axes.y * axes.size, rl.YELLOW)
-	rl.DrawLine3D(pos, pos + axes.z * axes.size, rl.Color({0, 255, 255, 255}))
+	rl.DrawLine3D(pos, pos + axes.x * axes.size * axes.scale, rl.MAGENTA)
+	rl.DrawLine3D(pos, pos + axes.y * axes.size * axes.scale, rl.YELLOW)
+	rl.DrawLine3D(
+		pos,
+		pos + axes.z * axes.size * axes.scale,
+		rl.Color({0, 255, 255, 255}),
+	)
 }
 
 // -----------------------------------------------------------------------------

@@ -15,7 +15,7 @@ earth_moon_system :: proc(
 	system: AstroSystem,
 ) {
 	system = create_system()
-	system.time_scale = 100
+	system.time_scale = 8
 	id_buf: [8]byte
 	id_str: string = strconv.itoa(id_buf[:], system.id)
 	system.name, _ = strings.join(
@@ -74,6 +74,20 @@ earth_moon_system :: proc(
 
 	add_to_system(&system, moon)
 	add_to_system(&system, moon_model)
+
+	return system
+}
+
+earth_moon_tle_system :: proc(
+	JD: f64 = 2451545.0, // defaults// default to J2000 TT
+	millenium: Millenium = .two_thousand,
+	num_to_read: int = -1,
+	start_sat: int = 0,
+) -> (
+	system: AstroSystem,
+) {
+	system = earth_moon_system(JD)
+	
 
 	return system
 }

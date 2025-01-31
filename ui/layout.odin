@@ -17,7 +17,7 @@ Context_Status :: enum u8 {
 Context_Statuses :: bit_set[Context_Status]
 
 Context :: struct {
-	ui_ctx:         UI_Context,
+	// ui_ctx:         UI_Context,
 	// active buffer
 	active_val_buf: [1024]u8,
 	active_val_len: int,
@@ -65,7 +65,7 @@ createLayout :: proc(
 	systems: ^ast.Systems,
 	systems_reset: ^ast.Systems,
 ) -> clay.ClayArray(clay.RenderCommand) {
-	ui_ctx: UI_Context
+	// ui_ctx: UI_Context
 	mobileScreen := rl.GetScreenWidth() < 750
 	handle_input_header(camera, camera_params, system, systems)
 	clay.BeginLayout()
