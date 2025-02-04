@@ -49,10 +49,10 @@ add_model_to_array_copy :: #force_inline proc(
 // -----------------------------------------------------------------------------
 
 Axes :: struct {
-	x, y, z:      [3]f32,
-	size: f32,
-	scale:        f32,
-	draw:         bool,
+	x, y, z: [3]f32,
+	size:    f32,
+	scale:   f32,
+	draw:    bool,
 }
 
 
@@ -148,31 +148,68 @@ draw_trail :: #force_inline proc(model: Model) #no_bounds_check {
 // Position/Velocity Vectors
 // -----------------------------------------------------------------------------
 PosVel :: struct {
-	pos, vel, pos_origin: [3]f32,
-	vel_scale:            f32,
-	target_id:            int,
-	pos_tint, vel_tint:   rl.Color,
-	draw_pos:             bool,
-	draw_vel:             bool,
+	pos, vel:           [3]f32,
+	target_pos_id:      int, // position relative to this body/satellite
+	target_vel_id:      int, // velocity relative to this body/satellite
+	vel_scale:          f32,
+	pos_tint, vel_tint: rl.Color,
+	draw_pos:           bool,
+	draw_vel:           bool,
 }
 
-update_posvel :: #force_inline proc(pv: ^PosVel, pos, vel: [3]f64) {
+update_posvel :: #force_inline proc(
+	pv: ^PosVel,
+	pos, vel: [3]f64,
+	system: AstroSystem,
+) {
 	pv.pos = cast_f32(pos) * u_to_rl
-	pv.vel = cast_f32(vel) * u_to_rl * pv.vel_scale
+	v_rel: [3]f32
+	if pv.target_vel_id != -1 {
+		v_rel = get_relative_vel(pv^, vel, system)
+	}
+	pv.vel = (cast_f32(vel) - v_rel) * u_to_rl * pv.vel_scale
 }
 
-set_pos_origin :: #force_inline proc(pv: ^PosVel, system: AstroSystem) {
+get_pos_origin :: #force_inline proc(
+	pv: PosVel,
+	system: AstroSystem,
+) -> (
+	pos_origin: [3]f32,
+) {
 	// line from origin to satellite
 	if pv.draw_pos {
-		target_ind := system.entity[pv.target_id]
-		if pv.target_id >= g_body_id_base {
+		target_ind := system.entity[pv.target_pos_id]
+		if pv.target_pos_id >= g_body_id_base {
 			// target is a body
-			pv.pos_origin = cast_f32(system.bodies[target_ind].pos) * u_to_rl
+			pos_origin = cast_f32(system.bodies[target_ind].pos) * u_to_rl
 		} else {
 			// target is satellite
-			pv.pos_origin = cast_f32(system.satellites[target_ind].pos) * u_to_rl
+			pos_origin = cast_f32(system.satellites[target_ind].pos) * u_to_rl
 		}
 	}
+
+	return pos_origin
+}
+
+get_relative_vel :: #force_inline proc(
+	pv: PosVel,
+	vel: [3]f64,
+	system: AstroSystem,
+) -> (
+	vrel: [3]f32,
+) {
+	if pv.draw_vel {
+		target_ind := system.entity[pv.target_vel_id]
+		if pv.target_vel_id >= g_body_id_base {
+			// target is a body
+			vrel = cast_f32(vel - system.bodies[target_ind].vel) * u_to_rl
+		} else {
+			// target is satellite
+			vrel = cast_f32(vel - system.satellites[target_ind].vel) * u_to_rl
+		}
+	}
+
+	return vrel
 }
 
 draw_vectors :: #force_inline proc(
@@ -181,14 +218,17 @@ draw_vectors :: #force_inline proc(
 	pos, vel: [3]f64,
 ) {
 	if pv.draw_pos || pv.draw_vel {
-		update_posvel(pv, pos, vel)
-		set_pos_origin(pv, system)
-	}
-	if pv.draw_pos {
-		rl.DrawLine3D(pv.pos_origin, pv.pos, pv.pos_tint)
-	}
-	if pv.draw_vel {
-		rl.DrawLine3D(pv.pos, pv.pos + pv.vel, pv.vel_tint)
+		update_posvel(pv, pos, vel, system)
+		pos_origin: [3]f32
+		if pv.target_pos_id != -1 {
+			pos_origin = get_pos_origin(pv^, system)
+		}
+		if pv.draw_pos {
+			rl.DrawLine3D(pos_origin, pv.pos, pv.pos_tint)
+		}
+		if pv.draw_vel {
+			rl.DrawLine3D(pv.pos, pv.pos + pv.vel, pv.vel_tint)
+		}
 	}
 }
 

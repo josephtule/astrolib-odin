@@ -63,7 +63,7 @@ earth_moon_system :: proc(
 
 	moon_model.posvel.draw_pos = true
 	moon_model.posvel.draw_vel = true
-	moon_model.posvel.target_id = earth.id
+	moon_model.posvel.target_pos_id = earth.id
 	moon_model.posvel.pos_tint = rl.PURPLE
 	moon_model.posvel.vel_tint = rl.MAROON
 	moon_model.posvel.vel_scale = 5000

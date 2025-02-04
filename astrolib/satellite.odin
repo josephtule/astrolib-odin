@@ -202,6 +202,8 @@ gen_sat_model :: #force_inline proc(
 	m.posvel.vel_scale = 1.
 	m.posvel.pos_tint = rl.GOLD
 	m.posvel.vel_tint = rl.ORANGE
+	m.posvel.target_pos_id = -1
+	m.posvel.target_vel_id = -1
 
 	// checker pattern
 	image_checker := rl.GenImageChecked(

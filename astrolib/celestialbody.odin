@@ -193,11 +193,13 @@ gen_celestialbody_model :: #force_inline proc(
 	model.axes.z = zaxis_f32
 
 	// // position/velocity vectors
-	// model.posvel.draw_pos = true
-	// model.posvel.draw_vel = true
-	// model.posvel.vel_scale = 1
-	// model.posvel.pos_tint = rl.GOLD
-	// model.posvel.vel_tint = rl.PURPLE
+	model.posvel.draw_pos = false
+	model.posvel.draw_vel = false
+	model.posvel.vel_scale = 1
+	model.posvel.pos_tint = rl.GOLD
+	model.posvel.vel_tint = rl.PURPLE
+	model.posvel.target_pos_id = -1
+	model.posvel.target_vel_id = -1
 
 	image_checker := rl.GenImageChecked(
 		8,

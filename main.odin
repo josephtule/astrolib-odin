@@ -218,7 +218,7 @@ main :: proc() {
 			0., 200., 0., 
 			0., 0., 300., 
 		})
-		sat_model.posvel.target_id = moon3.id
+		sat_model.posvel.target_pos_id = moon3.id
 		sat.update_attitude = true
 		ast.add_satellite(&satellites, sat)
 		ast.add_model_to_array(&satellite_models, sat_model)
@@ -242,7 +242,7 @@ main :: proc() {
 			0., 200., 0., 
 			0., 0., 300., 
 		})
-		sat_model.posvel.target_id = moon3.id
+		sat_model.posvel.target_pos_id = moon3.id
 		sat.update_attitude = true
 		ast.add_satellite(&satellites, sat)
 		ast.add_model_to_array(&satellite_models, sat_model)
