@@ -3,7 +3,7 @@ package ui
 import clay "../external/clay-odin"
 import "core:math"
 import "core:strings"
-import rl "vendor:raylib"
+import "vendor:raylib"
 
 RaylibFont :: struct {
     fontId: u16,
@@ -56,28 +56,22 @@ clayRaylibRender :: proc(renderCommands: ^clay.ClayArray(clay.RenderCommand), al
         case clay.RenderCommandType.None:
             {}
         case clay.RenderCommandType.Text:
-            config := renderCommand.renderData.text
             // Raylib uses standard C strings so isn't compatible with cheap slices, we need to clone the string to append null terminator
-            text := string(config.stringContents.chars[:config.stringContents.length])
+            text := string(renderCommand.text.chars[:renderCommand.text.length])
             cloned := strings.clone_to_cstring(text, allocator)
-            fontToUse: rl.Font = raylibFonts[config.fontId].font
+            fontToUse: rl.Font = raylibFonts[renderCommand.config.textElementConfig.fontId].font
             rl.DrawTextEx(
                 fontToUse,
                 cloned,
                 rl.Vector2{boundingBox.x, boundingBox.y},
-                cast(f32)config.fontSize,
-                cast(f32)config.letterSpacing,
-                clayColorToRaylibColor(config.textColor),
+                cast(f32)renderCommand.config.textElementConfig.fontSize,
+                cast(f32)renderCommand.config.textElementConfig.letterSpacing,
+                clayColorToRaylibColor(renderCommand.config.textElementConfig.textColor),
             )
         case clay.RenderCommandType.Image:
-            config := renderCommand.renderData.image
-            tintColor := config.backgroundColor
-            if (tintColor.rgba == 0) {
-                tintColor = { 255, 255, 255, 255 }
-            }
             // TODO image handling
-            imageTexture := cast(^rl.Texture2D)config.imageData
-            rl.DrawTextureEx(imageTexture^, rl.Vector2{boundingBox.x, boundingBox.y}, 0, boundingBox.width / cast(f32)imageTexture.width, clayColorToRaylibColor(tintColor))
+            imageTexture := cast(^rl.Texture2D)renderCommand.config.imageElementConfig.imageData
+            rl.DrawTextureEx(imageTexture^, rl.Vector2{boundingBox.x, boundingBox.y}, 0, boundingBox.width / cast(f32)imageTexture.width, rl.WHITE)
         case clay.RenderCommandType.ScissorStart:
             rl.BeginScissorMode(
                 cast(i32)math.round(boundingBox.x),
@@ -88,86 +82,86 @@ clayRaylibRender :: proc(renderCommands: ^clay.ClayArray(clay.RenderCommand), al
         case clay.RenderCommandType.ScissorEnd:
             rl.EndScissorMode()
         case clay.RenderCommandType.Rectangle:
-            config := renderCommand.renderData.rectangle
+            config: ^clay.RectangleElementConfig = renderCommand.config.rectangleElementConfig
             if (config.cornerRadius.topLeft > 0) {
                 radius: f32 = (config.cornerRadius.topLeft * 2) / min(boundingBox.width, boundingBox.height)
-                rl.DrawRectangleRounded(rl.Rectangle{boundingBox.x, boundingBox.y, boundingBox.width, boundingBox.height}, radius, 8, clayColorToRaylibColor(config.backgroundColor))
+                rl.DrawRectangleRounded(rl.Rectangle{boundingBox.x, boundingBox.y, boundingBox.width, boundingBox.height}, radius, 8, clayColorToRaylibColor(config.color))
             } else {
-                rl.DrawRectangle(cast(i32)boundingBox.x, cast(i32)boundingBox.y, cast(i32)boundingBox.width, cast(i32)boundingBox.height, clayColorToRaylibColor(config.backgroundColor))
+                rl.DrawRectangle(cast(i32)boundingBox.x, cast(i32)boundingBox.y, cast(i32)boundingBox.width, cast(i32)boundingBox.height, clayColorToRaylibColor(config.color))
             }
         case clay.RenderCommandType.Border:
-            config := renderCommand.renderData.border
+            config := renderCommand.config.borderElementConfig
             // Left border
-            if (config.width.left > 0) {
+            if (config.left.width > 0) {
                 rl.DrawRectangle(
                     cast(i32)math.round(boundingBox.x),
                     cast(i32)math.round(boundingBox.y + config.cornerRadius.topLeft),
-                    cast(i32)config.width.left,
+                    cast(i32)config.left.width,
                     cast(i32)math.round(boundingBox.height - config.cornerRadius.topLeft - config.cornerRadius.bottomLeft),
-                    clayColorToRaylibColor(config.color),
+                    clayColorToRaylibColor(config.left.color),
                 )
             }
             // Right border
-            if (config.width.right > 0) {
+            if (config.right.width > 0) {
                 rl.DrawRectangle(
-                    cast(i32)math.round(boundingBox.x + boundingBox.width - cast(f32)config.width.right),
+                    cast(i32)math.round(boundingBox.x + boundingBox.width - cast(f32)config.right.width),
                     cast(i32)math.round(boundingBox.y + config.cornerRadius.topRight),
-                    cast(i32)config.width.right,
+                    cast(i32)config.right.width,
                     cast(i32)math.round(boundingBox.height - config.cornerRadius.topRight - config.cornerRadius.bottomRight),
-                    clayColorToRaylibColor(config.color),
+                    clayColorToRaylibColor(config.right.color),
                 )
             }
             // Top border
-            if (config.width.top > 0) {
+            if (config.top.width > 0) {
                 rl.DrawRectangle(
                     cast(i32)math.round(boundingBox.x + config.cornerRadius.topLeft),
                     cast(i32)math.round(boundingBox.y),
                     cast(i32)math.round(boundingBox.width - config.cornerRadius.topLeft - config.cornerRadius.topRight),
-                    cast(i32)config.width.top,
-                    clayColorToRaylibColor(config.color),
+                    cast(i32)config.top.width,
+                    clayColorToRaylibColor(config.top.color),
                 )
             }
             // Bottom border
-            if (config.width.bottom > 0) {
+            if (config.bottom.width > 0) {
                 rl.DrawRectangle(
                     cast(i32)math.round(boundingBox.x + config.cornerRadius.bottomLeft),
-                    cast(i32)math.round(boundingBox.y + boundingBox.height - cast(f32)config.width.bottom),
+                    cast(i32)math.round(boundingBox.y + boundingBox.height - cast(f32)config.bottom.width),
                     cast(i32)math.round(boundingBox.width - config.cornerRadius.bottomLeft - config.cornerRadius.bottomRight),
-                    cast(i32)config.width.bottom,
-                    clayColorToRaylibColor(config.color),
+                    cast(i32)config.bottom.width,
+                    clayColorToRaylibColor(config.bottom.color),
                 )
             }
             if (config.cornerRadius.topLeft > 0) {
                 rl.DrawRing(
                     rl.Vector2{math.round(boundingBox.x + config.cornerRadius.topLeft), math.round(boundingBox.y + config.cornerRadius.topLeft)},
-                    math.round(config.cornerRadius.topLeft - cast(f32)config.width.top),
+                    math.round(config.cornerRadius.topLeft - cast(f32)config.top.width),
                     config.cornerRadius.topLeft,
                     180,
                     270,
                     10,
-                    clayColorToRaylibColor(config.color),
+                    clayColorToRaylibColor(config.top.color),
                 )
             }
             if (config.cornerRadius.topRight > 0) {
                 rl.DrawRing(
                     rl.Vector2{math.round(boundingBox.x + boundingBox.width - config.cornerRadius.topRight), math.round(boundingBox.y + config.cornerRadius.topRight)},
-                    math.round(config.cornerRadius.topRight - cast(f32)config.width.top),
+                    math.round(config.cornerRadius.topRight - cast(f32)config.top.width),
                     config.cornerRadius.topRight,
                     270,
                     360,
                     10,
-                    clayColorToRaylibColor(config.color),
+                    clayColorToRaylibColor(config.top.color),
                 )
             }
             if (config.cornerRadius.bottomLeft > 0) {
                 rl.DrawRing(
                     rl.Vector2{math.round(boundingBox.x + config.cornerRadius.bottomLeft), math.round(boundingBox.y + boundingBox.height - config.cornerRadius.bottomLeft)},
-                    math.round(config.cornerRadius.bottomLeft - cast(f32)config.width.top),
+                    math.round(config.cornerRadius.bottomLeft - cast(f32)config.top.width),
                     config.cornerRadius.bottomLeft,
                     90,
                     180,
                     10,
-                    clayColorToRaylibColor(config.color),
+                    clayColorToRaylibColor(config.bottom.color),
                 )
             }
             if (config.cornerRadius.bottomRight > 0) {
@@ -176,12 +170,12 @@ clayRaylibRender :: proc(renderCommands: ^clay.ClayArray(clay.RenderCommand), al
                         math.round(boundingBox.x + boundingBox.width - config.cornerRadius.bottomRight),
                         math.round(boundingBox.y + boundingBox.height - config.cornerRadius.bottomRight),
                     },
-                    math.round(config.cornerRadius.bottomRight - cast(f32)config.width.bottom),
+                    math.round(config.cornerRadius.bottomRight - cast(f32)config.bottom.width),
                     config.cornerRadius.bottomRight,
                     0.1,
                     90,
                     10,
-                    clayColorToRaylibColor(config.color),
+                    clayColorToRaylibColor(config.bottom.color),
                 )
             }
         case clay.RenderCommandType.Custom:

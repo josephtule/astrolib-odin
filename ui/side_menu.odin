@@ -48,10 +48,13 @@ info_menu_state :: enum {
 
 sys_state: sys_menu_state = .disp_sys
 
-ui_spacer :: proc() {if clay.UI(
-		clay.Layout(
-			{sizing = {width = clay.SizingGrow({}), height = clay.SizingGrow({})}},
-		),
+ui_spacer :: proc() {
+	if clay.UI().configure(
+	{
+		layout = {
+			sizing = {width = clay.SizingGrow({}), height = clay.SizingGrow({})},
+		},
+	},
 	) {}
 }
 
@@ -166,18 +169,18 @@ edit_sat_menu :: proc(system: ^ast.AstroSystem) {
 	strings.write_string(&str_b, system.name)
 	strings.write_string(&str_b, " > ")
 	strings.write_string(&str_b, system.satellites[sat_index].info.name)
-	if clay.UI(
-		clay.Layout(
-			{
-				sizing = {width = clay.SizingGrow({})},
-				padding = clay.Padding {
-					top = gaps / 2,
-					bottom = gaps / 2,
-					right = gaps,
-					left = gaps,
-				},
+	if clay.UI().configure(
+	{
+		layout = {
+			sizing = {width = clay.SizingGrow({})},
+			padding = clay.Padding {
+				top = gaps / 2,
+				bottom = gaps / 2,
+				right = gaps,
+				left = gaps,
 			},
-		),
+		},
+	},
 	) {
 		clay.Text(strings.to_string(str_b), &text_config_16)
 	}
@@ -206,20 +209,20 @@ edit_sat_menu :: proc(system: ^ast.AstroSystem) {
 disp_sats_menu :: proc(system: ^ast.AstroSystem) {
 	num_pages: int =
 		(system.num_satellites + max_entities_per_page - 1) / max_entities_per_page
-	if clay.UI(
-		clay.Layout(
-			{
-				childAlignment = {y = .CENTER},
-				childGap = gaps / 2,
-				sizing = {width = clay.SizingGrow({})},
-				padding = clay.Padding {
-					top = gaps / 2,
-					bottom = gaps / 2,
-					right = gaps,
-					left = gaps,
-				},
+	if clay.UI().configure(
+	{
+		layout = {
+			childAlignment = {y = .Center},
+			childGap = gaps / 2,
+			sizing = {width = clay.SizingGrow({})},
+			padding = clay.Padding {
+				top = gaps / 2,
+				bottom = gaps / 2,
+				right = gaps,
+				left = gaps,
 			},
-		),
+		},
+	},
 	) {
 		// TODO: update less often, create update system text function or something
 		num_buf: [8]byte
@@ -234,10 +237,14 @@ disp_sats_menu :: proc(system: ^ast.AstroSystem) {
 		// ui_spacer()
 
 		if num_pages > 1 {
-			if clay.UI(
-				clay.Layout(
-					{sizing = grow, childGap = gaps / 2, layoutDirection = .TOP_TO_BOTTOM},
-				),
+			if clay.UI().configure(
+			{
+				layout = {
+					sizing = grow,
+					childGap = gaps / 2,
+					layoutDirection = .TopToBottom,
+				},
+			},
 			) {
 				// vertical_bar(DARK_GRAY)
 				num_buf = [8]byte{}
@@ -254,10 +261,14 @@ disp_sats_menu :: proc(system: ^ast.AstroSystem) {
 				clay.Text(page, &text_config_14)
 				vertical_bar(DARK_GRAY)
 				inc_button_size: f32 = 16
-				if clay.UI(
-					clay.Layout(
-						{sizing = grow, childGap = gaps / 2, layoutDirection = .LEFT_TO_RIGHT},
-					),
+				if clay.UI().configure(
+				{
+					layout = {
+						sizing = grow,
+						childGap = gaps / 2,
+						layoutDirection = .LeftToRight,
+					},
+				},
 				) {
 					sys_button_custom("prev_sat_page", "-", inc_button_size)
 					sys_button_custom("next_sat_page", "+", inc_button_size)
@@ -269,10 +280,14 @@ disp_sats_menu :: proc(system: ^ast.AstroSystem) {
 					}
 				}
 				if num_pages >= 10 {
-					if clay.UI(
-						clay.Layout(
-							{sizing = grow, childGap = gaps / 2, layoutDirection = .LEFT_TO_RIGHT},
-						),
+					if clay.UI().configure(
+					{
+						layout = {
+							sizing = grow,
+							childGap = gaps / 2,
+							layoutDirection = .LeftToRight,
+						},
+					},
 					) {
 						sys_button_custom("prev_sat_page10", "-10", inc_button_size)
 						sys_button_custom("next_sat_page10", "+10", inc_button_size)
@@ -285,10 +300,14 @@ disp_sats_menu :: proc(system: ^ast.AstroSystem) {
 					}
 				}
 				if num_pages >= 25 {
-					if clay.UI(
-						clay.Layout(
-							{sizing = grow, childGap = gaps / 2, layoutDirection = .LEFT_TO_RIGHT},
-						),
+					if clay.UI().configure(
+					{
+						layout = {
+							sizing = grow,
+							childGap = gaps / 2,
+							layoutDirection = .LeftToRight,
+						},
+					},
 					) {
 						sys_button_custom("prev_sat_page25", "-25", inc_button_size)
 						sys_button_custom("next_sat_page25", "+25", inc_button_size)
@@ -347,18 +366,18 @@ display_satellites :: proc(system: ^ast.AstroSystem, num_pages: int) {
 }
 
 edit_sys_menu :: proc(system: ^ast.AstroSystem, systems_reset: ^ast.Systems) {
-	if clay.UI(
-		clay.Layout(
-			{
-				sizing = {width = clay.SizingGrow({})},
-				padding = clay.Padding {
-					top = gaps / 2,
-					bottom = gaps / 2,
-					right = gaps,
-					left = gaps,
-				},
+	if clay.UI().configure(
+	{
+		layout = {
+			sizing = {width = clay.SizingGrow({})},
+			padding = clay.Padding {
+				top = gaps / 2,
+				bottom = gaps / 2,
+				right = gaps,
+				left = gaps,
 			},
-		),
+		},
+	},
 	) {
 		// TODO: reduce number of times this is called, update only when pages are switched
 		num_buf: [8]byte
@@ -388,18 +407,14 @@ edit_sys_menu :: proc(system: ^ast.AstroSystem, systems_reset: ^ast.Systems) {
 
 	horizontal_bar(DARK_GRAY)
 	clay.Text("Satellite Toggles", &text_config_16)
-	if clay.UI(
-		clay.Layout(
-			{layoutDirection = .LEFT_TO_RIGHT, childGap = gaps, sizing = grow},
-		),
+	if clay.UI().configure(
+	{layout = {layoutDirection = .LeftToRight, childGap = gaps, sizing = grow}},
 	) {
 		sys_button_medium("toggle_sat_posvel", "Vectors")
 		sys_button_medium("toggle_sat_trails", "Trails")
 	}
-	if clay.UI(
-		clay.Layout(
-			{layoutDirection = .LEFT_TO_RIGHT, childGap = gaps, sizing = grow},
-		),
+	if clay.UI().configure(
+	{layout = {layoutDirection = .LeftToRight, childGap = gaps, sizing = grow}},
 	) {
 		sys_button_medium("toggle_sat_attitude", "Attitude")
 		sys_button_medium("toggle_sat_axes", "Axes")
@@ -407,28 +422,22 @@ edit_sys_menu :: proc(system: ^ast.AstroSystem, systems_reset: ^ast.Systems) {
 
 	horizontal_bar(DARK_GRAY)
 	clay.Text("Celestial Body Toggles", &text_config_16)
-	if clay.UI(
-		clay.Layout(
-			{layoutDirection = .LEFT_TO_RIGHT, childGap = gaps, sizing = grow},
-		),
+	if clay.UI().configure(
+	{layout = {layoutDirection = .LeftToRight, childGap = gaps, sizing = grow}},
 	) {
 		sys_button_medium("toggle_body_posvel", "Vectors")
 		sys_button_medium("toggle_body_trails", "Trails")
 	}
-	if clay.UI(
-		clay.Layout(
-			{layoutDirection = .LEFT_TO_RIGHT, childGap = gaps, sizing = grow},
-		),
+	if clay.UI().configure(
+	{layout = {layoutDirection = .LeftToRight, childGap = gaps, sizing = grow}},
 	) {
 		sys_button_medium("toggle_body_attitude", "Attitude")
 		sys_button_medium("toggle_body_axes", "Axes")
 	}
 
 	horizontal_bar(DARK_GRAY)
-	if clay.UI(
-		clay.Layout(
-			{layoutDirection = .LEFT_TO_RIGHT, childGap = gaps, sizing = grow},
-		),
+	if clay.UI().configure(
+	{layout = {layoutDirection = .LeftToRight, childGap = gaps, sizing = grow}},
 	) {
 		sys_button_medium("reset_sys_state", "Reset System ")
 		sys_button_medium("set_sys_state_save", "Set Save State")
@@ -615,7 +624,7 @@ sys_button_layout :: proc(size: f32) -> (layout_config: clay.LayoutConfig) {
 			left = pad_side,
 			right = pad_side,
 		},
-		childAlignment = clay.ChildAlignment{y = .CENTER},
+		childAlignment = clay.ChildAlignment{y = .Center},
 	}
 	return layout_config
 }
@@ -625,7 +634,7 @@ sys_button_rect :: proc(
 	rect_config: clay.RectangleElementConfig,
 ) {
 	rect_config.color = color
-	rect_config.cornerRadius = clay.CornerRadiusAll(4)
+	// rect_config.cornerRadius = clay.CornerRadiusAll(4)
 
 	return rect_config
 }
@@ -639,10 +648,13 @@ sys_button_custom :: proc(name: string, display_text: string, size: f32) {
 	color :=
 		clay.PointerOver(clay.GetElementId(clay.MakeString(name))) ? MEDIUM_GRAY2 : LIGHT_GRAY
 	sys_button_rectangle := sys_button_rect(color)
-	if clay.UI(
-		clay.ID(name),
-		clay.Layout(sys_button_layout(size)),
-		clay.Rectangle(sys_button_rectangle),
+	if clay.UI().configure(
+	{
+		id              = clay.ID(name),
+		layout          = sys_button_layout(size),
+		backgroundColor = color,
+		// clay.Rectangle(sys_button_rectangle),
+	},
 	) {
 		clay.Text(display_text, text_config)
 	}
@@ -651,10 +663,13 @@ sys_button_small :: proc(name: string, display_text: string) {
 	color :=
 		clay.PointerOver(clay.GetElementId(clay.MakeString(name))) ? MEDIUM_GRAY2 : LIGHT_GRAY
 	sys_button_rectangle := sys_button_rect(color)
-	if clay.UI(
-		clay.ID(name),
-		clay.Layout(sys_button_layout(32)),
-		clay.Rectangle(sys_button_rectangle),
+	if clay.UI().configure(
+	{
+		id              = clay.ID(name),
+		layout          = sys_button_layout(32),
+		backgroundColor = color,
+		// clay.Rectangle(sys_button_rectangle),
+	},
 	) {
 		clay.Text(display_text, &text_config_16)
 	}
@@ -663,10 +678,13 @@ sys_button_medium :: proc(name: string, display_text: string) {
 	color :=
 		clay.PointerOver(clay.GetElementId(clay.MakeString(name))) ? MEDIUM_GRAY2 : LIGHT_GRAY
 	sys_button_rectangle := sys_button_rect(color)
-	if clay.UI(
-		clay.ID(name),
-		clay.Layout(sys_button_layout(48)),
-		clay.Rectangle(sys_button_rectangle),
+	if clay.UI().configure(
+	{
+		id              = clay.ID(name),
+		layout          = sys_button_layout(48),
+		backgroundColor = color,
+		// clay.Rectangle(sys_button_rectangle),
+	},
 	) {
 		clay.Text(display_text, &text_config_16)
 	}
@@ -675,10 +693,13 @@ sys_button_large :: proc(name: string, display_text: string) {
 	color :=
 		clay.PointerOver(clay.GetElementId(clay.MakeString(name))) ? MEDIUM_GRAY2 : LIGHT_GRAY
 	sys_button_rectangle := sys_button_rect(color)
-	if clay.UI(
-		clay.ID(name),
-		clay.Layout(sys_button_layout(64)),
-		clay.Rectangle(sys_button_rectangle),
+	if clay.UI().configure(
+	{
+		id              = clay.ID(name),
+		layout          = sys_button_layout(64),
+		backgroundColor = color,
+		// clay.Rectangle(sys_button_rectangle),
+	},
 	) {
 		clay.Text(display_text, &text_config_16)
 	}
@@ -691,30 +712,51 @@ input_posvel :: proc(ctx: ^Context) {
 	layout := clay.LayoutConfig {
 		sizing = {width = clay.SizingGrow({}), height = clay.SizingFixed(48)},
 		padding = clay.PaddingAll(gaps),
-		childAlignment = clay.ChildAlignment{y = .CENTER},
+		childAlignment = clay.ChildAlignment{y = .Center},
 		childGap = gaps,
 	}
 	rectangle := clay.RectangleElementConfig {
-		color        = LIGHT_GRAY,
-		cornerRadius = clay.CornerRadiusAll(4),
+		color = LIGHT_GRAY,
+		// cornerRadius = clay.CornerRadiusAll(4),
 	}
 
-	if clay.UI(clay.ID("x_box"), clay.Layout(layout), clay.Rectangle(rectangle)) {
-		if clay.UI(clay.ID("x_title")) {
+	if clay.UI().configure(
+	{
+		id              = clay.ID("x_box"),
+		layout          = layout,
+		backgroundColor = LIGHT_GRAY,
+		//clay.Rectangle(rectangle)
+	},
+	) {
+		if clay.UI().configure({id = clay.ID("x_title")}) {
 			clay.Text("X position:", &text_config_16)
 		}
 		// TODO: this is a placeholder for text input
 		clay_textinput_box(ctx, "x_box_text", f64)
 	}
-	if clay.UI(clay.ID("y_box"), clay.Layout(layout), clay.Rectangle(rectangle)) {
-		if clay.UI(clay.ID("y_title")) {
+	if clay.UI().configure(
+	{
+		id              = clay.ID("y_box"),
+		layout          = layout,
+		backgroundColor = LIGHT_GRAY,
+		//  clay.Rectangle(rectangle)
+	},
+	) {
+		if clay.UI().configure({id = clay.ID("y_title")}) {
 			clay.Text("Y position:", &text_config_16)
 		}
 		// TODO: this is a placeholder for text input
 		clay_textinput_box(ctx, "y_box_text", f64)
 	}
-	if clay.UI(clay.ID("z_box"), clay.Layout(layout), clay.Rectangle(rectangle)) {
-		if clay.UI(clay.ID("z_title")) {
+	if clay.UI().configure(
+	{
+		id              = clay.ID("z_box"),
+		layout          = layout,
+		backgroundColor = LIGHT_GRAY,
+		// clay.Rectangle(rectangle)
+	},
+	) {
+		if clay.UI().configure({id = clay.ID("z_title")}) {
 			clay.Text("Z position:", &text_config_16)
 		}
 		// TODO: this is a placeholder for text input

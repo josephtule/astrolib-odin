@@ -28,9 +28,10 @@ text_config_18 := clay.TextElementConfig {
 }
 
 errorHandler :: proc "c" (errorData: clay.ErrorData) {
-	if (errorData.errorType == clay.ErrorType.DUPLICATE_ID) {
+	if (errorData.errorType == clay.ErrorType.DuplicateId) {
 
 	}
+
 }
 
 

@@ -48,9 +48,7 @@ grow := clay.Sizing {
 }
 
 rectangle_rounded :: proc(color: clay.Color) -> clay.RectangleElementConfig {
-	rect := clay.RectangleElementConfig(
-		{color = color, cornerRadius = clay.CornerRadiusAll(8)},
-	)
+	rect := clay.RectangleElementConfig({color = color})
 	return rect
 }
 
@@ -71,39 +69,41 @@ createLayout :: proc(
 	clay.BeginLayout()
 
 	// :outer container
-	if clay.UI(
-		clay.ID("outer_container"),
-		clay.Layout(
-			{
-				layoutDirection = .TOP_TO_BOTTOM,
-				sizing = grow,
-				padding = clay.PaddingAll(gaps),
-				childGap = gaps,
-			},
-		),
+	if clay.UI().configure(
+	{
+		id = clay.ID("outer_container"),
+		layout = {
+			layoutDirection = .TopToBottom,
+			sizing = grow,
+			padding = clay.PaddingAll(gaps),
+			childGap = gaps,
+		},
+	},
 	) {
 		// :header
-		if clay.UI(
-			clay.ID("header"),
-			clay.Rectangle(
-				{color = MEDIUM_GRAY, cornerRadius = clay.CornerRadiusAll(8)},
-			),
-			clay.Layout(
-				{
-					sizing = {clay.SizingGrow({}), clay.SizingFixed(header_size)},
-					padding = clay.Padding {
-						left = gaps,
-						right = gaps,
-						top = gaps / 2,
-						bottom = gaps / 2,
-					},
-					childGap = gaps,
-					childAlignment = clay.ChildAlignment{y = .CENTER},
+		if clay.UI().configure(
+		{
+			id = clay.ID("header"),
+			// rectangle =
+			// 	{color = MEDIUM_GRAY, cornerRadius = clay.CornerRadiusAll(8)},
+			backgroundColor = MEDIUM_GRAY,
+			layout = {
+				sizing = {clay.SizingGrow({}), clay.SizingFixed(header_size)},
+				padding = clay.Padding {
+					left = gaps,
+					right = gaps,
+					top = gaps / 2,
+					bottom = gaps / 2,
 				},
-			),
+				childGap = gaps,
+				childAlignment = clay.ChildAlignment{y = .Center},
+			},
+		},
 		) {
 			clay.Text("AstroLib", &text_config_16)
-			if clay.UI(clay.Layout({sizing = {width = clay.SizingGrow({})}})) {} 	// spacer
+			if clay.UI().configure(
+			{layout = {sizing = {width = clay.SizingGrow({})}}},
+			) {} 	// spacer
 			if show_info {
 				header_button("header_system", "System")
 				// header_button("Satellites")
@@ -121,7 +121,7 @@ createLayout :: proc(
 		info_menu_sizing: clay.Sizing
 		if mobileScreen {
 			// mobile width
-			lower_dir = .TOP_TO_BOTTOM
+			lower_dir = .TopToBottom
 			info_menu_sizing = {
 				width  = clay.SizingGrow({}),
 				height = clay.SizingFixed(0.3333 * f32(rl.GetScreenHeight())),
@@ -130,43 +130,50 @@ createLayout :: proc(
 			// desktop width
 			height := f32(rl.GetScreenHeight() - gaps * 3) - header_size
 			width: f32 = min(0.3333 * f32(rl.GetScreenWidth()), 450.)
-			lower_dir = .LEFT_TO_RIGHT
+			lower_dir = .LeftToRight
 			info_menu_sizing = {
 				width  = clay.SizingFixed(width),
 				height = clay.SizingFixed(height),
 			}
 		}
-		if clay.UI(
-			clay.ID("lower_content"),
-			clay.Layout({sizing = grow, childGap = gaps, layoutDirection = lower_dir}),
+
+
+		if clay.UI().configure(
+		{
+			id = clay.ID("lower_content"),
+			layout = {sizing = grow, childGap = gaps, layoutDirection = lower_dir},
+		},
 		) {
 			// :viewport on left/top (transparent to display raylib camera below)
-			if clay.UI(
-				clay.ID("viewport"),
-				clay.Layout({sizing = grow}),
+			if clay.UI().configure(
+			{
+				id = clay.ID("viewport"),
+				layout = {sizing = grow},
 				// clay.Rectangle(rectangle_rounded(clay.COLOR)),
+			},
 			) {
 				// empty here
 			}
 			// :info_menu on right/bottom TODO: draw only when button pressed
 			if show_info {
-				if clay.UI(
-					clay.ID("info_menu"),
-					clay.Scroll({vertical = true}),
-					clay.Layout(
-						{
-							padding = clay.Padding {
-								left = gaps,
-								right = gaps,
-								top = gaps,
-								bottom = gaps,
-							},
-							sizing = info_menu_sizing,
-							layoutDirection = .TOP_TO_BOTTOM,
-							childGap = gaps,
+				if clay.UI().configure(
+				{
+					id = clay.ID("info_menu"),
+					scroll = {vertical = true},
+					layout = {
+						padding = clay.Padding {
+							left = gaps,
+							right = gaps,
+							top = gaps,
+							bottom = gaps,
 						},
-					),
-					clay.Rectangle(rectangle_rounded(MEDIUM_GRAY)),
+						sizing = info_menu_sizing,
+						layoutDirection = .TopToBottom,
+						childGap = gaps,
+					},
+					backgroundColor = MEDIUM_GRAY
+					// clay.Rectangle(rectangle_rounded(MEDIUM_GRAY)),
+				},
 				) {
 					// info container children
 					if show_sys {

@@ -42,22 +42,21 @@ clay_textinput_box :: proc(
 ) -> (
 	val: T,
 ) {
-	if clay.UI(
-		clay.ID(fieldname),
-		clay.Rectangle(
-			{color = MEDIUM_GRAY, cornerRadius = clay.CornerRadiusAll(4)},
-		),
-		clay.Layout(
-			{
-				padding = clay.Padding {
-					left = gaps,
-					right = gaps,
-					top = gaps,
-					bottom = gaps,
-				},
-				sizing = {width = clay.SizingGrow({})},
+	if clay.UI().configure(
+	{
+		id = clay.ID(fieldname),
+		layout = {
+			padding = clay.Padding {
+				left = gaps,
+				right = gaps,
+				top = gaps,
+				bottom = gaps,
 			},
-		),
+			sizing = {width = clay.SizingGrow({})},
+		},
+		backgroundColor = MEDIUM_GRAY,
+		cornerRadius = clay.CornerRadiusAll(4),
+	},
 	) {
 		clay.Text("Enter value...", &text_config_16)
 	}
@@ -69,16 +68,13 @@ back_button :: proc(name: string) {}
 
 
 header_button :: proc(name, display_text: string) {
-	if clay.UI(
-		clay.ID(name),
-		clay.Layout({padding = {gaps, gaps, 2, 2}}),
-		// clay.BorderOutsideRadius({2, COLOR_RED}, 10),
-		clay.Rectangle(
-			{
-				color = clay.PointerOver(clay.GetElementId(clay.MakeString(name))) ? LIGHT_GRAY : MEDIUM_GRAY2,
-				cornerRadius = clay.CornerRadiusAll(4),
-			},
-		),
+	if clay.UI().configure(
+	{
+		id = clay.ID(name),
+		layout = {padding = {gaps, gaps, 2, 2}},
+		backgroundColor = clay.PointerOver(clay.GetElementId(clay.MakeString(name))) ? LIGHT_GRAY : MEDIUM_GRAY2,
+		cornerRadius = clay.CornerRadiusAll((4)),
+	},
 	) {
 		clay.Text(
 			display_text,
@@ -92,15 +88,15 @@ header_button :: proc(name, display_text: string) {
 side_by_side_buttons :: proc(
 	block_name, id1, display1, id2, display2: string,
 ) {
-	if clay.UI(
-		clay.ID(block_name),
-		clay.Layout(
-			{
-				childGap = gaps,
-				layoutDirection = clay.LayoutDirection.LEFT_TO_RIGHT,
-				sizing = {width = clay.SizingGrow({})},
-			},
-		),
+	if clay.UI().configure(
+	{
+		id = clay.ID(block_name),
+		layout = {
+			childGap = gaps,
+			layoutDirection = clay.LayoutDirection.LeftToRight,
+			sizing = {width = clay.SizingGrow({})},
+		},
+	},
 	) {
 		sys_button_medium(id1, display1)
 		sys_button_medium(id2, display2)
@@ -119,30 +115,31 @@ pointer_in :: proc(id: string) -> bool {
 }
 
 vertical_bar :: proc(color: clay.Color, thickness: f32 = 1) {
-	if clay.UI(
-		clay.Layout(
-			{
-				sizing = {
-					width = clay.SizingFixed(thickness),
-					height = clay.SizingGrow({}),
-				},
+	if clay.UI().configure(
+	{
+		layout = {
+			sizing = {
+				width = clay.SizingFixed(thickness),
+				height = clay.SizingGrow({}),
 			},
-		),
-		clay.Rectangle({color = color}),
+		},
+		backgroundColor = color,
+	},
 	) {}
 }
 
 horizontal_bar :: proc(color: clay.Color, thickness: f32 = 1) {
-	if clay.UI(
-		clay.Layout(
-			{
-				sizing = {
-					height = clay.SizingFixed(thickness),
-					width = clay.SizingGrow({}),
-				},
+	if clay.UI().configure(
+	{
+		layout = {
+			sizing = {
+				height = clay.SizingFixed(thickness),
+				width = clay.SizingGrow({}),
 			},
-		),
-		clay.Rectangle({color = color}),
-	) {}
-}
+		},
+		backgroundColor = color,
+	},
+	) {
 
+	}
+}
